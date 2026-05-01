@@ -1,0 +1,16 @@
+[package]
+name = "tui"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+core = { path = "../core" }
+
+anyhow.workspace = true
+thiserror.workspace = true
+ratatui.workspace = true
+crossterm.workspace = true
+tokio.workspace = true
+tracing.workspace = true

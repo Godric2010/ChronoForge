@@ -1,0 +1,17 @@
+[package]
+name = "storage"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+core = { path = "../core" }
+
+anyhow.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+sqlx.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+tracing.workspace = true

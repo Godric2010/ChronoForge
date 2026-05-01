@@ -1,0 +1,22 @@
+[package]
+name = "app"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "ChronoForge"
+path = "src/main.rs"
+
+[dependencies]
+core = { path = "../core" }
+storage = { path = "../storage" }
+tui = { path = "../tui" }
+
+anyhow.workspace = true
+tokio.workspace = true
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+dotenvy.workspace = true
