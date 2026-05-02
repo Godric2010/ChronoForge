@@ -1,0 +1,69 @@
+use crate::domain::TimeEntry;
+use crate::errors::AppResult;
+use crate::repositories::time_entry_repository::TimeEntryRepository;
+use async_trait::async_trait;
+use std::sync::{Arc, Mutex};
+use uuid::Uuid;
+
+#[derive(Clone, Default)]
+pub struct InMemoryTimeEntryRepository {
+    time_entries: Arc<Mutex<Vec<TimeEntry>>>,
+}
+
+#[async_trait]
+impl TimeEntryRepository for InMemoryTimeEntryRepository {
+    async fn create(&self, time_entry: TimeEntry) -> AppResult<()> {
+        self.time_entries.lock().unwrap().push(time_entry);
+        Ok(())
+    }
+
+    async fn update(&self, time_entry: TimeEntry) -> AppResult<()> {
+        let mut time_entries = self.time_entries.lock().unwrap();
+        if let Some(entry) = time_entries.iter_mut().find(|t| t.id == time_entry.id) {
+            *entry = time_entry;
+        }
+        Ok(())
+    }
+
+    async fn find_by_id(&self, id: Uuid) -> AppResult<Option<TimeEntry>> {
+        Ok(self
+            .time_entries
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|t| t.id == id)
+            .cloned())
+    }
+
+    async fn find_by_project_id(&self, project_id: Uuid) -> AppResult<Vec<TimeEntry>> {
+        Ok(self
+            .time_entries
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|t| t.project_id == project_id)
+            .cloned()
+            .collect())
+    }
+
+    async fn find_by_task_id(&self, task_id: Uuid) -> AppResult<Vec<TimeEntry>> {
+        Ok(self
+            .time_entries
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|t| t.id == task_id)
+            .cloned()
+            .collect())
+    }
+
+    async fn find_all(&self) -> AppResult<Vec<TimeEntry>> {
+        let time_entries = self.time_entries.lock().unwrap();
+        Ok(time_entries.clone())
+    }
+
+    async fn delete(&self, id: Uuid) -> AppResult<()> {
+        self.time_entries.lock().unwrap().retain(|t| t.id != id);
+        Ok(())
+    }
+}

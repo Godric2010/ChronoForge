@@ -1,0 +1,45 @@
+use async_trait::async_trait;
+use std::sync::{Arc, Mutex};
+use uuid::Uuid;
+
+use crate::repositories::project_repository::ProjectRepository;
+use crate::{
+    domain::Project,
+    errors::AppResult,
+};
+
+#[derive(Clone, Default)]
+pub struct InMemoryProjectRepository {
+    projects: Arc<Mutex<Vec<Project>>>,
+}
+
+#[async_trait]
+impl ProjectRepository for InMemoryProjectRepository {
+    async fn create(&self, project: Project) -> AppResult<()> {
+        self.projects.lock().unwrap().push(project);
+        Ok(())
+    }
+
+    async fn update(&self, project: Project) -> AppResult<()> {
+        let mut projects = self.projects.lock().unwrap();
+        if let Some(existing) = projects.iter_mut().find(|p| p.id == project.id) {
+            *existing = project;
+        }
+        Ok(())
+    }
+
+    async fn find_by_id(&self, id: Uuid) -> AppResult<Option<Project>> {
+        let projects = self.projects.lock().unwrap();
+        Ok(projects.iter().find(|p| p.id == id).cloned())
+    }
+
+    async fn fina_all(&self) -> AppResult<Vec<Project>> {
+        let projects = self.projects.lock().unwrap();
+        Ok(projects.clone())
+    }
+
+    async fn delete(&self, id: Uuid) -> AppResult<()> {
+        self.projects.lock().unwrap().retain(|p| p.id != id);
+        Ok(())
+    }
+}
