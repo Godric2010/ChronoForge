@@ -2,11 +2,9 @@ use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
+use crate::errors::AppError;
 use crate::repositories::project_repository::ProjectRepository;
-use crate::{
-    domain::Project,
-    errors::AppResult,
-};
+use crate::{domain::Project, errors::AppResult};
 
 #[derive(Clone, Default)]
 pub struct InMemoryProjectRepository {
@@ -15,7 +13,7 @@ pub struct InMemoryProjectRepository {
 
 impl InMemoryProjectRepository {
     pub fn new() -> Self {
-        Self{
+        Self {
             projects: Arc::new(Mutex::new(Vec::new())),
         }
     }
@@ -36,9 +34,13 @@ impl ProjectRepository for InMemoryProjectRepository {
         Ok(())
     }
 
-    async fn find_by_id(&self, id: Uuid) -> AppResult<Option<Project>> {
+    async fn find_by_id(&self, id: &Uuid) -> AppResult<Project> {
         let projects = self.projects.lock().unwrap();
-        Ok(projects.iter().find(|p| p.id == id).cloned())
+        let result = projects.iter().find(|p| p.id == id.clone());
+        match result {
+            Some(project) => Ok(project.clone()),
+            None => Err(AppError::ProjectNotFound),
+        }
     }
 
     async fn find_all(&self) -> AppResult<Vec<Project>> {

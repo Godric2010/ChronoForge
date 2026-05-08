@@ -1,3 +1,5 @@
+extern crate core;
+
 pub mod domain;
 pub mod errors;
 pub mod repositories;

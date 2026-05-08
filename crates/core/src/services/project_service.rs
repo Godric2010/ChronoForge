@@ -2,6 +2,7 @@ use crate::domain::Project;
 use crate::errors::AppError::ProjectNotFound;
 use crate::errors::{AppError, AppResult};
 use crate::repositories::project_repository::ProjectRepository;
+use crate::services::naming_service;
 use uuid::Uuid;
 
 pub struct ProjectService<P: ProjectRepository> {
@@ -45,14 +46,13 @@ impl<P: ProjectRepository> ProjectService<P> {
         }
     }
 
-    pub async fn get_all(&self) -> AppResult<Vec<Project>> {
+    pub async fn find_all(&self) -> AppResult<Vec<Project>> {
         let all_projects = self.project_repository.find_all().await?;
         Ok(all_projects)
     }
 
     pub async fn edit_name(&self, project_id: Uuid, name: &str) -> AppResult<()> {
-
-        if self.find_by_id(project_id).await.is_err(){
+        if self.find_by_id(project_id).await.is_err() {
             return Err(ProjectNotFound);
         }
         if name.is_empty() {
@@ -71,8 +71,7 @@ impl<P: ProjectRepository> ProjectService<P> {
     }
 
     pub async fn delete(&self, project_id: Uuid) -> AppResult<()> {
-
-        if self.find_by_id(project_id).await.is_err(){
+        if self.find_by_id(project_id).await.is_err() {
             return Err(ProjectNotFound);
         }
 
@@ -81,33 +80,13 @@ impl<P: ProjectRepository> ProjectService<P> {
     }
 
     fn create_unique_project_name(&self, project_name: &str, projects: &[Project]) -> String {
-        let mut next_suffix = 0;
-
+        let mut names = Vec::new();
         for project in projects {
-            if project.name == project_name {
-                next_suffix = next_suffix.max(1);
-                continue;
-            }
-
-            let Some(suffix_part) = project
-                .name
-                .strip_prefix(project_name)
-                .and_then(|name| name.strip_prefix('('))
-                .and_then(|name| name.strip_suffix(')'))
-            else {
-                continue;
-            };
-
-            if let Ok(suffix) = suffix_part.parse::<u32>() {
-                next_suffix = next_suffix.max(suffix + 1);
-            }
+            names.push(project.name.clone());
         }
 
-        if next_suffix == 0 {
-            project_name.to_string()
-        } else {
-            format!("{}({})", project_name, next_suffix)
-        }
+        let modified_name = naming_service::modify_name_with_count_of_equals(project_name, &names);
+        modified_name
     }
 }
 
@@ -126,7 +105,7 @@ mod project_service_tests {
         let result = service.create("MyProject".to_string()).await;
         assert!(result.is_ok());
 
-        let all_projects_result = service.get_all().await;
+        let all_projects_result = service.find_all().await;
         assert!(all_projects_result.is_ok());
 
         let all_projects = all_projects_result.unwrap();
@@ -155,7 +134,7 @@ mod project_service_tests {
         service.create("Jane Doe".to_string()).await.unwrap();
         service.create("Jane Doe".to_string()).await.unwrap();
 
-        let projects = service.get_all().await.unwrap();
+        let projects = service.find_all().await.unwrap();
         assert_eq!(projects.len(), 3);
         assert_eq!(projects.get(0).unwrap().name, "Jane Doe");
         assert_eq!(projects.get(1).unwrap().name, "Jane Doe(1)");
@@ -169,7 +148,7 @@ mod project_service_tests {
         let result = service.create("Jane Doe".to_string()).await;
         assert!(result.is_ok());
 
-        let projects = service.get_all().await.unwrap();
+        let projects = service.find_all().await.unwrap();
         assert_eq!(projects.len(), 1);
         let project_id = projects.get(0).unwrap().id;
 
@@ -207,7 +186,7 @@ mod project_service_tests {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string()).await.unwrap();
-        let projects = service.get_all().await.unwrap();
+        let projects = service.find_all().await.unwrap();
         let project = projects.get(0).unwrap();
 
         let result = service.edit_name(project.id, "Batman").await;
@@ -233,7 +212,7 @@ mod project_service_tests {
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string()).await.unwrap();
         service.create("MyProject".to_string()).await.unwrap();
-        let projects = service.get_all().await.unwrap();
+        let projects = service.find_all().await.unwrap();
         let project = projects.get(0).unwrap();
 
         let result = service.edit_name(project.id, "MyProject").await;
@@ -247,7 +226,7 @@ mod project_service_tests {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string()).await.unwrap();
-        let projects = service.get_all().await.unwrap();
+        let projects = service.find_all().await.unwrap();
         let project = projects.get(0).unwrap();
         let result = service.edit_name(project.id, "").await;
         assert!(result.is_err());
@@ -259,7 +238,7 @@ mod project_service_tests {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string()).await.unwrap();
-        let projects = service.get_all().await.unwrap();
+        let projects = service.find_all().await.unwrap();
         let project = projects.get(0).unwrap();
 
         let result = service.delete(project.id).await;

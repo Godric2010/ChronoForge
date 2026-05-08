@@ -10,6 +10,13 @@ pub struct InMemoryTimeEntryRepository {
     time_entries: Arc<Mutex<Vec<TimeEntry>>>,
 }
 
+impl InMemoryTimeEntryRepository {
+    pub fn new() -> Self {
+        Self {
+            time_entries: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+}
 #[async_trait]
 impl TimeEntryRepository for InMemoryTimeEntryRepository {
     async fn create(&self, time_entry: TimeEntry) -> AppResult<()> {

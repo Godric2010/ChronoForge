@@ -10,6 +10,14 @@ pub struct InMemoryActiveTimerRepository {
     active_timer: Arc<Mutex<Option<ActiveTimer>>>,
 }
 
+impl InMemoryActiveTimerRepository {
+    pub fn new() -> Self {
+        Self {
+            active_timer: Arc::new(Mutex::new(None)),
+        }
+    }
+}
+
 #[async_trait]
 impl ActiveTimerRepository for InMemoryActiveTimerRepository {
     async fn create(&self, entry: ActiveTimer) -> AppResult<()> {
