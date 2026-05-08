@@ -13,6 +13,14 @@ pub struct InMemoryProjectRepository {
     projects: Arc<Mutex<Vec<Project>>>,
 }
 
+impl InMemoryProjectRepository {
+    pub fn new() -> Self {
+        Self{
+            projects: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+}
+
 #[async_trait]
 impl ProjectRepository for InMemoryProjectRepository {
     async fn create(&self, project: Project) -> AppResult<()> {
@@ -33,7 +41,7 @@ impl ProjectRepository for InMemoryProjectRepository {
         Ok(projects.iter().find(|p| p.id == id).cloned())
     }
 
-    async fn fina_all(&self) -> AppResult<Vec<Project>> {
+    async fn find_all(&self) -> AppResult<Vec<Project>> {
         let projects = self.projects.lock().unwrap();
         Ok(projects.clone())
     }
