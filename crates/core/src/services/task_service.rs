@@ -154,27 +154,13 @@ mod task_service_tests {
     }
 
     async fn create_project_and_get_id(context: &Context, name: &str) -> Option<Uuid> {
-        if context
-            .project_service
-            .create(name.to_string())
-            .await
-            .is_err()
-        {
-            return None;
-        }
 
-        let projects = context.project_service.find_all().await;
-        if projects.is_err() {
+        let project = context.project_service.create(name.to_string()).await;
+        if project.is_err() {
             return None;
         }
-
-        let projects = projects.unwrap();
-        let project = projects.iter().find(|p| p.name == name);
-        if project.is_none() {
-            return None;
-        }
-        let id = project.unwrap().id;
-        Some(id)
+        let project = project.unwrap();
+        Some(project.id)
     }
 
     #[tokio::test]

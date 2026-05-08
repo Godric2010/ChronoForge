@@ -14,7 +14,7 @@ impl<P: ProjectRepository> ProjectService<P> {
         Self { project_repository }
     }
 
-    pub async fn create(&self, project_name: String) -> AppResult<()> {
+    pub async fn create(&self, project_name: String) -> AppResult<Project> {
         if project_name.is_empty() {
             return Err(AppError::EmptyName);
         }
@@ -27,9 +27,9 @@ impl<P: ProjectRepository> ProjectService<P> {
             name: unique_project_name,
         };
 
-        self.project_repository.create(project).await?;
+        self.project_repository.create(project.clone()).await?;
 
-        Ok(())
+        Ok(project)
     }
 
     pub async fn find_by_id(&self, project_id: Uuid) -> AppResult<Project> {
@@ -51,7 +51,7 @@ impl<P: ProjectRepository> ProjectService<P> {
         Ok(all_projects)
     }
 
-    pub async fn edit_name(&self, project_id: Uuid, name: &str) -> AppResult<()> {
+    pub async fn edit_name(&self, project_id: Uuid, name: &str) -> AppResult<Project> {
         if self.find_by_id(project_id).await.is_err() {
             return Err(ProjectNotFound);
         }
@@ -66,8 +66,10 @@ impl<P: ProjectRepository> ProjectService<P> {
             id: project_id,
             name: unique_project_name,
         };
-        self.project_repository.update(edited_project).await?;
-        Ok(())
+        self.project_repository
+            .update(edited_project.clone())
+            .await?;
+        Ok(edited_project)
     }
 
     pub async fn delete(&self, project_id: Uuid) -> AppResult<()> {
