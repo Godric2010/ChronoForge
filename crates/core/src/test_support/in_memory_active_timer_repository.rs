@@ -20,7 +20,7 @@ impl InMemoryActiveTimerRepository {
 
 #[async_trait]
 impl ActiveTimerRepository for InMemoryActiveTimerRepository {
-    async fn create(&self, entry: ActiveTimer) -> AppResult<()> {
+    async fn set(&self, entry: ActiveTimer) -> AppResult<()> {
         let mut active_timer = self.active_timer.lock().unwrap();
         if active_timer.is_some() {
             return Err(TimerAlreadyRunning);
@@ -29,7 +29,7 @@ impl ActiveTimerRepository for InMemoryActiveTimerRepository {
         Ok(())
     }
 
-    async fn delete(&self) -> AppResult<()> {
+    async fn remove(&self) -> AppResult<()> {
         let mut active_timer = self.active_timer.lock().unwrap();
         if active_timer.is_none() {
             return Err(NoActiveTimer);
@@ -38,7 +38,8 @@ impl ActiveTimerRepository for InMemoryActiveTimerRepository {
         Ok(())
     }
 
-    async fn get_active_timer(&self) -> AppResult<Option<ActiveTimer>> {
-        Ok(self.active_timer.lock().unwrap().clone())
+    async fn get_active_timer(&self) -> Option<ActiveTimer> {
+        let active_timer = self.active_timer.lock().unwrap().clone();
+        active_timer
     }
 }

@@ -42,24 +42,13 @@ impl TimeEntryRepository for InMemoryTimeEntryRepository {
             .cloned())
     }
 
-    async fn find_by_project_id(&self, project_id: Uuid) -> AppResult<Vec<TimeEntry>> {
-        Ok(self
-            .time_entries
-            .lock()
-            .unwrap()
-            .iter()
-            .filter(|t| t.project_id == project_id)
-            .cloned()
-            .collect())
-    }
-
     async fn find_by_task_id(&self, task_id: Uuid) -> AppResult<Vec<TimeEntry>> {
         Ok(self
             .time_entries
             .lock()
             .unwrap()
             .iter()
-            .filter(|t| t.id == task_id)
+            .filter(|t| t.task_id == task_id)
             .cloned()
             .collect())
     }

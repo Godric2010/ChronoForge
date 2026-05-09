@@ -1,5 +1,5 @@
 use crate::domain::Task;
-use crate::errors::AppResult;
+use crate::errors::{AppError, AppResult};
 use crate::repositories::task_repository::TaskRepository;
 use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
@@ -33,9 +33,13 @@ impl TaskRepository for InMemoryTaskRepository {
         Ok(())
     }
 
-    async fn find_by_id(&self, id: Uuid) -> AppResult<Option<Task>> {
+    async fn find_by_id(&self, id: &Uuid) -> AppResult<Task> {
         let tasks = self.tasks.lock().unwrap();
-        Ok(tasks.iter().find(|t| t.id == id).cloned())
+        let task = tasks.iter().find(|t| t.id == *id);
+        if task.is_none() {
+            return Err(AppError::TaskNotFound);
+        }
+        Ok(task.unwrap().clone())
     }
 
     async fn find_by_project_id(&self, project_id: Uuid) -> AppResult<Vec<Task>> {

@@ -4,7 +4,7 @@ use async_trait::async_trait;
 
 #[async_trait]
 pub trait ActiveTimerRepository {
-    async fn create(&self, entry: ActiveTimer) -> AppResult<()>;
-    async fn delete(&self) -> AppResult<()>;
-    async fn get_active_timer(&self) -> AppResult<Option<ActiveTimer>>;
+    async fn set(&self, entry: ActiveTimer) -> AppResult<()>;
+    async fn remove(&self) -> AppResult<()>;
+    async fn get_active_timer(&self) -> Option<ActiveTimer>;
 }

@@ -11,6 +11,9 @@ pub enum AppError {
     #[error("Task not found")]
     TaskNotFound,
 
+    #[error("Time entry not found")]
+    TimeEntryNotFound,
+
     #[error("A timer is already running")]
     TimerAlreadyRunning,
 
