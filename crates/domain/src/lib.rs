@@ -1,5 +1,3 @@
-extern crate core;
-
 pub mod types;
 pub mod errors;
 pub mod repositories;

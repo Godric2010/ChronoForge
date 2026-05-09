@@ -10,7 +10,7 @@ name = "ChronoForge"
 path = "src/main.rs"
 
 [dependencies]
-core = { path = "../core" }
+domain = { path = "../domain" }
 storage = { path = "../storage" }
 tui = { path = "../tui" }
 
