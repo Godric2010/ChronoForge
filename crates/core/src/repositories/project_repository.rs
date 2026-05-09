@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 
-use crate::{domain::Project, errors::AppResult};
+use crate::{types::Project, errors::AppResult};
 
 #[async_trait]
 pub trait ProjectRepository {

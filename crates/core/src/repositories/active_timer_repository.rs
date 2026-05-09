@@ -1,4 +1,4 @@
-use crate::domain::ActiveTimer;
+use crate::types::ActiveTimer;
 use crate::errors::AppResult;
 use async_trait::async_trait;
 

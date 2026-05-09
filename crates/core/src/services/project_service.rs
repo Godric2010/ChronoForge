@@ -1,4 +1,4 @@
-use crate::domain::Project;
+use crate::types::Project;
 use crate::errors::AppError::ProjectNotFound;
 use crate::errors::{AppError, AppResult};
 use crate::repositories::project_repository::ProjectRepository;

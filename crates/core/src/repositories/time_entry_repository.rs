@@ -1,4 +1,4 @@
-use crate::domain::TimeEntry;
+use crate::types::TimeEntry;
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use uuid::Uuid;

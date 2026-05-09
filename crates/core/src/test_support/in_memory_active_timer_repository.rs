@@ -1,4 +1,4 @@
-use crate::domain::ActiveTimer;
+use crate::types::ActiveTimer;
 use crate::errors::AppError::{NoActiveTimer, TimerAlreadyRunning};
 use crate::errors::AppResult;
 use crate::repositories::active_timer_repository::ActiveTimerRepository;

@@ -1,4 +1,4 @@
-use crate::domain::Task;
+use crate::types::Task;
 use crate::errors::{AppError, AppResult};
 use crate::repositories::task_repository::TaskRepository;
 use async_trait::async_trait;

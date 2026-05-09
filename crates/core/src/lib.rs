@@ -1,6 +1,6 @@
 extern crate core;
 
-pub mod domain;
+pub mod types;
 pub mod errors;
 pub mod repositories;
 pub mod services;

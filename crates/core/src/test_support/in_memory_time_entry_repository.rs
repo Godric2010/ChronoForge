@@ -1,4 +1,4 @@
-use crate::domain::TimeEntry;
+use crate::types::TimeEntry;
 use crate::errors::AppResult;
 use crate::repositories::time_entry_repository::TimeEntryRepository;
 use async_trait::async_trait;

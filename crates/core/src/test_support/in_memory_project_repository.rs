@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::errors::AppError;
 use crate::repositories::project_repository::ProjectRepository;
-use crate::{domain::Project, errors::AppResult};
+use crate::{types::Project, errors::AppResult};
 
 #[derive(Clone, Default)]
 pub struct InMemoryProjectRepository {

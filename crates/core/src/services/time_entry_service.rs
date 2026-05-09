@@ -1,4 +1,4 @@
-use crate::domain::{ActiveTimer, TimeEntry};
+use crate::types::{ActiveTimer, TimeEntry};
 use crate::errors::{AppError, AppResult};
 use crate::repositories::active_timer_repository::ActiveTimerRepository;
 use crate::repositories::task_repository::TaskRepository;

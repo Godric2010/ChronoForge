@@ -1,4 +1,4 @@
-use crate::domain::Task;
+use crate::types::Task;
 use crate::errors::AppResult;
 use async_trait::async_trait;
 use uuid::Uuid;
