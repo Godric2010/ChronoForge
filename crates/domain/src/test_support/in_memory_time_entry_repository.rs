@@ -1,5 +1,4 @@
 use crate::types::TimeEntry;
-use crate::errors::AppResult;
 use crate::repositories::time_entry_repository::TimeEntryRepository;
 use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
@@ -19,12 +18,12 @@ impl InMemoryTimeEntryRepository {
 }
 #[async_trait]
 impl TimeEntryRepository for InMemoryTimeEntryRepository {
-    async fn create(&self, time_entry: TimeEntry) -> AppResult<()> {
+    async fn create(&self, time_entry: TimeEntry) -> anyhow::Result<()> {
         self.time_entries.lock().unwrap().push(time_entry);
         Ok(())
     }
 
-    async fn update(&self, time_entry: TimeEntry) -> AppResult<()> {
+    async fn update(&self, time_entry: TimeEntry) -> anyhow::Result<()> {
         let mut time_entries = self.time_entries.lock().unwrap();
         if let Some(entry) = time_entries.iter_mut().find(|t| t.id == time_entry.id) {
             *entry = time_entry;
@@ -32,7 +31,7 @@ impl TimeEntryRepository for InMemoryTimeEntryRepository {
         Ok(())
     }
 
-    async fn find_by_id(&self, id: Uuid) -> AppResult<Option<TimeEntry>> {
+    async fn find_by_id(&self, id: Uuid) -> anyhow::Result<Option<TimeEntry>> {
         Ok(self
             .time_entries
             .lock()
@@ -42,7 +41,7 @@ impl TimeEntryRepository for InMemoryTimeEntryRepository {
             .cloned())
     }
 
-    async fn find_by_task_id(&self, task_id: Uuid) -> AppResult<Vec<TimeEntry>> {
+    async fn find_by_task_id(&self, task_id: Uuid) -> anyhow::Result<Vec<TimeEntry>> {
         Ok(self
             .time_entries
             .lock()
@@ -53,12 +52,12 @@ impl TimeEntryRepository for InMemoryTimeEntryRepository {
             .collect())
     }
 
-    async fn find_all(&self) -> AppResult<Vec<TimeEntry>> {
+    async fn find_all(&self) -> anyhow::Result<Vec<TimeEntry>> {
         let time_entries = self.time_entries.lock().unwrap();
         Ok(time_entries.clone())
     }
 
-    async fn delete(&self, id: Uuid) -> AppResult<()> {
+    async fn delete(&self, id: Uuid) -> anyhow::Result<()> {
         self.time_entries.lock().unwrap().retain(|t| t.id != id);
         Ok(())
     }

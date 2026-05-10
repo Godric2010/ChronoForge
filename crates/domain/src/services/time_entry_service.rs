@@ -1,8 +1,8 @@
-use crate::types::{ActiveTimer, TimeEntry};
 use crate::errors::{AppError, AppResult};
 use crate::repositories::active_timer_repository::ActiveTimerRepository;
 use crate::repositories::task_repository::TaskRepository;
 use crate::repositories::time_entry_repository::TimeEntryRepository;
+use crate::types::{ActiveTimer, TimeEntry};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
@@ -29,9 +29,7 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
         end_time: DateTime<Utc>,
         task_id: Uuid,
     ) -> AppResult<TimeEntry> {
-        if self.task_repository.find_by_id(&task_id).await.is_err() {
-            return Err(AppError::TaskNotFound);
-        }
+        self.is_task_id_valid(&task_id).await?;
 
         if start_time >= end_time {
             return Err(AppError::InvalidTimeRange);
@@ -43,38 +41,41 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
             start_time,
             end_time,
         };
-        self.time_entry_repository
-            .create(time_entry.clone())
-            .await?;
+        let result = self.time_entry_repository.create(time_entry.clone()).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
         Ok(time_entry)
     }
 
     pub async fn start_timer(&self, task_id: Uuid) -> AppResult<ActiveTimer> {
-        if self
-            .active_timer_repository
-            .get_active_timer()
-            .await
-            .is_some()
-        {
+        let active_timer = self.active_timer_repository.get_active_timer().await;
+        if active_timer.is_err() {
+            return Err(AppError::Storage(active_timer.unwrap_err().to_string()));
+        }
+        if active_timer.unwrap().is_some() {
             return Err(AppError::TimerAlreadyRunning);
         }
 
-        if self.task_repository.find_by_id(&task_id).await.is_err() {
-            return Err(AppError::TaskNotFound);
-        }
+        self.is_task_id_valid(&task_id).await?;
 
         let active_timer = ActiveTimer {
             task_id,
             start_time: Utc::now(),
         };
-        self.active_timer_repository
-            .set(active_timer.clone())
-            .await?;
+        let result = self.active_timer_repository.set(active_timer.clone()).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
         Ok(active_timer)
     }
 
     pub async fn stop_timer(&self) -> AppResult<TimeEntry> {
         let active_timer = self.active_timer_repository.get_active_timer().await;
+        if active_timer.is_err() {
+            return Err(AppError::Storage(active_timer.unwrap_err().to_string()));
+        }
+        let active_timer = active_timer.unwrap();
         if active_timer.is_none() {
             return Err(AppError::NoActiveTimer);
         }
@@ -86,28 +87,33 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
             start_time: active_timer.start_time,
             end_time: Utc::now(),
         };
-        self.time_entry_repository
-            .create(time_entry.clone())
-            .await?;
-        self.active_timer_repository.remove().await?;
+        let result = self.time_entry_repository.create(time_entry.clone()).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
+        let result = self.active_timer_repository.remove().await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
         Ok(time_entry)
     }
 
     pub async fn delete(&self, entry_id: Uuid) -> AppResult<()> {
-        let entry_exists = self.time_entry_repository.find_by_id(entry_id).await?;
-        if entry_exists.is_none() {
-            return Err(AppError::TimeEntryNotFound);
+        self.get_by_id(entry_id).await?;
+        let result = self.time_entry_repository.delete(entry_id).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
         }
-
-        self.time_entry_repository.delete(entry_id).await?;
         Ok(())
     }
 
     pub async fn find_all_entries_of_task(&self, task_id: Uuid) -> AppResult<Vec<TimeEntry>> {
-        if self.task_repository.find_by_id(&task_id).await.is_err() {
-            return Err(AppError::TaskNotFound);
+        self.is_task_id_valid(&task_id).await?;
+        let result = self.time_entry_repository.find_by_task_id(task_id).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
         }
-        self.time_entry_repository.find_by_task_id(task_id).await
+        Ok(result.unwrap())
     }
 
     pub async fn edit_time_entry(
@@ -120,11 +126,7 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
             return Err(AppError::InvalidTimeRange);
         }
 
-        let time_entry = self.time_entry_repository.find_by_id(entry_id).await?;
-        if time_entry.is_none() {
-            return Err(AppError::TimeEntryNotFound);
-        }
-        let time_entry = time_entry.unwrap();
+        let time_entry = self.get_by_id(entry_id).await?;
 
         let modified_time_entry = TimeEntry {
             id: time_entry.id,
@@ -132,9 +134,13 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
             start_time: new_start_time,
             end_time: new_end_time,
         };
-        self.time_entry_repository
+        let result = self
+            .time_entry_repository
             .update(modified_time_entry.clone())
-            .await?;
+            .await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
         Ok(modified_time_entry)
     }
 
@@ -143,26 +149,46 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
         entry_id: Uuid,
         new_task_id: Uuid,
     ) -> AppResult<TimeEntry> {
-        if self.task_repository.find_by_id(&new_task_id).await.is_err() {
-            return Err(AppError::TaskNotFound);
-        }
+        self.is_task_id_valid(&new_task_id).await?;
 
-        let time_entry = self.time_entry_repository.find_by_id(entry_id).await?;
-        if time_entry.is_none() {
-            return Err(AppError::TimeEntryNotFound);
-        }
-
-        let time_entry = time_entry.unwrap();
+        let time_entry = self.get_by_id(entry_id).await?;
         let modified_time_entry = TimeEntry {
             id: time_entry.id,
             task_id: new_task_id,
             start_time: time_entry.start_time,
             end_time: time_entry.end_time,
         };
-        self.time_entry_repository
+        let result = self
+            .time_entry_repository
             .update(modified_time_entry.clone())
-            .await?;
+            .await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
         Ok(modified_time_entry)
+    }
+
+    async fn get_by_id(&self, entry_id: Uuid) -> AppResult<TimeEntry> {
+        let result = self.time_entry_repository.find_by_id(entry_id).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
+        let result = result.unwrap();
+        if result.is_none() {
+            return Err(AppError::TimeEntryNotFound);
+        }
+        Ok(result.unwrap())
+    }
+    async fn is_task_id_valid(&self, task_id: &Uuid) -> AppResult<()> {
+        let result = self.task_repository.find_by_id(task_id).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
+        let result = result.unwrap();
+        match result {
+            Some(_) => Ok(()),
+            None => Err(AppError::TaskNotFound),
+        }
     }
 }
 
@@ -193,11 +219,8 @@ mod time_entry_service_tests {
             let time_entry_repo = InMemoryTimeEntryRepository::new();
             let active_timer_repo = InMemoryActiveTimerRepository::new();
 
-            let service = TimeEntryService::new(
-                task_repo.clone(),
-                time_entry_repo,
-                active_timer_repo,
-            );
+            let service =
+                TimeEntryService::new(task_repo.clone(), time_entry_repo, active_timer_repo);
 
             let project_service = ProjectService::new(project_repo.clone());
             let task_service = TaskService::new(task_repo.clone(), project_repo.clone());
@@ -217,10 +240,7 @@ mod time_entry_service_tests {
             let task_04 = task_service.create("Task04", &project_02.id).await.unwrap();
 
             let task_ids = vec![task_01.id, task_02.id, task_03.id, task_04.id];
-            Self {
-                service,
-                task_ids,
-            }
+            Self { service, task_ids }
         }
     }
 
@@ -292,6 +312,7 @@ mod time_entry_service_tests {
             .active_timer_repository
             .get_active_timer()
             .await
+            .unwrap()
             .is_some());
     }
 
@@ -347,6 +368,7 @@ mod time_entry_service_tests {
             .active_timer_repository
             .get_active_timer()
             .await
+            .unwrap()
             .is_none())
     }
 
