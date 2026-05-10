@@ -1,5 +1,4 @@
 use crate::types::Task;
-use crate::errors::{AppError, AppResult};
 use crate::repositories::task_repository::TaskRepository;
 use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
@@ -20,12 +19,12 @@ impl InMemoryTaskRepository {
 
 #[async_trait]
 impl TaskRepository for InMemoryTaskRepository {
-    async fn create(&self, task: Task) -> AppResult<()> {
+    async fn create(&self, task: Task) -> anyhow::Result<()> {
         self.tasks.lock().unwrap().push(task);
         Ok(())
     }
 
-    async fn update(&self, task: Task) -> AppResult<()> {
+    async fn update(&self, task: Task) -> anyhow::Result<()> {
         let mut tasks = self.tasks.lock().unwrap();
         if let Some(existing_task) = tasks.iter_mut().find(|t| t.id == task.id) {
             *existing_task = task;
@@ -33,16 +32,13 @@ impl TaskRepository for InMemoryTaskRepository {
         Ok(())
     }
 
-    async fn find_by_id(&self, id: &Uuid) -> AppResult<Task> {
+    async fn find_by_id(&self, id: &Uuid) -> anyhow::Result<Option<Task>> {
         let tasks = self.tasks.lock().unwrap();
-        let task = tasks.iter().find(|t| t.id == *id);
-        if task.is_none() {
-            return Err(AppError::TaskNotFound);
-        }
-        Ok(task.unwrap().clone())
+        let task = tasks.iter().find(|t| t.id == id.clone());
+        Ok(task.cloned())
     }
 
-    async fn find_by_project_id(&self, project_id: Uuid) -> AppResult<Vec<Task>> {
+    async fn find_by_project_id(&self, project_id: Uuid) -> anyhow::Result<Vec<Task>> {
         let tasks = self.tasks.lock().unwrap();
         Ok(tasks
             .iter()
@@ -51,12 +47,12 @@ impl TaskRepository for InMemoryTaskRepository {
             .collect())
     }
 
-    async fn fina_all(&self) -> AppResult<Vec<Task>> {
+    async fn fina_all(&self) -> anyhow::Result<Vec<Task>> {
         let tasks = self.tasks.lock().unwrap();
         Ok(tasks.clone())
     }
 
-    async fn delete(&self, id: Uuid) -> AppResult<()> {
+    async fn delete(&self, id: Uuid) -> anyhow::Result<()> {
         self.tasks.lock().unwrap().retain(|t| t.id != id);
         Ok(())
     }

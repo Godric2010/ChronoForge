@@ -25,7 +25,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
 
         self.check_if_project_exists(project).await?;
 
-        let tasks = self.task_repository.fina_all().await?;
+        let tasks = self.find_all_tasks().await?;
         let unique_name = self.create_unique_task_name(task_name, &tasks, project.clone());
 
         let task = Task {
@@ -33,17 +33,21 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             name: unique_name,
             project_id: project.clone(),
         };
-        self.task_repository.create(task.clone()).await?;
+
+        let result = self.task_repository.create(task.clone()).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
         Ok(task)
     }
 
     pub async fn find_all(&self) -> AppResult<Vec<Task>> {
-        let all_tasks = self.task_repository.fina_all().await?;
+        let all_tasks = self.find_all_tasks().await?;
         Ok(all_tasks)
     }
 
     pub async fn find_by_id(&self, task_id: Uuid) -> AppResult<Task> {
-        let tasks = self.task_repository.fina_all().await?;
+        let tasks = self.find_all_tasks().await?;
         let task = tasks.into_iter().find(|task| task.id == task_id);
         if let Some(task) = task {
             return Ok(task);
@@ -52,7 +56,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
     }
 
     pub async fn find_by_project_id(&self, project_id: Uuid) -> AppResult<Vec<Task>> {
-        let tasks = self.task_repository.fina_all().await?;
+        let tasks = self.find_all_tasks().await?;
         let mut matching_tasks = Vec::new();
         for task in tasks {
             if task.project_id == project_id {
@@ -63,7 +67,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
     }
 
     pub async fn edit_task_name(&self, task_id: Uuid, new_name: &str) -> AppResult<Task> {
-        let tasks = self.task_repository.fina_all().await?;
+        let tasks = self.find_all_tasks().await?;
         let task = self.find_by_id(task_id).await?;
 
         let unique_name = self.create_unique_task_name(new_name, &tasks, task.project_id);
@@ -74,14 +78,17 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             name: unique_name,
         };
 
-        self.task_repository.update(new_task.clone()).await?;
+        let result = self.task_repository.update(new_task.clone()).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
         Ok(new_task)
     }
 
     pub async fn assign_to_project(&self, task_id: Uuid, project: Uuid) -> AppResult<Task> {
         self.check_if_project_exists(&project).await?;
 
-        let tasks = self.task_repository.fina_all().await?;
+        let tasks = self.find_all_tasks().await?;
         let task = self.find_by_id(task_id).await?;
 
         let unique_name = self.create_unique_task_name(&task.name, &tasks, project);
@@ -92,7 +99,10 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             name: unique_name,
         };
 
-        self.task_repository.update(new_task.clone()).await?;
+        let result = self.task_repository.update(new_task.clone()).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
         Ok(new_task)
     }
 
@@ -100,7 +110,10 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         if self.find_by_id(task_id).await.is_err() {
             return Err(AppError::TaskNotFound);
         }
-        self.task_repository.delete(task_id).await?;
+        let result = self.task_repository.delete(task_id).await;
+        if result.is_err() {
+            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        }
         Ok(())
     }
 
@@ -130,6 +143,14 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             return Err(AppError::ProjectNotFound);
         }
         Ok(())
+    }
+    async fn find_all_tasks(&self) -> AppResult<Vec<Task>> {
+        let tasks = self.task_repository.fina_all().await;
+        if tasks.is_err() {
+            return Err(AppError::Storage("Find all tasks failed!".to_string()));
+        }
+        let tasks = tasks.unwrap();
+        Ok(tasks)
     }
 }
 
