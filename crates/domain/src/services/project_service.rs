@@ -1,8 +1,8 @@
-use crate::types::Project;
 use crate::errors::AppError::ProjectNotFound;
 use crate::errors::{AppError, AppResult};
 use crate::repositories::project_repository::ProjectRepository;
 use crate::services::naming_service;
+use crate::types::Project;
 use uuid::Uuid;
 
 pub struct ProjectService<P: ProjectRepository> {
@@ -19,7 +19,7 @@ impl<P: ProjectRepository> ProjectService<P> {
             return Err(AppError::EmptyName);
         }
 
-        let projects = self.project_repository.find_all().await?;
+        let projects = self.find_all().await?;
         let unique_project_name = self.create_unique_project_name(&project_name, &projects);
 
         let project = Project {
@@ -27,7 +27,13 @@ impl<P: ProjectRepository> ProjectService<P> {
             name: unique_project_name,
         };
 
-        self.project_repository.create(project.clone()).await?;
+        let result = self.project_repository.create(project.clone()).await;
+        if result.is_err() {
+            let error = result.unwrap_err();
+            return Err(AppError::Storage(
+                "Unable to create project in database: ".to_string() + &error.to_string(),
+            ));
+        }
 
         Ok(project)
     }
@@ -37,7 +43,7 @@ impl<P: ProjectRepository> ProjectService<P> {
             return Err(ProjectNotFound);
         }
 
-        let projects = self.project_repository.find_all().await?;
+        let projects = self.find_all().await?;
         let project = projects.iter().find(|p| p.id == project_id);
         if let Some(project) = project {
             Ok(project.clone())
@@ -47,7 +53,15 @@ impl<P: ProjectRepository> ProjectService<P> {
     }
 
     pub async fn find_all(&self) -> AppResult<Vec<Project>> {
-        let all_projects = self.project_repository.find_all().await?;
+        let projects = self.project_repository.find_all().await;
+
+        if projects.is_err() {
+            let error_msg = projects.unwrap_err().to_string();
+            return Err(AppError::Storage(
+                "Error when fetching all projects: ".to_string() + error_msg.as_str(),
+            ));
+        }
+        let all_projects = projects.unwrap();
         Ok(all_projects)
     }
 
@@ -59,16 +73,20 @@ impl<P: ProjectRepository> ProjectService<P> {
             return Err(AppError::EmptyName);
         }
 
-        let all_projects = self.project_repository.find_all().await?;
+        let all_projects = self.find_all().await?;
         let unique_project_name = self.create_unique_project_name(&name, &all_projects);
 
         let edited_project = Project {
             id: project_id,
             name: unique_project_name,
         };
-        self.project_repository
-            .update(edited_project.clone())
-            .await?;
+        let result = self.project_repository.update(edited_project.clone()).await;
+        if result.is_err() {
+            let error_msg = result.err().unwrap().to_string();
+            return Err(AppError::Storage(
+                "Unable to edit project in database: ".to_string() + &error_msg,
+            ));
+        }
         Ok(edited_project)
     }
 
@@ -77,7 +95,13 @@ impl<P: ProjectRepository> ProjectService<P> {
             return Err(ProjectNotFound);
         }
 
-        self.project_repository.delete(project_id).await?;
+        let result = self.project_repository.delete(project_id).await;
+        if result.is_err() {
+            let error_msg = result.err().unwrap().to_string();
+            return Err(AppError::Storage(
+                "Database failed to delete: ".to_string() + error_msg.as_str(),
+            ));
+        }
         Ok(())
     }
 

@@ -1,8 +1,8 @@
-use crate::types::Task;
 use crate::errors::{AppError, AppResult};
 use crate::repositories::project_repository::ProjectRepository;
 use crate::repositories::task_repository::TaskRepository;
 use crate::services::naming_service;
+use crate::types::Task;
 use uuid::Uuid;
 
 pub struct TaskService<T: TaskRepository, P: ProjectRepository> {
@@ -23,9 +23,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             return Err(AppError::EmptyName);
         }
 
-        if self.project_repository.find_by_id(&project).await.is_err() {
-            return Err(AppError::ProjectNotFound);
-        }
+        self.check_if_project_exists(project).await?;
 
         let tasks = self.task_repository.fina_all().await?;
         let unique_name = self.create_unique_task_name(task_name, &tasks, project.clone());
@@ -80,14 +78,8 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         Ok(new_task)
     }
 
-    pub async fn edit_task_project_relation(
-        &self,
-        task_id: Uuid,
-        project: Uuid,
-    ) -> AppResult<Task> {
-        if self.project_repository.find_by_id(&project).await.is_err() {
-            return Err(AppError::ProjectNotFound);
-        }
+    pub async fn assign_to_project(&self, task_id: Uuid, project: Uuid) -> AppResult<Task> {
+        self.check_if_project_exists(&project).await?;
 
         let tasks = self.task_repository.fina_all().await?;
         let task = self.find_by_id(task_id).await?;
@@ -124,6 +116,21 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         let modified_name = naming_service::modify_name_with_count_of_equals(task_name, &names);
         modified_name
     }
+
+    async fn check_if_project_exists(&self, project_id: &Uuid) -> AppResult<()> {
+        let find_result = self.project_repository.find_by_id(project_id).await;
+        if find_result.is_err() {
+            let error_msg = find_result.err().unwrap().to_string();
+            return Err(AppError::Storage(
+                "Error when fetching id from database: ".to_string() + error_msg.as_str(),
+            ));
+        }
+        let find_result = find_result.unwrap();
+        if find_result.is_none() {
+            return Err(AppError::ProjectNotFound);
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -154,7 +161,6 @@ mod task_service_tests {
     }
 
     async fn create_project_and_get_id(context: &Context, name: &str) -> Option<Uuid> {
-
         let project = context.project_service.create(name.to_string()).await;
         if project.is_err() {
             return None;
@@ -481,7 +487,7 @@ mod task_service_tests {
 
         let result = context
             .task_service
-            .edit_task_project_relation(task.id, project_id_b)
+            .assign_to_project(task.id, project_id_b)
             .await;
         assert!(result.is_ok());
         let result = result.unwrap();
@@ -506,7 +512,7 @@ mod task_service_tests {
 
         let result = context
             .task_service
-            .edit_task_project_relation(task.id, Uuid::new_v4())
+            .assign_to_project(task.id, Uuid::new_v4())
             .await;
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), AppError::ProjectNotFound));
@@ -542,7 +548,7 @@ mod task_service_tests {
 
         let result = context
             .task_service
-            .edit_task_project_relation(task.id, project_id_b)
+            .assign_to_project(task.id, project_id_b)
             .await;
         assert!(result.is_ok());
         let result = result.unwrap();

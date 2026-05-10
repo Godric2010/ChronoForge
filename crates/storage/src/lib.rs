@@ -1,14 +1,23 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+mod sqlite_project_repository;
+
+use crate::sqlite_project_repository::SQLiteProjectRepository;
+use sqlx::SqlitePool;
+
+pub struct StorageManager {
+    pool: SqlitePool,
+    project_repo: SQLiteProjectRepository,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl StorageManager {
+    pub async fn new(db_url: &str) -> anyhow::Result<StorageManager> {
+        let pool = SqlitePool::connect(db_url).await?;
+        sqlx::migrate!("../../migrations").run(&pool).await?;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        let project_repo = SQLiteProjectRepository::new(pool.clone());
+        Ok(StorageManager { pool, project_repo })
+    }
+
+    pub fn project_repository(&self) -> &SQLiteProjectRepository {
+        &self.project_repo
     }
 }

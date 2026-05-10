@@ -27,4 +27,4 @@ pub enum AppError {
     Storage(String),
 }
 
-pub type AppResult<T> = Result<T, AppError>;
+pub type AppResult<T> = anyhow::Result<T, AppError>;
