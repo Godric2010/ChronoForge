@@ -1,4 +1,5 @@
 mod sqlite_project_repository;
+pub mod sqlite_task_repository;
 
 use crate::sqlite_project_repository::SQLiteProjectRepository;
 use sqlx::SqlitePool;

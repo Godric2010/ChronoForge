@@ -145,7 +145,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         Ok(())
     }
     async fn find_all_tasks(&self) -> AppResult<Vec<Task>> {
-        let tasks = self.task_repository.fina_all().await;
+        let tasks = self.task_repository.find_all().await;
         if tasks.is_err() {
             return Err(AppError::Storage("Find all tasks failed!".to_string()));
         }

@@ -47,7 +47,7 @@ impl TaskRepository for InMemoryTaskRepository {
             .collect())
     }
 
-    async fn fina_all(&self) -> anyhow::Result<Vec<Task>> {
+    async fn find_all(&self) -> anyhow::Result<Vec<Task>> {
         let tasks = self.tasks.lock().unwrap();
         Ok(tasks.clone())
     }
