@@ -20,7 +20,7 @@ impl ActiveTimerRepository for SqliteActiveTimerRepository {
     async fn set(&self, entry: ActiveTimer) -> anyhow::Result<()> {
         sqlx::query(
             r#"
-                    INSERT INTO active_timers (id, task_id, start_time)
+                    INSERT INTO active_timer (id, task_id, start_time)
                     VALUES (1, ?, ?)
                     "#,
         )
@@ -35,7 +35,7 @@ impl ActiveTimerRepository for SqliteActiveTimerRepository {
     async fn remove(&self) -> anyhow::Result<()> {
         sqlx::query(
             r#"
-                     DELETE FROM active_timers
+                     DELETE FROM active_timer
                      WHERE id = 1
                     "#,
         )
@@ -49,7 +49,7 @@ impl ActiveTimerRepository for SqliteActiveTimerRepository {
         let row = sqlx::query_as::<_, ActiveTimerRow>(
             r#"
                     SELECT id, task_id, start_time
-                    FROM active_timers
+                    FROM active_timer
                     WHERE id = 1
                     "#,
         )
@@ -74,36 +74,3 @@ struct ActiveTimerRow {
     start_time: String,
 }
 
-#[cfg(test)]
-mod active_timer_repository_tests {
-    use super::*;
-    use chrono::{TimeZone, Utc};
-
-    async fn setup() -> SqliteActiveTimerRepository {
-        let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
-        sqlx::migrate!("../../migrations").run(&pool).await.unwrap();
-        SqliteActiveTimerRepository::new(pool)
-    }
-
-    #[tokio::test]
-    async fn set_active_timer_and_its_active() {
-        let repository = setup().await;
-
-        let time_entry = ActiveTimer {
-            task_id: Uuid::new_v4(),
-            start_time: Utc.with_ymd_and_hms(2026, 05, 24, 14, 00, 00).unwrap(),
-        };
-
-        let result = repository.set(time_entry.clone()).await;
-        assert!(result.is_ok());
-
-        let active = repository.get_active_timer().await;
-        assert!(active.is_ok());
-        let active = active.unwrap();
-        assert!(active.is_some());
-        let active = active.unwrap();
-
-        assert_eq!(time_entry.task_id, active.task_id);
-        assert_eq!(time_entry.start_time, active.start_time);
-    }
-}

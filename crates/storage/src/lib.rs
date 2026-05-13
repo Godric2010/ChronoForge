@@ -1,9 +1,9 @@
-mod sqlite_project_repository;
-pub mod sqlite_task_repository;
-pub mod sqlite_active_timer_repository;
-
-use crate::sqlite_project_repository::SQLiteProjectRepository;
 use sqlx::SqlitePool;
+use crate::repositories::sqlite_project_repository::SQLiteProjectRepository;
+
+#[cfg(test)]
+pub mod integration_tests;
+pub mod repositories;
 
 pub struct StorageManager {
     pool: SqlitePool,
