@@ -5,6 +5,7 @@ use domain::types::ActiveTimer;
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct SqliteActiveTimerRepository {
     pool: SqlitePool,
 }
@@ -68,6 +69,7 @@ impl ActiveTimerRepository for SqliteActiveTimerRepository {
 }
 
 #[derive(sqlx::FromRow)]
+#[allow(dead_code)]
 struct ActiveTimerRow {
     id: i32,
     task_id: String,

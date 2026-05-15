@@ -5,6 +5,7 @@ use crate::repositories::sqlite_project_repository::SQLiteProjectRepository;
 pub mod integration_tests;
 pub mod repositories;
 
+#[allow(dead_code)]
 pub struct StorageManager {
     pool: SqlitePool,
     project_repo: SQLiteProjectRepository,

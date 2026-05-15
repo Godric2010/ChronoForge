@@ -4,6 +4,7 @@ use domain::types::Project;
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct SQLiteProjectRepository {
     pool: SqlitePool,
 }

@@ -5,6 +5,7 @@ use domain::types::TimeEntry;
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct SqliteTimeEntryRepository {
     pool: SqlitePool,
 }
