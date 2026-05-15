@@ -1,14 +1,16 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod app;
+mod screens;
+mod terminal;
+mod widgets;
+mod event;
+mod app_action;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub async fn run() -> anyhow::Result<()> {
+    let mut terminal = terminal::init_terminal()?;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+    let result = app::App::new().run(&mut terminal).await;
+    
+    terminal::restore_terminal()?;
+    
+    result
 }

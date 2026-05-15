@@ -12,7 +12,7 @@ mod timer_commands;
 #[derive(clap::Parser)]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Command,
+    pub command: Option<Command>,
 }
 
 #[derive(clap::Subcommand)]
@@ -29,7 +29,12 @@ pub enum Command {
 
 impl Cli {
     pub async fn run(&self, app: &AppContext) -> anyhow::Result<()> {
-        match &self.command {
+        if self.command.is_some() {
+            return Err(anyhow::anyhow!("No command given!").into());
+        };
+        
+        let command = self.command.as_ref().unwrap();
+        match &command {
             Command::Project(command) => command.run(app).await,
             Command::Tasks(command) => command.run(app).await,
             Command::Entry(command) => command.run(app).await,
