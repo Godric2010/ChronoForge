@@ -3,11 +3,34 @@ use sqlx::types::Uuid;
 
 #[derive(clap::Subcommand)]
 pub enum TaskCommands {
-    Create { name: String, project_id: String },
+    #[command(about = "Create a new task in a project")]
+    Create {
+        #[arg(help = "The name of the task to create")]
+        name: String,
+        #[arg(help = "The id of the project this task belongs to")]
+        project_id: String,
+    },
+    #[command(about = "List all tasks")]
     List,
-    Delete { id: String },
-    Edit { id: String, name: String },
-    Assign { id: String, project_id: String },
+    #[command(about = "Delete a task")]
+    Delete {
+        #[arg(help = "The id of the task to delete")]
+        id: String,
+    },
+    #[command(about = "Set a new task name")]
+    Edit {
+        #[arg(help = "The id of the task to edit")]
+        id: String,
+        #[arg(help = "The new task name")]
+        name: String,
+    },
+    #[command(about = "Assign a task to a new project")]
+    Assign {
+        #[arg(help = "The id of the  task to re-assign")]
+        id: String,
+        #[arg(help = "The id of the project this task shall be assigned to")]
+        project_id: String,
+    },
 }
 
 impl TaskCommands {

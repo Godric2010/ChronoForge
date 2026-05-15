@@ -17,13 +17,13 @@ pub struct Cli {
 
 #[derive(clap::Subcommand)]
 pub enum Command {
-    #[command(subcommand)]
+    #[command(subcommand, about = "Manage projects")]
     Project(ProjectCommand),
-    #[command(subcommand)]
+    #[command(subcommand, about = "Manage tasks")]
     Tasks(TaskCommands),
-    #[command(subcommand)]
+    #[command(subcommand, about = "Start and stop timers")]
     Entry(EntryCommands),
-    #[command(subcommand)]
+    #[command(subcommand, about = "Manage time entries")]
     Timer(TimerCommands),
 }
 

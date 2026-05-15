@@ -4,10 +4,25 @@ use std::str::FromStr;
 
 #[derive(clap::Subcommand)]
 pub enum ProjectCommand {
-    Create { name: String },
+    #[command(about = "Create a new project")]
+    Create {
+        #[arg(help = "The name of the project")]
+        name: String,
+    },
+    #[command(about = "List all projects")]
     List,
-    Delete { id: String },
-    Rename { id: String, name: String },
+    #[command(about = "Delete a project")]
+    Delete {
+        #[arg(help = "The id of the project that shall be deleted")]
+        id: String,
+    },
+    #[command(about = "Rename a project")]
+    Rename {
+        #[arg(help = "The id of the project to rename")]
+        id: String,
+        #[arg(help = "The new name of the project")]
+        name: String,
+    },
 }
 
 impl ProjectCommand {

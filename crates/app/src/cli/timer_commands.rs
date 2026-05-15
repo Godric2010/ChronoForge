@@ -4,7 +4,12 @@ use std::str::FromStr;
 
 #[derive(clap::Subcommand)]
 pub enum TimerCommands {
-    Start { task_id: String },
+    #[command(about = "Start a timer for a task")]
+    Start {
+        #[arg(help = "The id of the task this timer works on")]
+        task_id: String,
+    },
+    #[command(about = "Stop a timer")]
     Stop,
 }
 

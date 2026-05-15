@@ -4,40 +4,71 @@ use sqlx::types::Uuid;
 
 #[derive(clap::Subcommand)]
 pub enum EntryCommands {
+    #[command(about = "Create a new time entry")]
     Create {
+        #[arg(help = "The task id this entry belongs to")]
         task_id: String,
+        #[arg(help = "Start time - year")]
         start_year: String,
+        #[arg(help = "Start time - month")]
         start_month: String,
+        #[arg(help = "Start time - day")]
         start_day: String,
+        #[arg(help = "Start time - hour")]
         start_hour: String,
+        #[arg(help = "Start time - minute")]
         start_minute: String,
+        #[arg(help = "Stop time - year")]
         end_year: String,
+        #[arg(help = "Stop time - month")]
         end_month: String,
+        #[arg(help = "Stop time - day")]
         end_day: String,
+        #[arg(help = "Stop time - hour")]
         end_hour: String,
+        #[arg(help = "Stop time - minute")]
         end_minute: String,
     },
+    #[command(about = "List all time entries of a task")]
     List {
+        #[arg(help = "The id of the task")]
         task_id: String,
     },
+    #[command(about = "Delete a time entry")]
     Delete {
+        #[arg(help = "The time entry id to delete")]
         id: String,
     },
+    #[command(about = "Re-assign a time entry to another task")]
     Assign {
+        #[arg(help = "The time entry id to assign")]
         id: String,
+        #[arg(help = "The task id to assign this entry to")]
         task_id: String,
     },
+    #[command(about = "Edit a time entry")]
     Edit {
+        #[arg(help = "The time entry id to edit")]
         id: String,
+        #[arg(help = "Start time - year")]
         start_year: String,
+        #[arg(help = "Start time - month")]
         start_month: String,
+        #[arg(help = "Start time - day")]
         start_day: String,
+        #[arg(help = "Start time - hour")]
         start_hour: String,
+        #[arg(help = "Start time - minute")]
         start_minute: String,
+        #[arg(help = "Stop time - year")]
         end_year: String,
+        #[arg(help = "Stop time - month")]
         end_month: String,
+        #[arg(help = "Stop time - day")]
         end_day: String,
+        #[arg(help = "Stop time - hour")]
         end_hour: String,
+        #[arg(help = "Stop time - minute")]
         end_minute: String,
     },
 }
@@ -81,7 +112,6 @@ impl EntryCommands {
                     .await?;
                 println!("Entries of task {}", task.name);
                 for entry in entries {
-                    
                     println!("\t{} - {}", entry.start_time, entry.end_time);
                 }
             }
