@@ -118,6 +118,11 @@ impl TextEditDialog {
                 if c.is_alphanumeric() {
                     self.content += &c.to_string();
                     self.cursor_pos += 1;
+                    return DialogResult::None
+                }
+                if c == ' '{
+                    self.content.push(' ');
+                    self.cursor_pos += 1;
                 }
             }
             KeyCode::Left => {
