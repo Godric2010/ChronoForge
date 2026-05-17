@@ -1,6 +1,6 @@
 use crate::app_action::AppAction;
 use crate::event::read_event;
-use crate::screens::{Screen, Screens};
+use crate::screens::{ScreenData, ScreenType, Screens};
 use crossterm::event::Event;
 use ratatui::backend::CrosstermBackend;
 use ratatui::{Frame, Terminal};
@@ -9,15 +9,17 @@ use std::io::Stdout;
 pub struct App {
     should_quit: bool,
     screens: Screens,
-    current_screen: Screen,
+    current_screen: ScreenType,
+    app_data: ScreenData,
 }
 
 impl App {
     pub fn new() -> Self {
         Self {
             should_quit: false,
-            current_screen: Screen::ProjectOverview,
+            current_screen: ScreenType::ProjectOverview,
             screens: Screens::new(),
+            app_data: ScreenData::new(),
         }
     }
 
@@ -26,6 +28,8 @@ impl App {
         terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     ) -> anyhow::Result<()> {
         while !self.should_quit {
+            self.update_view_model();
+
             terminal.draw(|frame| {
                 self.render(frame);
             })?;
@@ -38,15 +42,32 @@ impl App {
 
         Ok(())
     }
+
+    fn update_view_model(&mut self) {
+        match self.current_screen {
+            ScreenType::ProjectOverview => {
+                self.screens
+                    .project_overview
+                    .set_view_model(self.app_data.project_overview.clone());
+            }
+            ScreenType::Timer => {
+                todo!()
+            }
+            ScreenType::Dashboard => {
+                todo!()
+            }
+        }
+    }
+
     fn render(&mut self, frame: &mut Frame) {
         let area = frame.area();
 
         match self.current_screen {
-            Screen::ProjectOverview => self.screens.project_overview.render(frame, area),
-            Screen::Timer => {
+            ScreenType::ProjectOverview => self.screens.project_overview.render(frame, area),
+            ScreenType::Timer => {
                 todo!()
             }
-            Screen::Dashboard => {
+            ScreenType::Dashboard => {
                 todo!()
             }
         }
@@ -54,11 +75,11 @@ impl App {
 
     fn handle_event(&mut self, event: Event) -> Option<AppAction> {
         match self.current_screen {
-            Screen::ProjectOverview => self.screens.project_overview.handle_event(event),
-            Screen::Timer => {
+            ScreenType::ProjectOverview => self.screens.project_overview.handle_event(event),
+            ScreenType::Timer => {
                 todo!()
             }
-            Screen::Dashboard => {
+            ScreenType::Dashboard => {
                 todo!()
             }
         }
@@ -69,6 +90,9 @@ impl App {
             AppAction::Quit => {
                 self.should_quit = true;
             }
+            AppAction::CreateProject(_) => {}
+            AppAction::RenameProject(_, _) => {}
+            AppAction::DeleteProject(_) => {}
         }
         Ok(())
     }
