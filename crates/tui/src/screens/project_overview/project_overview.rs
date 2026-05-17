@@ -38,7 +38,7 @@ impl ProjectOverviewScreen {
             .view_model
             .projects
             .iter()
-            .map(|p| p.name.clone())
+            .map(|p| p.project.name.clone())
             .collect();
         self.projects_list_widget.items = project_names;
     }
@@ -98,19 +98,19 @@ impl ProjectOverviewScreen {
                 'e' => {
                     self.mode = Mode::ProjectEdit;
                     let index = self.projects_list_widget.get_selected_index();
-                    let project = &self.view_model.projects[index];
-                    self.selected_project = Some(project.clone());
-                    self.build_text_dialog(project.name.clone(), "Rename the project");
+                    let project_vm = &self.view_model.projects[index];
+                    self.selected_project = Some(project_vm.project.clone());
+                    self.build_text_dialog(project_vm.project.name.clone(), "Rename the project");
                     None
                 }
                 'd' => {
                     self.mode = Mode::ProjectDeletion;
                     let index = self.projects_list_widget.get_selected_index();
-                    let project = &self.view_model.projects[index];
-                    self.selected_project = Some(project.clone());
+                    let project_vm = &self.view_model.projects[index];
+                    self.selected_project = Some(project_vm.project.clone());
                     self.confirmation_dialog = Some(ConfirmationDialog::new(format!(
                         "Delete project \"{}\"?",
-                        project.name
+                        project_vm.project.name
                     )));
                     None
                 }

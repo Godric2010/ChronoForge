@@ -8,6 +8,9 @@ use storage::repositories::sqlite_active_timer_repository::SqliteActiveTimerRepo
 use storage::repositories::sqlite_project_repository::SQLiteProjectRepository;
 use storage::repositories::sqlite_task_repository::SQLiteTaskRepository;
 use storage::repositories::sqlite_time_entry_repository::SqliteTimeEntryRepository;
+use tui::screens::project_overview::project_overview_view_model::{
+    ProjectViewModel, TaskViewModel,
+};
 use tui::screens::project_overview::ProjectOverviewViewModel;
 use tui::TuiBackend;
 
@@ -51,14 +54,44 @@ impl AppContext {
 
 #[async_trait::async_trait]
 impl TuiBackend for AppContext {
-    async fn load_projects(
-        &self,
-    ) -> anyhow::Result<
-        ProjectOverviewViewModel,
-    > {
+    async fn load_projects(&self) -> anyhow::Result<ProjectOverviewViewModel> {
         let all_projects = self.project_service.find_all().await?;
+        let mut project_view_models = Vec::new();
+        for project in all_projects {
+            let mut total_project_time_min = 0;
+
+            let mut task_view_models = Vec::new();
+            let project_tasks = self.task_service.find_by_project_id(project.id).await?;
+            for task in project_tasks {
+                let mut total_task_time_min = 0;
+
+                let time_entries = self
+                    .time_entry_service
+                    .find_all_entries_of_task(task.id)
+                    .await?;
+                for time_entry in time_entries {
+                    let start = time_entry.start_time;
+                    let end = time_entry.end_time;
+                    let duration = (end - start).num_minutes();
+                    total_task_time_min += duration;
+                }
+
+                total_project_time_min += total_task_time_min;
+
+                task_view_models.push(TaskViewModel {
+                    task,
+                    total_task_time_min: total_task_time_min as u32,
+                })
+            }
+
+            project_view_models.push(ProjectViewModel {
+                project,
+                total_project_time_min: total_project_time_min as u32,
+                tasks: task_view_models,
+            })
+        }
         Ok(ProjectOverviewViewModel {
-            projects: all_projects,
+            projects: project_view_models,
         })
     }
 
