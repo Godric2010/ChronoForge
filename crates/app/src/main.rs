@@ -18,7 +18,7 @@ async fn main() -> anyhow::Result<()> {
             cli.run(&context).await?;
         }
         None => {
-            tui::run().await?;
+            tui::run(&context).await?;
         }
     }
 

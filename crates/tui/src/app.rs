@@ -1,6 +1,7 @@
 use crate::app_action::AppAction;
 use crate::event::read_event;
-use crate::screens::{ScreenData, ScreenType, Screens};
+use crate::screens::{ScreenType, Screens};
+use crate::TuiBackend;
 use crossterm::event::Event;
 use ratatui::backend::CrosstermBackend;
 use ratatui::{Frame, Terminal};
@@ -10,7 +11,6 @@ pub struct App {
     should_quit: bool,
     screens: Screens,
     current_screen: ScreenType,
-    app_data: ScreenData,
 }
 
 impl App {
@@ -19,16 +19,16 @@ impl App {
             should_quit: false,
             current_screen: ScreenType::ProjectOverview,
             screens: Screens::new(),
-            app_data: ScreenData::new(),
         }
     }
 
-    pub async fn run(
+    pub async fn run<B: TuiBackend>(
         &mut self,
+        backend: &B,
         terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     ) -> anyhow::Result<()> {
         while !self.should_quit {
-            self.update_view_model();
+            self.update_view_model(backend).await?;
 
             terminal.draw(|frame| {
                 self.render(frame);
@@ -36,19 +36,21 @@ impl App {
 
             let event = read_event()?;
             if let Some(action) = self.handle_event(event) {
-                self.handle_action(action).await?
+                self.handle_action(action, backend).await?
             }
         }
 
         Ok(())
     }
 
-    fn update_view_model(&mut self) {
+    async fn update_view_model<B: TuiBackend>(&mut self, backend: &B) -> anyhow::Result<()> {
         match self.current_screen {
             ScreenType::ProjectOverview => {
+                let view_model = backend.load_projects().await?;
                 self.screens
                     .project_overview
-                    .set_view_model(self.app_data.project_overview.clone());
+                    .set_view_model(view_model.clone());
+                Ok(())
             }
             ScreenType::Timer => {
                 todo!()
@@ -85,14 +87,24 @@ impl App {
         }
     }
 
-    async fn handle_action(&mut self, action: AppAction) -> anyhow::Result<()> {
+    async fn handle_action<B: TuiBackend>(
+        &mut self,
+        action: AppAction,
+        backend: &B,
+    ) -> anyhow::Result<()> {
         match action {
             AppAction::Quit => {
                 self.should_quit = true;
             }
-            AppAction::CreateProject(_) => {}
-            AppAction::RenameProject(_, _) => {}
-            AppAction::DeleteProject(_) => {}
+            AppAction::CreateProject(name) => {
+                backend.create_project(&name).await?;
+            }
+            AppAction::RenameProject(id, name) => {
+                backend.rename_project(id, &name).await?;
+            }
+            AppAction::DeleteProject(id) => {
+                backend.delete_project(id).await?;
+            }
         }
         Ok(())
     }

@@ -21,3 +21,4 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 dotenvy.workspace = true
 sqlx.workspace = true
+async-trait.workspace = true

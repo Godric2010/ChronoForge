@@ -1,5 +1,5 @@
 mod project_overview;
-mod project_overview_view_model;
+pub mod project_overview_view_model;
 mod mode;
 
 pub use project_overview::ProjectOverviewScreen;
