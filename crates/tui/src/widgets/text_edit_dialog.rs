@@ -111,17 +111,19 @@ impl TextEditDialog {
                 return DialogResult::Confirmed(self.content.clone());
             }
             KeyCode::Backspace => {
-                self.content.pop();
-                self.cursor_pos = self.content.len() as u16;
+                if self.cursor_pos > 0 {
+                    self.content.remove((self.cursor_pos - 1) as usize);
+                    self.cursor_pos -= 1;
+                }
             }
             KeyCode::Char(c) => {
                 if c.is_alphanumeric() {
-                    self.content += &c.to_string();
+                    self.content.insert(self.cursor_pos as usize, c);
                     self.cursor_pos += 1;
-                    return DialogResult::None
+                    return DialogResult::None;
                 }
-                if c == ' '{
-                    self.content.push(' ');
+                if c == ' ' {
+                    self.content.insert(self.cursor_pos as usize, ' ');
                     self.cursor_pos += 1;
                 }
             }
