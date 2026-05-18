@@ -111,4 +111,19 @@ impl TuiBackend for AppContext {
         self.project_service.edit_name(project_id, name).await?;
         Ok(())
     }
+
+    async fn create_task(&self, name: String, project_id: Uuid) -> anyhow::Result<()> {
+        self.task_service.create(&name, &project_id).await?;
+        Ok(())
+    }
+
+    async fn delete_task(&self, project_id: Uuid) -> anyhow::Result<()> {
+        self.task_service.delete(project_id).await?;
+        Ok(())
+    }
+
+    async fn rename_task(&self, task_id: Uuid, name: String) -> anyhow::Result<()> {
+        self.task_service.edit_task_name(task_id, &name).await?;
+        Ok(())
+    }
 }

@@ -12,11 +12,13 @@ pub struct SelectableList {
 }
 
 impl SelectableList {
-    
-    pub fn get_selected_index(&self) -> usize {
-        self.selected_index.clone()
+    pub fn get_selected_index(&self) -> Option<usize> {
+        if self.items.len() == 0 {
+            return None;
+        }
+        Some(self.selected_index.clone())
     }
-    
+
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let items: Vec<ListItem> = self
             .items

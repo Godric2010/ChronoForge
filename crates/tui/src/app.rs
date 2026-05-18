@@ -155,6 +155,17 @@ impl App {
             AppAction::DeleteProject(id) => {
                 backend.delete_project(id).await?;
             }
+            AppAction::CreateTask(name, project_id) => {
+                backend.create_task(name, project_id).await?;
+            }
+            AppAction::RenameTask(task_id, new_name) => {
+                backend.rename_task(task_id, new_name).await?;
+            }
+            AppAction::DeleteTask(task_id) => {
+                backend.delete_task(task_id).await?;
+            }
+            AppAction::StartTimer(_) => {}
+            AppAction::StopTimer => {}
         }
         Ok(())
     }
