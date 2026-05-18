@@ -3,11 +3,13 @@ use ratatui::layout::Rect;
 use ratatui::prelude::{Line, Modifier, Style};
 use ratatui::widgets::{Block, Borders, List, ListItem};
 use ratatui::Frame;
+use ratatui::style::Color;
 
 #[derive(Default)]
 pub struct SelectableList {
     pub title: Option<String>,
     pub items: Vec<String>,
+    pub highlight: bool,
     selected_index: usize,
 }
 
@@ -33,11 +35,19 @@ impl SelectableList {
                 ListItem::new(Line::from(format!("{prefix}{}", item)))
             })
             .collect();
+
+        let mut border_color = Color::Gray;
+        if self.highlight {
+            border_color = Color::Rgb(255, 125, 0)
+        }
+        let style = Style::default().fg(border_color);
+
         let list = List::new(items)
             .block(
                 Block::default()
                     .title(format!(" {} ", self.title.clone().unwrap_or_default()))
-                    .borders(Borders::ALL),
+                    .borders(Borders::ALL)
+                    .border_style(style),
             )
             .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
         frame.render_widget(list, area);

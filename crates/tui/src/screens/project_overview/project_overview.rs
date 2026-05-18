@@ -255,7 +255,7 @@ impl ProjectOverviewScreen {
                     let task = self.get_selected_task();
 
                     self.enable_task_selection_mode();
-                    if let Some(task) =  task {
+                    if let Some(task) = task {
                         return Some(AppAction::RenameTask(task.id, text));
                     };
                     panic!("Try to edit project, but no object is selected!")
@@ -318,6 +318,8 @@ impl ProjectOverviewScreen {
 
     fn enable_project_selection_mode(&mut self) {
         self.mode = Mode::ProjectSelection;
+        self.projects_list_widget.highlight = true;
+        self.task_list_widget.highlight = false;
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
         self.help_text =
@@ -327,6 +329,8 @@ impl ProjectOverviewScreen {
 
     fn enable_task_selection_mode(&mut self) {
         self.mode = Mode::TaskSelection;
+        self.projects_list_widget.highlight = false;
+        self.task_list_widget.highlight = true;
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
         self.help_text = "[N]ew task | [E]dit task | [D]elete task | <Left>: Go to projects | <Right>: Start/Stop timer | <Up/Down>".to_string();
