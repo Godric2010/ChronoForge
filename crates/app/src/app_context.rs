@@ -126,4 +126,8 @@ impl TuiBackend for AppContext {
         self.task_service.edit_task_name(task_id, &name).await?;
         Ok(())
     }
+
+    async fn get_active_time(&self) -> anyhow::Result<Option<u32>> {
+        Ok(None)
+    }
 }

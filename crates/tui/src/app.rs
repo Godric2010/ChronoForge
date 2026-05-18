@@ -1,11 +1,12 @@
 use crate::app_action::AppAction;
 use crate::event::read_event;
 use crate::screens::{ScreenType, Screens};
+use crate::widgets::active_timer::ActiveTimer;
 use crate::TuiBackend;
 use crossterm::event::Event;
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::HorizontalAlignment::Center;
-use ratatui::layout::{Alignment, Constraint, Layout};
+use ratatui::layout::{Alignment, Constraint, Layout, Rect};
 use ratatui::prelude::Line;
 use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
 use ratatui::{symbols, Frame, Terminal};
@@ -15,6 +16,7 @@ pub struct App {
     should_quit: bool,
     screens: Screens,
     current_screen: ScreenType,
+    active_timer: ActiveTimer,
 }
 
 impl App {
@@ -23,6 +25,7 @@ impl App {
             should_quit: false,
             current_screen: ScreenType::ProjectOverview,
             screens: Screens::new(),
+            active_timer: ActiveTimer::new(),
         }
     }
 
@@ -48,6 +51,9 @@ impl App {
     }
 
     async fn update_view_model<B: TuiBackend>(&mut self, backend: &B) -> anyhow::Result<()> {
+        
+        self.active_timer.passed_time = backend.get_active_time().await?;
+        
         match self.current_screen {
             ScreenType::ProjectOverview => {
                 let view_model = backend.load_projects().await?;
@@ -89,12 +95,8 @@ impl App {
         ])
         .split(screen_rect);
 
-        let separator =
-            symbols::line::HORIZONTAL.repeat(app_layout_rects[1].width.saturating_sub(2) as usize);
-        let separator_widget = Paragraph::new(Line::from(separator));
-        let mut rect = app_layout_rects[1];
-        rect.x = rect.x + 1;
-        frame.render_widget(separator_widget, rect);
+        self.render_header(frame, app_layout_rects[0]);
+        self.render_separator(frame, app_layout_rects[1]);
 
         let mut help_text = String::new();
         let screen_area = app_layout_rects[2];
@@ -111,18 +113,28 @@ impl App {
             }
         }
 
-        let separator =
-            symbols::line::HORIZONTAL.repeat(app_layout_rects[3].width.saturating_sub(2) as usize);
-        let separator_widget = Paragraph::new(Line::from(separator));
-        let mut rect = app_layout_rects[3];
-        rect.x = rect.x + 1;
-        frame.render_widget(separator_widget, rect);
+        self.render_separator(frame, app_layout_rects[3]);
 
         // help box
         let help_box = Paragraph::new(Line::from(help_text).alignment(Alignment::Center));
         let mut rect = app_layout_rects[4];
         rect.y += 1;
         frame.render_widget(help_box, rect);
+    }
+
+    fn render_header(&self, frame: &mut Frame, rect: Rect) {
+        let tab_time_split =
+            Layout::horizontal([Constraint::Min(1), Constraint::Length(15)]).split(rect);
+
+        self.active_timer.render(frame, tab_time_split[1]);
+    }
+
+    fn render_separator(&self, frame: &mut Frame, area: Rect) {
+        let separator = symbols::line::HORIZONTAL.repeat(area.width.saturating_sub(2) as usize);
+        let separator_widget = Paragraph::new(Line::from(separator));
+        let mut rect = area;
+        rect.x = rect.x + 1;
+        frame.render_widget(separator_widget, rect);
     }
 
     fn handle_event(&mut self, event: Event) -> Option<AppAction> {
