@@ -2,7 +2,9 @@ use crate::app_action::AppAction;
 use crate::screens::project_overview::mode::Mode;
 use crate::screens::project_overview::project_overview_view_model::ProjectOverviewViewModel;
 use crate::widgets::confirmation_dialog::{ConfirmationDialog, ConfirmationResult};
-use crate::widgets::selectable_list::SelectableList;
+use crate::widgets::selectable_card_list::project_card::ProjectCard;
+use crate::widgets::selectable_card_list::task_card::TaskCard;
+use crate::widgets::selectable_card_list::SelectableCardList;
 use crate::widgets::text_edit_dialog::{DialogResult, TextEditDialog};
 use crossterm::event::{Event, KeyCode, KeyEvent};
 use domain::types::{Project, Task};
@@ -13,12 +15,12 @@ use uuid::Uuid;
 pub struct ProjectOverviewScreen {
     view_model: ProjectOverviewViewModel,
     mode: Mode,
-    projects_list_widget: SelectableList,
-    task_list_widget: SelectableList,
+    projects_list_widget: SelectableCardList<ProjectCard>,
+    task_list_widget: SelectableCardList<TaskCard>,
     text_edit_dialog: Option<TextEditDialog>,
     confirmation_dialog: Option<ConfirmationDialog>,
     help_text: String,
-    timer_active: bool
+    timer_active: bool,
 }
 
 impl ProjectOverviewScreen {
@@ -26,12 +28,12 @@ impl ProjectOverviewScreen {
         let mut this = Self {
             view_model: ProjectOverviewViewModel::default(),
             mode: Mode::ProjectSelection,
-            projects_list_widget: SelectableList::default(),
-            task_list_widget: SelectableList::default(),
+            projects_list_widget: SelectableCardList::<ProjectCard>::default(),
+            task_list_widget: SelectableCardList::<TaskCard>::default(),
             text_edit_dialog: None,
             confirmation_dialog: None,
             help_text: String::new(),
-            timer_active: false
+            timer_active: false,
         };
         this.enable_project_selection_mode();
         this
@@ -40,22 +42,15 @@ impl ProjectOverviewScreen {
     pub fn get_help_text(&self) -> String {
         self.help_text.clone()
     }
-    
-    
+
     pub fn set_view_model(&mut self, view_model: ProjectOverviewViewModel, timer_active: bool) {
         self.view_model = view_model;
         self.timer_active = timer_active;
 
-        let project_names: Vec<String> = self
-            .view_model
-            .projects
-            .iter()
-            .map(|p| p.project.name.clone())
-            .collect();
-        self.projects_list_widget.items = project_names;
-        self.projects_list_widget.title = Some("Projects".to_string());
+        self.projects_list_widget.title = "Projects".to_string();
+        self.fill_projects_list();
 
-        self.task_list_widget.title = Some("Tasks".to_string());
+        self.task_list_widget.title = "Tasks".to_string();
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
@@ -173,9 +168,9 @@ impl ProjectOverviewScreen {
                     None
                 }
                 's' => {
-                    if self.timer_active{
+                    if self.timer_active {
                         self.timer_active = false;
-                        return Some(AppAction::StopTimer)
+                        return Some(AppAction::StopTimer);
                     }
 
                     if let Some(task) = &self.get_selected_task() {
@@ -364,6 +359,23 @@ impl ProjectOverviewScreen {
         Some(task_vm.task.clone())
     }
 
+    fn fill_projects_list(&mut self) {
+        let project_cards: Vec<ProjectCard> = self
+            .view_model
+            .projects
+            .iter()
+            .map(|p| {
+                ProjectCard::new(
+                    p.project.name.clone(),
+                    p.tasks.len(),
+                    p.total_project_time_min,
+                )
+            })
+            .collect();
+        self.projects_list_widget.item_height = 7;
+        self.projects_list_widget.cards = project_cards;
+    }
+
     fn fill_task_list(&mut self, project_id: &Uuid) {
         let vm = &self
             .view_model
@@ -373,7 +385,11 @@ impl ProjectOverviewScreen {
             .unwrap();
 
         let tasks = &vm.tasks;
-        let task_names: Vec<String> = tasks.iter().map(|t| t.task.name.clone()).collect();
-        self.task_list_widget.items = task_names;
+        let task_cards: Vec<TaskCard> = tasks
+            .iter()
+            .map(|t| TaskCard::new(t.task.name.clone(), t.total_task_time_min))
+            .collect();
+        self.task_list_widget.item_height = 5;
+        self.task_list_widget.cards = task_cards;
     }
 }
