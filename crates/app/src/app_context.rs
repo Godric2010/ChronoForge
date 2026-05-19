@@ -1,7 +1,9 @@
 use domain::services::project_service::ProjectService;
+use domain::services::report_service::ReportService;
 use domain::services::task_service::TaskService;
 use domain::services::time_entry_service::TimeEntryService;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::types::chrono::Utc;
 use sqlx::types::Uuid;
 use std::str::FromStr;
 use storage::repositories::sqlite_active_timer_repository::SqliteActiveTimerRepository;
@@ -18,6 +20,12 @@ pub struct AppContext {
     pub project_service: ProjectService<SQLiteProjectRepository>,
     pub task_service: TaskService<SQLiteTaskRepository, SQLiteProjectRepository>,
     pub time_entry_service: TimeEntryService<
+        SQLiteTaskRepository,
+        SqliteTimeEntryRepository,
+        SqliteActiveTimerRepository,
+    >,
+    pub report_service: ReportService<
+        SQLiteProjectRepository,
         SQLiteTaskRepository,
         SqliteTimeEntryRepository,
         SqliteActiveTimerRepository,
@@ -44,6 +52,12 @@ impl AppContext {
             project_service: ProjectService::new(project_repo.clone()),
             task_service: TaskService::new(task_repo.clone(), project_repo.clone()),
             time_entry_service: TimeEntryService::new(
+                task_repo.clone(),
+                entry_repo.clone(),
+                active_repo.clone(),
+            ),
+            report_service: ReportService::new(
+                project_repo.clone(),
                 task_repo.clone(),
                 entry_repo.clone(),
                 active_repo.clone(),
@@ -128,6 +142,22 @@ impl TuiBackend for AppContext {
     }
 
     async fn get_active_time(&self) -> anyhow::Result<Option<u32>> {
+        let active_time = self.report_service.get_active_timer_start_time().await?;
+        if let Some(active_time) = active_time {
+            let current = Utc::now();
+            let time_delta = current - active_time;
+            return Ok(Some(time_delta.num_minutes() as u32));
+        }
         Ok(None)
+    }
+
+    async fn start_timer(&self, task_id: Uuid) -> anyhow::Result<()> {
+        self.time_entry_service.start_timer(task_id).await?;
+        Ok(())
+    }
+
+    async fn stop_timer(&self) -> anyhow::Result<()> {
+        self.time_entry_service.stop_timer().await?;
+        Ok(())
     }
 }

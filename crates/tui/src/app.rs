@@ -1,5 +1,5 @@
 use crate::app_action::AppAction;
-use crate::event::read_event;
+use crate::event::{read_event, TuiEvent};
 use crate::screens::{ScreenType, Screens};
 use crate::widgets::active_timer::ActiveTimer;
 use crate::TuiBackend;
@@ -11,6 +11,7 @@ use ratatui::prelude::Line;
 use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
 use ratatui::{symbols, Frame, Terminal};
 use std::io::Stdout;
+use std::time::Duration;
 
 pub struct App {
     should_quit: bool,
@@ -35,15 +36,25 @@ impl App {
         terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     ) -> anyhow::Result<()> {
         while !self.should_quit {
-            self.update_view_model(backend).await?;
+            let event = read_event(Duration::from_millis(250))?;
+            match event {
+                TuiEvent::Tick => {
+                    self.update_tick(backend).await?;
+                    terminal.draw(|frame| {
+                        self.render(frame);
+                    })?;
+                }
+                TuiEvent::Input(ct_event) => {
+                    self.update_view_model(backend).await?;
 
-            terminal.draw(|frame| {
-                self.render(frame);
-            })?;
+                    terminal.draw(|frame| {
+                        self.render(frame);
+                    })?;
 
-            let event = read_event()?;
-            if let Some(action) = self.handle_event(event) {
-                self.handle_action(action, backend).await?
+                    if let Some(action) = self.handle_event(ct_event) {
+                        self.handle_action(action, backend).await?
+                    }
+                }
             }
         }
 
@@ -51,15 +62,13 @@ impl App {
     }
 
     async fn update_view_model<B: TuiBackend>(&mut self, backend: &B) -> anyhow::Result<()> {
-        
-        self.active_timer.passed_time = backend.get_active_time().await?;
-        
+        let timer_active = backend.get_active_time().await?.is_some();
         match self.current_screen {
             ScreenType::ProjectOverview => {
                 let view_model = backend.load_projects().await?;
                 self.screens
                     .project_overview
-                    .set_view_model(view_model.clone());
+                    .set_view_model(view_model.clone(), timer_active);
                 Ok(())
             }
             ScreenType::Timer => {
@@ -69,6 +78,12 @@ impl App {
                 todo!()
             }
         }
+    }
+
+    async fn update_tick<B: TuiBackend>(&mut self, backend: &B) -> anyhow::Result<()> {
+        self.active_timer
+            .set_passed_time(backend.get_active_time().await?);
+        Ok(())
     }
 
     fn render(&mut self, frame: &mut Frame) {
@@ -176,8 +191,12 @@ impl App {
             AppAction::DeleteTask(task_id) => {
                 backend.delete_task(task_id).await?;
             }
-            AppAction::StartTimer(_) => {}
-            AppAction::StopTimer => {}
+            AppAction::StartTimer(task_id) => {
+                backend.start_timer(task_id).await?;
+            }
+            AppAction::StopTimer => {
+                backend.stop_timer().await?;
+            }
         }
         Ok(())
     }

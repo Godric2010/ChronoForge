@@ -18,6 +18,7 @@ pub struct ProjectOverviewScreen {
     text_edit_dialog: Option<TextEditDialog>,
     confirmation_dialog: Option<ConfirmationDialog>,
     help_text: String,
+    timer_active: bool
 }
 
 impl ProjectOverviewScreen {
@@ -30,6 +31,7 @@ impl ProjectOverviewScreen {
             text_edit_dialog: None,
             confirmation_dialog: None,
             help_text: String::new(),
+            timer_active: false
         };
         this.enable_project_selection_mode();
         this
@@ -38,9 +40,11 @@ impl ProjectOverviewScreen {
     pub fn get_help_text(&self) -> String {
         self.help_text.clone()
     }
-
-    pub fn set_view_model(&mut self, view_model: ProjectOverviewViewModel) {
+    
+    
+    pub fn set_view_model(&mut self, view_model: ProjectOverviewViewModel, timer_active: bool) {
         self.view_model = view_model;
+        self.timer_active = timer_active;
 
         let project_names: Vec<String> = self
             .view_model
@@ -165,6 +169,18 @@ impl ProjectOverviewScreen {
                             "Delete task \"{}\"?",
                             task.name
                         )));
+                    }
+                    None
+                }
+                's' => {
+                    if self.timer_active{
+                        self.timer_active = false;
+                        return Some(AppAction::StopTimer)
+                    }
+
+                    if let Some(task) = &self.get_selected_task() {
+                        self.timer_active = true;
+                        return Some(AppAction::StartTimer(task.id));
                     }
                     None
                 }
@@ -333,7 +349,7 @@ impl ProjectOverviewScreen {
         self.task_list_widget.highlight = true;
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
-        self.help_text = "[N]ew task | [E]dit task | [D]elete task | <Left>: Go to projects | <Right>: Start/Stop timer | <Up/Down>".to_string();
+        self.help_text = "[N]ew task | [E]dit task | [D]elete task | [S]tart/[S]top timer | <Left>: Go to projects | <Right>: Start/Stop timer | <Up/Down>".to_string();
     }
 
     fn get_selected_project(&self) -> Option<Project> {

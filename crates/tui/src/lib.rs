@@ -1,5 +1,4 @@
 use crate::screens::project_overview::ProjectOverviewViewModel;
-use std::time::Duration;
 use uuid::Uuid;
 
 mod app;
@@ -31,4 +30,7 @@ pub trait TuiBackend {
     async fn rename_task(&self, task_id: Uuid, name: String) -> anyhow::Result<()>;
 
     async fn get_active_time(&self) -> anyhow::Result<Option<u32>>;
+
+    async fn start_timer(&self, task_id: Uuid) -> anyhow::Result<()>;
+    async fn stop_timer(&self) -> anyhow::Result<()>;
 }
