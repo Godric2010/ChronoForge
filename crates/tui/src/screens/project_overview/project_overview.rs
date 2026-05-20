@@ -73,12 +73,12 @@ impl ProjectOverviewScreen {
         if let Some(selected_project) = &self.get_selected_project() {
             self.fill_task_list(&selected_project.id);
             self.task_list_widget.render(frame, chunks[1]);
-        }
 
-        // time entry list
-        if let Some(selected_task) = &self.get_selected_task() {
-            self.fill_time_entry_list(&selected_task.id);
-            self.time_entry_widget.render(frame, chunks[2]);
+            // time entry list
+            if let Some(selected_task) = &self.get_selected_task() {
+                self.fill_time_entry_list(&selected_project.id, &selected_task.id);
+                self.time_entry_widget.render(frame, chunks[2]);
+            }
         }
 
         // dialog boxes
@@ -461,7 +461,26 @@ impl ProjectOverviewScreen {
         self.task_list_widget.cards = task_cards;
     }
 
-    fn fill_time_entry_list(&mut self, task_id: &Uuid) {
-        self.time_entry_widget.item_height = 7;
+    fn fill_time_entry_list(&mut self, project_id: &Uuid, task_id: &Uuid) {
+        let project_vm = self
+            .view_model
+            .projects
+            .iter()
+            .find(|p_vm| p_vm.project.id == project_id.clone())
+            .unwrap();
+
+        let tasks = &project_vm.tasks;
+        let task_vm = tasks.iter().find(|t| t.task.id == task_id.clone()).unwrap();
+
+        let mut entries = task_vm.time_entries.clone();
+        entries.sort_by(|a, b| b.end_time.cmp(&a.end_time));
+
+        let time_entry_cards: Vec<TimeEntryCard> = entries
+            .iter()
+            .map(|te| TimeEntryCard::new(te.start_time, te.end_time))
+            .collect();
+
+        self.time_entry_widget.item_height = 6;
+        self.time_entry_widget.cards = time_entry_cards;
     }
 }

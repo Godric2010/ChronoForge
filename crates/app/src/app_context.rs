@@ -1,7 +1,9 @@
+use async_trait::async_trait;
 use domain::services::project_service::ProjectService;
 use domain::services::report_service::ReportService;
 use domain::services::task_service::TaskService;
 use domain::services::time_entry_service::TimeEntryService;
+use domain::types::{Project, Task, TimeEntry};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::types::chrono::Utc;
 use sqlx::types::Uuid;
@@ -11,7 +13,7 @@ use storage::repositories::sqlite_project_repository::SQLiteProjectRepository;
 use storage::repositories::sqlite_task_repository::SQLiteTaskRepository;
 use storage::repositories::sqlite_time_entry_repository::SqliteTimeEntryRepository;
 use tui::screens::project_overview::project_overview_view_model::{
-    ProjectViewModel, TaskViewModel,
+    ProjectViewModel, TaskViewModel, TimeEntryViewModel,
 };
 use tui::screens::project_overview::ProjectOverviewViewModel;
 use tui::TuiBackend;
@@ -66,47 +68,76 @@ impl AppContext {
     }
 }
 
+impl AppContext {
+    async fn create_overview_view_model(&self) -> anyhow::Result<ProjectOverviewViewModel> {
+        let all_projects = self.project_service.find_all().await?;
+        let mut projects = Vec::<ProjectViewModel>::new();
+        for project in all_projects {
+            let project_vm = self.create_project_view_model(&project).await?;
+            projects.push(project_vm);
+        }
+
+        Ok(ProjectOverviewViewModel { projects })
+    }
+
+    async fn create_project_view_model(
+        &self,
+        project: &Project,
+    ) -> anyhow::Result<ProjectViewModel> {
+        let tasks = self.task_service.find_by_project_id(project.id).await?;
+
+        let mut project_time_minutes = 0;
+        let mut task_vms = Vec::<TaskViewModel>::new();
+        for task in tasks {
+            let task_vm = self.create_task_view_model(&task).await?;
+            project_time_minutes += task_vm.total_task_time_min;
+            task_vms.push(task_vm);
+        }
+
+        Ok(ProjectViewModel {
+            project: project.clone(),
+            total_project_time_min: project_time_minutes,
+            tasks: task_vms,
+        })
+    }
+
+    async fn create_task_view_model(&self, task: &Task) -> anyhow::Result<TaskViewModel> {
+        let time_entries = self
+            .time_entry_service
+            .find_all_entries_of_task(task.id)
+            .await?;
+
+        let mut task_time_minutes = 0;
+        let mut time_entry_vms = Vec::<TimeEntryViewModel>::new();
+        for time_entry in time_entries {
+            let time_entry_vm = self.create_time_entry_view_model(&time_entry)?;
+            task_time_minutes +=
+                (time_entry_vm.end_time - time_entry_vm.start_time).num_minutes() as u32;
+            time_entry_vms.push(time_entry_vm);
+        }
+
+        Ok(TaskViewModel {
+            task: task.clone(),
+            total_task_time_min: task_time_minutes,
+            time_entries: time_entry_vms,
+        })
+    }
+
+    fn create_time_entry_view_model(
+        &self,
+        time_entry: &TimeEntry,
+    ) -> anyhow::Result<TimeEntryViewModel> {
+        Ok(TimeEntryViewModel {
+            start_time: time_entry.start_time.clone(),
+            end_time: time_entry.end_time.clone(),
+        })
+    }
+}
+
 #[async_trait::async_trait]
 impl TuiBackend for AppContext {
     async fn load_projects(&self) -> anyhow::Result<ProjectOverviewViewModel> {
-        let all_projects = self.project_service.find_all().await?;
-        let mut project_view_models = Vec::new();
-        for project in all_projects {
-            let mut total_project_time_min = 0;
-
-            let mut task_view_models = Vec::new();
-            let project_tasks = self.task_service.find_by_project_id(project.id).await?;
-            for task in project_tasks {
-                let mut total_task_time_min = 0;
-
-                let time_entries = self
-                    .time_entry_service
-                    .find_all_entries_of_task(task.id)
-                    .await?;
-                for time_entry in time_entries {
-                    let start = time_entry.start_time;
-                    let end = time_entry.end_time;
-                    let duration = (end - start).num_minutes();
-                    total_task_time_min += duration;
-                }
-
-                total_project_time_min += total_task_time_min;
-
-                task_view_models.push(TaskViewModel {
-                    task,
-                    total_task_time_min: total_task_time_min as u32,
-                })
-            }
-
-            project_view_models.push(ProjectViewModel {
-                project,
-                total_project_time_min: total_project_time_min as u32,
-                tasks: task_view_models,
-            })
-        }
-        Ok(ProjectOverviewViewModel {
-            projects: project_view_models,
-        })
+        self.create_overview_view_model().await
     }
 
     async fn create_project(&self, project_name: &str) -> anyhow::Result<()> {

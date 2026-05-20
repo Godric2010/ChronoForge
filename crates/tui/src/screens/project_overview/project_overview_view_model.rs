@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use domain::types::{Project, Task};
 
 #[derive(Default, Clone)]
@@ -15,5 +16,11 @@ pub struct ProjectViewModel {
 pub struct TaskViewModel {
     pub task: Task,
     pub total_task_time_min: u32,
+    pub time_entries: Vec<TimeEntryViewModel>,
 }
 
+#[derive(Clone)]
+pub struct TimeEntryViewModel {
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
+}
