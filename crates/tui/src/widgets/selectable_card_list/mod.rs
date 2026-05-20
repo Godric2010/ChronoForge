@@ -8,6 +8,7 @@ use ratatui::Frame;
 pub mod card_trait;
 pub mod project_card;
 pub mod task_card;
+pub mod time_entry_card;
 
 #[derive(Default)]
 pub struct SelectableCardList<Card: SelectableCard> {

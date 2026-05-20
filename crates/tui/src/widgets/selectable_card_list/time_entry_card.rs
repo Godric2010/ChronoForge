@@ -1,41 +1,76 @@
 use crate::widgets::selectable_card_list::card_trait::SelectableCard;
+use chrono::{DateTime, Datelike, Utc};
 use ratatui::layout::{Constraint, HorizontalAlignment, Layout, Rect};
 use ratatui::prelude::{Color, Modifier, Style};
 use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
 use ratatui::Frame;
 
 #[derive(Default)]
-pub struct TaskCard {
-    pub task_name: String,
-    pub total_minutes: u32,
+pub struct TimeEntryCard {
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
+    duration_min: u32,
+    duration_days: u16,
+    weekday: String,
+    older_than_week: bool,
     is_selected: bool,
 }
 
-impl TaskCard {
-    pub fn new(task_name: String, total_minutes: u32) -> Self {
+impl TimeEntryCard {
+    pub fn new(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Self {
+        let duration_min = (end_time - start_time).num_minutes() as u32;
+        let duration_days = (end_time - start_time).num_days() as u16;
+        let weekday = start_time.weekday().to_string();
+        let older_than_week = (Utc::now() - start_time).num_days() >= 7;
+
         Self {
-            task_name,
-            total_minutes,
+            start_time,
+            end_time,
+            duration_min,
+            duration_days,
+            weekday,
+            older_than_week,
             is_selected: false,
         }
     }
-    fn render_task_info(&self, area: Rect, frame: &mut Frame) {
+    fn render_time_entry_info(&self, area: Rect, frame: &mut Frame) {
         let info_chunks = Layout::vertical([
             Constraint::Length(1), // spacer
-            Constraint::Length(1), // task name
+            Constraint::Length(1), // weekday
+            Constraint::Length(1), // time start - time end
             Constraint::Length(1), // spacer
         ])
         .split(area);
 
-        let name_paragraph = Paragraph::new(self.task_name.clone()).style(
+        let weekday_text = if self.older_than_week {
+            format!("{} ({})", self.weekday, self.start_time.format("%%F"))
+        } else {
+            format! {"{}", self.weekday}
+        };
+
+        let weekday_paragraph = Paragraph::new(weekday_text).style(
             Style::default()
                 .add_modifier(Modifier::BOLD)
                 .fg(Color::White),
         );
-        frame.render_widget(name_paragraph, info_chunks[1]);
+        frame.render_widget(weekday_paragraph, info_chunks[1]);
+
+        let start_time_string = self.start_time.format("%H:%M").to_string();
+        let end_time_string = self.end_time.format("%H:%M").to_string();
+        let day_appendage = if self.duration_days > 0 {
+            format!("(+{})", self.duration_days)
+        } else {
+            String::from("")
+        };
+
+        let time_entry_paragraph = Paragraph::new(format!(
+            "{} - {} {}",
+            start_time_string, end_time_string, day_appendage
+        ));
+        frame.render_widget(time_entry_paragraph, info_chunks[2]);
     }
 
-    fn render_time_info(&self, area: Rect, frame: &mut Frame) {
+    fn render_duration_info(&self, area: Rect, frame: &mut Frame) {
         let time_info_block = Block::default()
             .borders(Borders::LEFT)
             .border_type(BorderType::LightTripleDashed);
@@ -46,22 +81,21 @@ impl TaskCard {
         let time_chunks = Layout::vertical([
             Constraint::Length(1),
             Constraint::Length(1),
-
             Constraint::Min(1),
         ])
         .split(inner);
 
         let time_paragraph = Paragraph::new(format!(
             "{:02}:{:02}",
-            self.total_minutes / 60,
-            self.total_minutes % 60
+            self.duration_min / 60,
+            self.duration_min % 60
         ))
         .alignment(HorizontalAlignment::Center);
         frame.render_widget(time_paragraph, time_chunks[1]);
     }
 }
 
-impl SelectableCard for TaskCard {
+impl SelectableCard for TimeEntryCard {
     fn enable_highlight(&mut self) {
         self.is_selected = true;
     }
@@ -94,7 +128,7 @@ impl SelectableCard for TaskCard {
         let info_side = vertical_chunks[1];
         let time_side = vertical_chunks[2];
 
-        self.render_task_info(info_side, frame);
-        self.render_time_info(time_side, frame);
+        self.render_time_entry_info(info_side, frame);
+        self.render_duration_info(time_side, frame);
     }
 }

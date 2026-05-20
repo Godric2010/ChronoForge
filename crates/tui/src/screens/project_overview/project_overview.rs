@@ -4,10 +4,11 @@ use crate::screens::project_overview::project_overview_view_model::ProjectOvervi
 use crate::widgets::confirmation_dialog::{ConfirmationDialog, ConfirmationResult};
 use crate::widgets::selectable_card_list::project_card::ProjectCard;
 use crate::widgets::selectable_card_list::task_card::TaskCard;
+use crate::widgets::selectable_card_list::time_entry_card::TimeEntryCard;
 use crate::widgets::selectable_card_list::SelectableCardList;
 use crate::widgets::text_edit_dialog::{DialogResult, TextEditDialog};
 use crossterm::event::{Event, KeyCode, KeyEvent};
-use domain::types::{Project, Task};
+use domain::types::{Project, Task, TimeEntry};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::Frame;
 use uuid::Uuid;
@@ -17,6 +18,7 @@ pub struct ProjectOverviewScreen {
     mode: Mode,
     projects_list_widget: SelectableCardList<ProjectCard>,
     task_list_widget: SelectableCardList<TaskCard>,
+    time_entry_widget: SelectableCardList<TimeEntryCard>,
     text_edit_dialog: Option<TextEditDialog>,
     confirmation_dialog: Option<ConfirmationDialog>,
     help_text: String,
@@ -30,6 +32,7 @@ impl ProjectOverviewScreen {
             mode: Mode::ProjectSelection,
             projects_list_widget: SelectableCardList::<ProjectCard>::default(),
             task_list_widget: SelectableCardList::<TaskCard>::default(),
+            time_entry_widget: SelectableCardList::<TimeEntryCard>::default(),
             text_edit_dialog: None,
             confirmation_dialog: None,
             help_text: String::new(),
@@ -51,6 +54,8 @@ impl ProjectOverviewScreen {
         self.fill_projects_list();
 
         self.task_list_widget.title = "Tasks".to_string();
+
+        self.time_entry_widget.title = "Time Entries".to_string();
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
@@ -70,7 +75,11 @@ impl ProjectOverviewScreen {
             self.task_list_widget.render(frame, chunks[1]);
         }
 
-        // start/stop task
+        // time entry list
+        if let Some(selected_task) = &self.get_selected_task() {
+            self.fill_time_entry_list(&selected_task.id);
+            self.time_entry_widget.render(frame, chunks[2]);
+        }
 
         // dialog boxes
         if let Some(text_edit_dialog) = &mut self.text_edit_dialog {
@@ -93,7 +102,10 @@ impl ProjectOverviewScreen {
                 Mode::TaskCreation => self.handle_task_creation_events(key_event),
                 Mode::TaskEdit => self.handle_task_editing_events(key_event),
                 Mode::TaskDeletion => self.handle_task_deletion_events(key_event),
-                Mode::StartStopTimer => None,
+                Mode::TimeEntrySelection => self.handle_time_entry_selection_events(key_event),
+                Mode::TimeEntryCreation => None,
+                Mode::TimeEntryEdit => None,
+                Mode::TimeEntryDeletion => None,
             };
         }
         None
@@ -186,15 +198,50 @@ impl ProjectOverviewScreen {
                 None
             }
             KeyCode::Right => {
-                if let Some(task) = &self.get_selected_task() {
-                    // self.mode = Mode::StartStopTimer;
-
-                    // Enable start/stop screen
+                if let Some(_) = &self.get_selected_task() {
+                    self.enable_time_entry_mode();
                 }
                 None
             }
             _ => {
                 self.task_list_widget.handle_event(&key_event);
+                None
+            }
+        }
+    }
+    fn handle_time_entry_selection_events(&mut self, key_event: KeyEvent) -> Option<AppAction> {
+        match key_event.code {
+            KeyCode::Esc => Some(AppAction::Quit),
+            KeyCode::Char(c) => match c {
+                'q' => Some(AppAction::Quit),
+                'n' => {
+                    self.mode = Mode::TimeEntryCreation;
+                    self.build_text_dialog(String::new(), "Create new task");
+                    None
+                }
+                'e' => {
+                    if let Some(_) = &self.get_selected_time_entry() {
+                        // self.mode = Mode::TimeEntryEdit;
+                        // self.build_text_dialog(task.name.clone(), "Rename the task");
+                    }
+                    None
+                }
+                'd' => {
+                    if let Some(_) = &self.get_selected_time_entry() {
+                        self.mode = Mode::TimeEntryDeletion;
+                        self.confirmation_dialog =
+                            Some(ConfirmationDialog::new("Delete time entry?".to_string()));
+                    }
+                    None
+                }
+                _ => None,
+            },
+            KeyCode::Left => {
+                self.enable_task_selection_mode();
+                None
+            }
+            _ => {
+                self.time_entry_widget.handle_event(&key_event);
                 None
             }
         }
@@ -331,6 +378,7 @@ impl ProjectOverviewScreen {
         self.mode = Mode::ProjectSelection;
         self.projects_list_widget.highlight = true;
         self.task_list_widget.highlight = false;
+        self.time_entry_widget.highlight = false;
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
         self.help_text =
@@ -342,9 +390,20 @@ impl ProjectOverviewScreen {
         self.mode = Mode::TaskSelection;
         self.projects_list_widget.highlight = false;
         self.task_list_widget.highlight = true;
+        self.time_entry_widget.highlight = false;
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
-        self.help_text = "[N]ew task | [E]dit task | [D]elete task | [S]tart/[S]top timer | <Left>: Go to projects | <Right>: Start/Stop timer | <Up/Down>".to_string();
+        self.help_text = "[N]ew task | [E]dit task | [D]elete task | [S]tart/[S]top timer | <Left>: Go to projects | <Right>: Go to Time Entries | <Up/Down>".to_string();
+    }
+
+    fn enable_time_entry_mode(&mut self) {
+        self.mode = Mode::TimeEntrySelection;
+        self.projects_list_widget.highlight = false;
+        self.task_list_widget.highlight = false;
+        self.time_entry_widget.highlight = true;
+        self.confirmation_dialog = None;
+        self.text_edit_dialog = None;
+        self.help_text = "[N]ew time entry | [E]dit time entry | [D]elete time entry | <Left>: Go to tasks | <Up/Down>".to_string();
     }
 
     fn get_selected_project(&self) -> Option<Project> {
@@ -357,6 +416,15 @@ impl ProjectOverviewScreen {
         let task_index = self.task_list_widget.get_selected_index()?;
         let task_vm = &self.view_model.projects[project_index].tasks[task_index];
         Some(task_vm.task.clone())
+    }
+
+    fn get_selected_time_entry(&self) -> Option<TimeEntry> {
+        let project_index = self.projects_list_widget.get_selected_index()?;
+        let task_index = self.task_list_widget.get_selected_index()?;
+        let entry_index = self.time_entry_widget.get_selected_index()?;
+
+        let entry_vm = &self.view_model.projects[entry_index].tasks[task_index];
+        None
     }
 
     fn fill_projects_list(&mut self) {
@@ -391,5 +459,9 @@ impl ProjectOverviewScreen {
             .collect();
         self.task_list_widget.item_height = 5;
         self.task_list_widget.cards = task_cards;
+    }
+
+    fn fill_time_entry_list(&mut self, task_id: &Uuid) {
+        self.time_entry_widget.item_height = 7;
     }
 }

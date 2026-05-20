@@ -4,11 +4,14 @@ pub enum Mode {
     ProjectCreation,
     ProjectEdit,
     ProjectDeletion,
-    
+
     TaskSelection,
     TaskCreation,
     TaskEdit,
     TaskDeletion,
-    
-    StartStopTimer,
+
+    TimeEntrySelection,
+    TimeEntryCreation,
+    TimeEntryEdit,
+    TimeEntryDeletion,
 }
