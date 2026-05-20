@@ -35,6 +35,9 @@ impl App {
         backend: &B,
         terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     ) -> anyhow::Result<()> {
+        self.update_view_model(backend).await?;
+        self.update_tick(backend).await?;
+
         while !self.should_quit {
             let event = read_event(Duration::from_millis(250))?;
             match event {
