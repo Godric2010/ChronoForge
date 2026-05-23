@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use domain::services::project_service::ProjectService;
 use domain::services::report_service::ReportService;
 use domain::services::task_service::TaskService;
@@ -128,6 +127,7 @@ impl AppContext {
         time_entry: &TimeEntry,
     ) -> anyhow::Result<TimeEntryViewModel> {
         Ok(TimeEntryViewModel {
+            time_entry: time_entry.clone(),
             start_time: time_entry.start_time.clone(),
             end_time: time_entry.end_time.clone(),
         })

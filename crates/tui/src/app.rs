@@ -200,6 +200,9 @@ impl App {
             AppAction::StopTimer => {
                 backend.stop_timer().await?;
             }
+            AppAction::CreateTimeEntry(_, _, _) => {}
+            AppAction::EditTimeEntry(_, _, _) => {}
+            AppAction::DeleteTimeEntry(_) => {}
         }
         Ok(())
     }
