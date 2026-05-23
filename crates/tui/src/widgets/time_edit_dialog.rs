@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, TimeZone, Timelike, Utc};
+use chrono::{DateTime, Datelike, Local, NaiveDate, TimeZone, Timelike, Utc};
 use crossterm::event::KeyCode;
 use ratatui::layout::{Constraint, HorizontalAlignment, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
@@ -25,21 +25,24 @@ pub struct TimeEditDialog {
 impl TimeEditDialog {
     pub fn new(
         title: &str,
-        start: DateTime<Utc>,
-        end: DateTime<Utc>,
+        start_time: DateTime<Utc>,
+        end_time: DateTime<Utc>,
         width_percentage: u16,
     ) -> Self {
+        let start_local = start_time.with_timezone(&Local);
+        let end_local = end_time.with_timezone(&Local);
+
         let mut input_fields = [
-            NumberInputField::new(0, start.hour() as u16, 2, 0, 23),
-            NumberInputField::new(1, start.minute() as u16, 2, 0, 59),
-            NumberInputField::new(2, start.day() as u16, 2, 1, 31),
-            NumberInputField::new(3, start.month() as u16, 2, 1, 12),
-            NumberInputField::new(4, start.year() as u16, 4, 1970, 9999),
-            NumberInputField::new(5, end.hour() as u16, 2, 0, 23),
-            NumberInputField::new(6, end.minute() as u16, 2, 0, 59),
-            NumberInputField::new(7, end.day() as u16, 2, 1, 31),
-            NumberInputField::new(8, end.month() as u16, 2, 1, 12),
-            NumberInputField::new(9, end.year() as u16, 4, 1970, 9999),
+            NumberInputField::new(start_local.hour() as u16, 2, 0, 23),
+            NumberInputField::new(start_local.minute() as u16, 2, 0, 59),
+            NumberInputField::new(start_local.day() as u16, 2, 1, 31),
+            NumberInputField::new(start_local.month() as u16, 2, 1, 12),
+            NumberInputField::new(start_local.year() as u16, 4, 1970, 9999),
+            NumberInputField::new(end_local.hour() as u16, 2, 0, 23),
+            NumberInputField::new(end_local.minute() as u16, 2, 0, 59),
+            NumberInputField::new(end_local.day() as u16, 2, 1, 31),
+            NumberInputField::new(end_local.month() as u16, 2, 1, 12),
+            NumberInputField::new(end_local.year() as u16, 4, 1970, 9999),
         ];
         let selected_field = 0;
         input_fields[selected_field].set_highlight(true);
@@ -49,8 +52,8 @@ impl TimeEditDialog {
 
         Self {
             title: title.to_string(),
-            start_time: Some(start),
-            end_time: Some(end),
+            start_time: Some(start_time),
+            end_time: Some(end_time),
             selected_field,
             width_percentage,
             start_date_error_msg,
@@ -240,6 +243,14 @@ impl TimeEditDialog {
             &self.input_fields[4],
         );
 
+        if date_time.is_err() {
+            self.start_date_error_msg = date_time.unwrap_err().to_string();
+            self.start_time = None;
+            return;
+        }
+
+        let date_time = date_time.unwrap();
+
         let override_active;
         let mut start_time = None;
         if Utc::now() < date_time {
@@ -271,6 +282,14 @@ impl TimeEditDialog {
             &self.input_fields[9],
         );
 
+        if date_time.is_err() {
+            self.start_date_error_msg = date_time.unwrap_err().to_string();
+            self.start_time = None;
+            return;
+        }
+
+        let date_time = date_time.unwrap();
+
         let mut override_active = false;
         let mut end_time = None;
         if Utc::now() < date_time {
@@ -301,27 +320,29 @@ impl TimeEditDialog {
         day: &NumberInputField,
         month: &NumberInputField,
         year: &NumberInputField,
-    ) -> DateTime<Utc> {
+    ) -> anyhow::Result<DateTime<Utc>> {
         let hour_value = hour.value as u32;
         let minute_value = minute.value as u32;
         let day_value = day.value as u32;
         let month_value = month.value as u32;
         let year_value = year.value as i32;
-        let date_time = Utc.with_ymd_and_hms(
-            year_value,
-            month_value,
-            day_value,
-            hour_value,
-            minute_value,
-            0,
-        );
 
-        date_time.unwrap()
+        let date = NaiveDate::from_ymd_opt(year_value, month_value, day_value)
+            .ok_or_else(|| anyhow::anyhow!("Invalid date"))?;
+        let naive = date
+            .and_hms_opt(hour_value, minute_value, 0)
+            .ok_or_else(|| anyhow::anyhow!("Invalid time"))?;
+
+        let local_time = Local
+            .from_local_datetime(&naive)
+            .single()
+            .ok_or_else(|| anyhow::anyhow!("Invalid or ambiguous local time"))?;
+
+        Ok(local_time.with_timezone(&Utc))
     }
 }
 
 struct NumberInputField {
-    pub id: u8,
     highlight_enabled: bool,
     is_value_invalid: bool,
     override_invalid: bool,
@@ -334,9 +355,8 @@ struct NumberInputField {
 }
 
 impl NumberInputField {
-    pub fn new(id: u8, value: u16, character_limit: u8, min_value: u16, max_value: u16) -> Self {
+    pub fn new(value: u16, character_limit: u8, min_value: u16, max_value: u16) -> Self {
         Self {
-            id,
             highlight_enabled: false,
             is_value_invalid: false,
             override_invalid: false,

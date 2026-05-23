@@ -1,5 +1,5 @@
 use crate::widgets::selectable_card_list::card_trait::SelectableCard;
-use chrono::{DateTime, Datelike, Utc};
+use chrono::{DateTime, Datelike, Local, Utc};
 use ratatui::layout::{Constraint, HorizontalAlignment, Layout, Rect};
 use ratatui::prelude::{Color, Modifier, Style};
 use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
@@ -7,8 +7,8 @@ use ratatui::Frame;
 
 #[derive(Default)]
 pub struct TimeEntryCard {
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<Local>,
+    pub end_time: DateTime<Local>,
     duration_min: u32,
     duration_days: u16,
     weekday: String,
@@ -24,8 +24,8 @@ impl TimeEntryCard {
         let older_than_week = (Utc::now() - start_time).num_days() >= 7;
 
         Self {
-            start_time,
-            end_time,
+            start_time: start_time.with_timezone(&Local),
+            end_time: end_time.with_timezone(&Local),
             duration_min,
             duration_days,
             weekday,
@@ -55,8 +55,14 @@ impl TimeEntryCard {
         );
         frame.render_widget(weekday_paragraph, info_chunks[1]);
 
-        let start_time_string = self.start_time.format("%H:%M").to_string();
-        let end_time_string = self.end_time.format("%H:%M").to_string();
+        let start_time_string = self
+            .start_time
+            .format("%H:%M")
+            .to_string();
+        let end_time_string = self
+            .end_time
+            .format("%H:%M")
+            .to_string();
         let day_appendage = if self.duration_days > 0 {
             format!("(+{})", self.duration_days)
         } else {
