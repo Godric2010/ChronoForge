@@ -5,7 +5,6 @@ use crate::widgets::active_timer::ActiveTimer;
 use crate::TuiBackend;
 use crossterm::event::Event;
 use ratatui::backend::CrosstermBackend;
-use ratatui::layout::HorizontalAlignment::Center;
 use ratatui::layout::{Alignment, Constraint, Layout, Rect};
 use ratatui::prelude::Line;
 use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
@@ -98,11 +97,17 @@ impl App {
 
     fn render(&mut self, frame: &mut Frame) {
         let area = frame.area();
+
+        if area.width < 150 || area.height < 40 {
+            self.render_terminal_to_small_text(frame, area);
+            return;
+        }
+
         let main_block = Block::default()
             .borders(Borders::ALL)
             .border_type(BorderType::Thick)
             .title(" Chrono Forge ")
-            .title_alignment(Center);
+            .title_alignment(Alignment::Center);
         frame.render_widget(main_block, area);
 
         let mut screen_rect = area;
@@ -148,6 +153,18 @@ impl App {
         let mut rect = app_layout_rects[4];
         rect.y += 1;
         frame.render_widget(help_box, rect);
+    }
+
+    fn render_terminal_to_small_text(&self, frame: &mut Frame, area: Rect) {
+        let vertical_layout = Layout::vertical([
+            Constraint::Min(1),
+            Constraint::Length(1),
+            Constraint::Min(1),
+        ])
+        .split(area);
+        let text = Paragraph::new("Window too small. At least 150x40 required").centered();
+
+        frame.render_widget(text, vertical_layout[1]);
     }
 
     fn render_header(&self, frame: &mut Frame, rect: Rect) {
