@@ -25,6 +25,7 @@ pub struct ProjectOverviewScreen {
     confirmation_dialog: Option<ConfirmationDialog>,
     time_edit_dialog: Option<TimeEditDialog>,
     help_text: String,
+    enforce_view_model_update_on_next_tick: bool,
     timer_active: bool,
 }
 
@@ -40,6 +41,7 @@ impl ProjectOverviewScreen {
             confirmation_dialog: None,
             time_edit_dialog: None,
             help_text: String::new(),
+            enforce_view_model_update_on_next_tick: false,
             timer_active: false,
         };
         this.enable_project_selection_mode();
@@ -48,6 +50,14 @@ impl ProjectOverviewScreen {
 
     pub fn get_help_text(&self) -> String {
         self.help_text.clone()
+    }
+
+    pub fn enforce_view_model_update_on_next_tick(&mut self) -> bool {
+        let enforce = self.enforce_view_model_update_on_next_tick;
+        if enforce {
+            self.enforce_view_model_update_on_next_tick = false;
+        }
+        enforce
     }
 
     pub fn set_view_model(&mut self, view_model: ProjectOverviewViewModel, timer_active: bool) {
@@ -97,8 +107,6 @@ impl ProjectOverviewScreen {
         if let Some(confirmation_dialog) = &mut self.confirmation_dialog {
             confirmation_dialog.render(frame, area);
         }
-
-
     }
 
     pub fn handle_event(&mut self, event: Event) -> Option<AppAction> {
@@ -264,6 +272,7 @@ impl ProjectOverviewScreen {
                 DialogResult::None => None,
                 DialogResult::Confirmed(text) => {
                     self.enable_project_selection_mode();
+                    self.enforce_view_model_update_on_next_tick = true;
                     Some(AppAction::CreateProject(text))
                 }
                 DialogResult::Cancelled => {
@@ -282,6 +291,7 @@ impl ProjectOverviewScreen {
                 DialogResult::Confirmed(text) => {
                     let project_id = self.get_selected_project()?.id;
                     self.enable_task_selection_mode();
+                    self.enforce_view_model_update_on_next_tick = true;
                     Some(AppAction::CreateTask(text, project_id))
                 }
                 DialogResult::Cancelled => {
@@ -300,6 +310,7 @@ impl ProjectOverviewScreen {
                 EditResult::Confirmed(start_time, end_time) => {
                     let task_id = self.get_selected_task()?.id;
                     self.enable_task_selection_mode();
+                    self.enforce_view_model_update_on_next_tick = true;
                     Some(AppAction::CreateTimeEntry(task_id, start_time, end_time))
                 }
                 EditResult::Cancelled => {
@@ -321,6 +332,7 @@ impl ProjectOverviewScreen {
 
                     self.enable_project_selection_mode();
                     if let Some(selected_project) = project {
+                        self.enforce_view_model_update_on_next_tick = true;
                         return Some(AppAction::RenameProject(selected_project.id, text));
                     };
                     panic!("Try to edit project, but no object is selected!")
@@ -343,6 +355,7 @@ impl ProjectOverviewScreen {
 
                     self.enable_task_selection_mode();
                     if let Some(task) = task {
+                        self.enforce_view_model_update_on_next_tick = true;
                         return Some(AppAction::RenameTask(task.id, text));
                     };
                     panic!("Try to edit project, but no object is selected!")
@@ -363,6 +376,7 @@ impl ProjectOverviewScreen {
                 EditResult::Confirmed(start_time, end_time) => {
                     let entry_id = self.get_selected_time_entry()?.id;
                     self.enable_task_selection_mode();
+                    self.enforce_view_model_update_on_next_tick = true;
                     Some(AppAction::EditTimeEntry(entry_id, start_time, end_time))
                 }
                 EditResult::Cancelled => {
@@ -382,6 +396,7 @@ impl ProjectOverviewScreen {
                     let project = self.get_selected_project();
                     self.enable_project_selection_mode();
                     if let Some(selected_project) = project {
+                        self.enforce_view_model_update_on_next_tick = true;
                         return Some(AppAction::DeleteProject(selected_project.id));
                     }
                     None
@@ -403,6 +418,7 @@ impl ProjectOverviewScreen {
                     let task = self.get_selected_task();
                     self.enable_task_selection_mode();
                     if let Some(task) = task {
+                        self.enforce_view_model_update_on_next_tick = true;
                         return Some(AppAction::DeleteTask(task.id));
                     }
                     None
@@ -424,6 +440,7 @@ impl ProjectOverviewScreen {
                     let time_entry = self.get_selected_time_entry();
                     self.enable_time_entry_mode();
                     if let Some(time_entry) = time_entry {
+                        self.enforce_view_model_update_on_next_tick = true;
                         return Some(AppAction::DeleteTimeEntry(time_entry.id));
                     }
                     None
@@ -565,7 +582,8 @@ impl ProjectOverviewScreen {
         let mut entries = task_vm.time_entries.clone();
         entries.sort_by(|a, b| b.end_time.cmp(&a.end_time));
 
-        let time_entry_cards: Vec<TimeEntryCard> =task_vm.time_entries
+        let time_entry_cards: Vec<TimeEntryCard> = task_vm
+            .time_entries
             .iter()
             .map(|te| TimeEntryCard::new(te.start_time, te.end_time))
             .collect();

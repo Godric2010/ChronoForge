@@ -18,6 +18,7 @@ pub struct App {
     screens: Screens,
     current_screen: ScreenType,
     active_timer: ActiveTimer,
+    enforce_vm_update_on_next_tick: bool,
 }
 
 impl App {
@@ -27,6 +28,7 @@ impl App {
             current_screen: ScreenType::ProjectOverview,
             screens: Screens::new(),
             active_timer: ActiveTimer::new(),
+            enforce_vm_update_on_next_tick: false,
         }
     }
 
@@ -86,6 +88,11 @@ impl App {
     async fn update_tick<B: TuiBackend>(&mut self, backend: &B) -> anyhow::Result<()> {
         self.active_timer
             .set_passed_time(backend.get_active_time().await?);
+
+        if self.enforce_vm_update_on_next_tick {
+            self.update_view_model(backend).await?;
+        }
+
         Ok(())
     }
 
@@ -120,8 +127,11 @@ impl App {
         let screen_area = app_layout_rects[2];
         match self.current_screen {
             ScreenType::ProjectOverview => {
-                self.screens.project_overview.render(frame, screen_area);
-                help_text = self.screens.project_overview.get_help_text();
+                let screen = &mut self.screens.project_overview;
+                screen.render(frame, screen_area);
+                help_text = screen.get_help_text();
+                self.enforce_vm_update_on_next_tick =
+                    screen.enforce_view_model_update_on_next_tick();
             }
             ScreenType::Timer => {
                 todo!()
