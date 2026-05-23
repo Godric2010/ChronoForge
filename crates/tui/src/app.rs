@@ -200,9 +200,19 @@ impl App {
             AppAction::StopTimer => {
                 backend.stop_timer().await?;
             }
-            AppAction::CreateTimeEntry(_, _, _) => {}
-            AppAction::EditTimeEntry(_, _, _) => {}
-            AppAction::DeleteTimeEntry(_) => {}
+            AppAction::CreateTimeEntry(task_id, start_time, end_time) => {
+                backend
+                    .create_time_entry(task_id, start_time, end_time)
+                    .await?;
+            }
+            AppAction::EditTimeEntry(entry_id, start_time, end_time) => {
+                backend
+                    .edit_time_entry(entry_id, start_time, end_time)
+                    .await?;
+            }
+            AppAction::DeleteTimeEntry(entry_id) => {
+                backend.delete_time_entry(entry_id).await?;
+            }
         }
         Ok(())
     }

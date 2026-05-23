@@ -276,14 +276,16 @@ impl TimeEditDialog {
         if Utc::now() < date_time {
             self.end_date_error_msg = "// Time values cannot be set into the future!".to_string();
             override_active = true;
-        } else if let Some(start_time) = self.start_time {
-            if start_time > date_time {
-                self.end_date_error_msg = "// End time cannot be set before start time".to_string();
-                override_active = true;
-            }
         } else {
             override_active = false;
             end_time = Some(date_time);
+        }
+        if let Some(start_time) = self.start_time {
+            if start_time > date_time {
+                self.end_date_error_msg = "// End time cannot be set before start time".to_string();
+                override_active = true;
+                end_time = None;
+            }
         }
 
         for idx in 5..10 {
@@ -399,6 +401,9 @@ impl NumberInputField {
                 self.value = (self.value - 1).max(self.min_value);
             }
             KeyCode::Left => {
+                if self.cursor_position == 0 {
+                    return;
+                }
                 self.cursor_position = (self.cursor_position - 1).max(0);
             }
             KeyCode::Right => {

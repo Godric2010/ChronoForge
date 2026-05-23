@@ -4,7 +4,7 @@ use domain::services::task_service::TaskService;
 use domain::services::time_entry_service::TimeEntryService;
 use domain::types::{Project, Task, TimeEntry};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
-use sqlx::types::chrono::Utc;
+use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::types::Uuid;
 use std::str::FromStr;
 use storage::repositories::sqlite_active_timer_repository::SqliteActiveTimerRepository;
@@ -169,6 +169,35 @@ impl TuiBackend for AppContext {
 
     async fn rename_task(&self, task_id: Uuid, name: String) -> anyhow::Result<()> {
         self.task_service.edit_task_name(task_id, &name).await?;
+        Ok(())
+    }
+
+    async fn create_time_entry(
+        &self,
+        task_id: Uuid,
+        start_time: DateTime<Utc>,
+        end_time: DateTime<Utc>,
+    ) -> anyhow::Result<()> {
+        self.time_entry_service
+            .create_manual(start_time, end_time, task_id)
+            .await?;
+        Ok(())
+    }
+
+    async fn edit_time_entry(
+        &self,
+        entry_id: Uuid,
+        start_time: DateTime<Utc>,
+        end_time: DateTime<Utc>,
+    ) -> anyhow::Result<()> {
+        self.time_entry_service
+            .edit_time_entry(entry_id, start_time, end_time)
+            .await?;
+        Ok(())
+    }
+
+    async fn delete_time_entry(&self, entry_id: Uuid) -> anyhow::Result<()> {
+        self.time_entry_service.delete(entry_id).await?;
         Ok(())
     }
 

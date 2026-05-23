@@ -298,9 +298,9 @@ impl ProjectOverviewScreen {
             return match dialog_result {
                 EditResult::None => None,
                 EditResult::Confirmed(start_time, end_time) => {
-                    let entry_id = self.get_selected_time_entry()?.id;
+                    let task_id = self.get_selected_task()?.id;
                     self.enable_task_selection_mode();
-                    Some(AppAction::CreateTimeEntry(entry_id, start_time, end_time))
+                    Some(AppAction::CreateTimeEntry(task_id, start_time, end_time))
                 }
                 EditResult::Cancelled => {
                     self.enable_time_entry_mode();

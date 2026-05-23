@@ -1,4 +1,5 @@
 use crate::screens::project_overview::ProjectOverviewViewModel;
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 mod app;
@@ -28,6 +29,20 @@ pub trait TuiBackend {
     async fn create_task(&self, name: String, project_id: Uuid) -> anyhow::Result<()>;
     async fn delete_task(&self, project_id: Uuid) -> anyhow::Result<()>;
     async fn rename_task(&self, task_id: Uuid, name: String) -> anyhow::Result<()>;
+
+    async fn create_time_entry(
+        &self,
+        task_id: Uuid,
+        start_time: DateTime<Utc>,
+        end_time: DateTime<Utc>,
+    ) -> anyhow::Result<()>;
+    async fn edit_time_entry(
+        &self,
+        entry_id: Uuid,
+        start_time: DateTime<Utc>,
+        end_time: DateTime<Utc>,
+    ) -> anyhow::Result<()>;
+    async fn delete_time_entry(&self, entry_id: Uuid) -> anyhow::Result<()>;
 
     async fn get_active_time(&self) -> anyhow::Result<Option<u32>>;
 
