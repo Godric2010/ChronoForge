@@ -20,7 +20,9 @@ pub fn read_event(timeout: Duration) -> anyhow::Result<TuiEvent> {
                 }
 
                 // Ignore Release / Repeat events
-                continue
+                if !crossterm::event::poll(Duration::from_millis(5))?{
+                    return Ok(TuiEvent::Tick);
+                }
             },
             other => return Ok(TuiEvent::Input(other))
         }
