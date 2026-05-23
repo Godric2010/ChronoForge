@@ -495,19 +495,19 @@ impl ProjectOverviewScreen {
         self.help_text = "[N]ew time entry | [E]dit time entry | [D]elete time entry | <Left>: Go to tasks | <Up/Down>".to_string();
     }
 
-    fn get_selected_project(&self) -> Option<Project> {
+    fn get_selected_project(&mut self) -> Option<Project> {
         let index = self.projects_list_widget.get_selected_index()?;
         let project_vm = self.view_model.projects.get(index)?;
         Some(project_vm.project.clone())
     }
-    fn get_selected_task(&self) -> Option<Task> {
+    fn get_selected_task(&mut self) -> Option<Task> {
         let project_index = self.projects_list_widget.get_selected_index()?;
         let task_index = self.task_list_widget.get_selected_index()?;
         let task_vm = &self.view_model.projects[project_index].tasks[task_index];
         Some(task_vm.task.clone())
     }
 
-    fn get_selected_time_entry(&self) -> Option<TimeEntry> {
+    fn get_selected_time_entry(&mut self) -> Option<TimeEntry> {
         let project_index = self.projects_list_widget.get_selected_index()?;
         let task_index = self.task_list_widget.get_selected_index()?;
         let entry_index = self.time_entry_widget.get_selected_index()?;
@@ -565,7 +565,7 @@ impl ProjectOverviewScreen {
         let mut entries = task_vm.time_entries.clone();
         entries.sort_by(|a, b| b.end_time.cmp(&a.end_time));
 
-        let time_entry_cards: Vec<TimeEntryCard> = entries
+        let time_entry_cards: Vec<TimeEntryCard> =task_vm.time_entries
             .iter()
             .map(|te| TimeEntryCard::new(te.start_time, te.end_time))
             .collect();

@@ -108,6 +108,7 @@ impl AppContext {
 
         let mut task_time_minutes = 0;
         let mut time_entry_vms = Vec::<TimeEntryViewModel>::new();
+
         for time_entry in time_entries {
             let time_entry_vm = self.create_time_entry_view_model(&time_entry)?;
             task_time_minutes +=
@@ -115,10 +116,13 @@ impl AppContext {
             time_entry_vms.push(time_entry_vm);
         }
 
+        let mut sorted_entries = time_entry_vms.clone();
+        sorted_entries.sort_by(|a, b| b.end_time.cmp(&a.end_time));
+
         Ok(TaskViewModel {
             task: task.clone(),
             total_task_time_min: task_time_minutes,
-            time_entries: time_entry_vms,
+            time_entries: sorted_entries,
         })
     }
 

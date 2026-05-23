@@ -20,9 +20,12 @@ pub struct SelectableCardList<Card: SelectableCard> {
 }
 
 impl<Card: SelectableCard> SelectableCardList<Card> {
-    pub fn get_selected_index(&self) -> Option<usize> {
+    pub fn get_selected_index(&mut self) -> Option<usize> {
         if self.cards.is_empty() {
             return None;
+        }
+        if self.selected_index >= self.cards.len() {
+            self.selected_index = 0;
         }
         Some(self.selected_index)
     }
