@@ -8,10 +8,12 @@ pub enum Mode {
     TaskSelection,
     TaskCreation,
     TaskEdit,
+    TaskAssign,
     TaskDeletion,
 
     TimeEntrySelection,
     TimeEntryCreation,
     TimeEntryEdit,
+    TimeEntryAssign,
     TimeEntryDeletion,
 }

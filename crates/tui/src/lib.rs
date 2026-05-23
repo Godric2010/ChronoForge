@@ -29,6 +29,7 @@ pub trait TuiBackend {
     async fn create_task(&self, name: String, project_id: Uuid) -> anyhow::Result<()>;
     async fn delete_task(&self, project_id: Uuid) -> anyhow::Result<()>;
     async fn rename_task(&self, task_id: Uuid, name: String) -> anyhow::Result<()>;
+    async fn assign_task(&self, task_id: Uuid, project_id: Uuid) -> anyhow::Result<()>;
 
     async fn create_time_entry(
         &self,
@@ -42,6 +43,7 @@ pub trait TuiBackend {
         start_time: DateTime<Utc>,
         end_time: DateTime<Utc>,
     ) -> anyhow::Result<()>;
+    async fn assign_time_entry(&self, entry_id: Uuid, task_id: Uuid) -> anyhow::Result<()>;
     async fn delete_time_entry(&self, entry_id: Uuid) -> anyhow::Result<()>;
 
     async fn get_active_time(&self) -> anyhow::Result<Option<u32>>;

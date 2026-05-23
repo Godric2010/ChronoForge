@@ -2,6 +2,8 @@ use crate::app_action::AppAction;
 use crate::screens::project_overview::mode::Mode;
 use crate::screens::project_overview::project_overview_view_model::ProjectOverviewViewModel;
 use crate::widgets::confirmation_dialog::{ConfirmationDialog, ConfirmationResult};
+use crate::widgets::list_dialog;
+use crate::widgets::list_dialog::{ListDialog, ListItem};
 use crate::widgets::selectable_card_list::project_card::ProjectCard;
 use crate::widgets::selectable_card_list::task_card::TaskCard;
 use crate::widgets::selectable_card_list::time_entry_card::TimeEntryCard;
@@ -24,6 +26,7 @@ pub struct ProjectOverviewScreen {
     text_edit_dialog: Option<TextEditDialog>,
     confirmation_dialog: Option<ConfirmationDialog>,
     time_edit_dialog: Option<TimeEditDialog>,
+    list_dialog: Option<ListDialog>,
     help_text: String,
     enforce_view_model_update_on_next_tick: bool,
     timer_active: bool,
@@ -40,6 +43,7 @@ impl ProjectOverviewScreen {
             text_edit_dialog: None,
             confirmation_dialog: None,
             time_edit_dialog: None,
+            list_dialog: None,
             help_text: String::new(),
             enforce_view_model_update_on_next_tick: false,
             timer_active: false,
@@ -104,6 +108,10 @@ impl ProjectOverviewScreen {
             time_edit_dialog.render(frame, area);
         }
 
+        if let Some(list_dialog) = &mut self.list_dialog {
+            list_dialog.render(frame, area);
+        }
+
         if let Some(confirmation_dialog) = &mut self.confirmation_dialog {
             confirmation_dialog.render(frame, area);
         }
@@ -124,6 +132,8 @@ impl ProjectOverviewScreen {
                 Mode::TimeEntryCreation => self.handle_time_entry_creation_events(key_event),
                 Mode::TimeEntryEdit => self.handle_time_entry_edit_events(key_event),
                 Mode::TimeEntryDeletion => self.handle_time_entry_deletion_events(key_event),
+                Mode::TaskAssign => self.handle_task_reassignment_events(key_event),
+                Mode::TimeEntryAssign => self.handle_time_entry_reassignment_events(key_event),
             };
         }
         None
@@ -187,6 +197,21 @@ impl ProjectOverviewScreen {
                     }
                     None
                 }
+                'a' => {
+                    self.mode = Mode::TaskAssign;
+                    let list_items = self
+                        .view_model
+                        .projects
+                        .iter()
+                        .map(|project| ListItem {
+                            name: project.project.name.clone(),
+                            id: project.project.id,
+                        })
+                        .collect::<Vec<ListItem>>();
+                    self.list_dialog =
+                        Some(ListDialog::new("Assign task to project", list_items, 50));
+                    None
+                }
                 'd' => {
                     if let Some(task) = &self.get_selected_task() {
                         self.mode = Mode::TaskDeletion;
@@ -243,6 +268,21 @@ impl ProjectOverviewScreen {
                         let time_entry = self.get_selected_time_entry().clone();
                         self.build_time_edit_dialog("Edit time entry", time_entry);
                     }
+                    None
+                }
+                'a' => {
+                    self.mode = Mode::TimeEntryAssign;
+                    let selected_project_index = self.projects_list_widget.get_selected_index()?;
+                    let list_items = self.view_model.projects[selected_project_index]
+                        .tasks
+                        .iter()
+                        .map(|task| ListItem {
+                            name: task.task.name.clone(),
+                            id: task.task.id,
+                        })
+                        .collect::<Vec<ListItem>>();
+                    self.list_dialog =
+                        Some(ListDialog::new("Assign time entry to task", list_items, 50));
                     None
                 }
                 'd' => {
@@ -387,6 +427,46 @@ impl ProjectOverviewScreen {
         }
         None
     }
+
+    fn handle_task_reassignment_events(&mut self, key_event: KeyEvent) -> Option<AppAction> {
+        if let Some(list_dialog) = &mut self.list_dialog {
+            let dialog_result = list_dialog.handle_event(&key_event);
+            return match dialog_result {
+                list_dialog::DialogResult::None => None,
+                list_dialog::DialogResult::Confirmed(project_id) => {
+                    let task_id = self.get_selected_task()?.id;
+                    self.enable_task_selection_mode();
+                    self.enforce_view_model_update_on_next_tick = true;
+                    Some(AppAction::AssignTask(task_id, project_id))
+                }
+                list_dialog::DialogResult::Cancelled => {
+                    self.enable_task_selection_mode();
+                    None
+                }
+            };
+        }
+        None
+    }
+
+    fn handle_time_entry_reassignment_events(&mut self, key_event: KeyEvent) -> Option<AppAction> {
+        if let Some(list_dialog) = &mut self.list_dialog {
+            let dialog_result = list_dialog.handle_event(&key_event);
+            return match dialog_result {
+                list_dialog::DialogResult::None => None,
+                list_dialog::DialogResult::Confirmed(task_id) => {
+                    let time_entry_id = self.get_selected_time_entry()?.id;
+                    self.enable_time_entry_mode();
+                    self.enforce_view_model_update_on_next_tick = true;
+                    Some(AppAction::AssignTimeEntry(time_entry_id, task_id))
+                }
+                list_dialog::DialogResult::Cancelled => {
+                    self.enable_time_entry_mode();
+                    None
+                }
+            };
+        }
+        None
+    }
     fn handle_project_deletion_events(&mut self, key_event: KeyEvent) -> Option<AppAction> {
         if let Some(confirmation_dialog) = &mut self.confirmation_dialog {
             let result = confirmation_dialog.handle_event(&key_event);
@@ -485,6 +565,7 @@ impl ProjectOverviewScreen {
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
         self.time_edit_dialog = None;
+        self.list_dialog = None;
         self.help_text =
             "[N]ew project | [E]dit project | [D]elete project | <Right>: Go to tasks | <Up/Down>"
                 .to_string();
@@ -498,7 +579,8 @@ impl ProjectOverviewScreen {
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
         self.time_edit_dialog = None;
-        self.help_text = "[N]ew task | [E]dit task | [D]elete task | [S]tart/[S]top timer | <Left>: Go to projects | <Right>: Go to Time Entries | <Up/Down>".to_string();
+        self.list_dialog = None;
+        self.help_text = "[N]ew task | [E]dit task | [A]ssign to other project | [D]elete task | [S]tart/[S]top timer | <Left>: Go to projects | <Right>: Go to Time Entries | <Up/Down>".to_string();
     }
 
     fn enable_time_entry_mode(&mut self) {
@@ -509,7 +591,8 @@ impl ProjectOverviewScreen {
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
         self.time_edit_dialog = None;
-        self.help_text = "[N]ew time entry | [E]dit time entry | [D]elete time entry | <Left>: Go to tasks | <Up/Down>".to_string();
+        self.list_dialog = None;
+        self.help_text = "[N]ew time entry | [E]dit time entry | [A]ssign to other task | [D]elete time entry | <Left>: Go to tasks | <Up/Down>".to_string();
     }
 
     fn get_selected_project(&mut self) -> Option<Project> {

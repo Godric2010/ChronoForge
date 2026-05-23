@@ -223,6 +223,12 @@ impl App {
             AppAction::DeleteTimeEntry(entry_id) => {
                 backend.delete_time_entry(entry_id).await?;
             }
+            AppAction::AssignTask(task_id, project_id) => {
+                backend.assign_task(task_id, project_id).await?;
+            }
+            AppAction::AssignTimeEntry(time_entry_id, task_id) => {
+                backend.assign_time_entry(time_entry_id, task_id).await?;
+            }
         }
         Ok(())
     }

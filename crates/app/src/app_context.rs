@@ -176,6 +176,13 @@ impl TuiBackend for AppContext {
         Ok(())
     }
 
+    async fn assign_task(&self, task_id: Uuid, project_id: Uuid) -> anyhow::Result<()> {
+        self.task_service
+            .assign_to_project(task_id, project_id)
+            .await?;
+        Ok(())
+    }
+
     async fn create_time_entry(
         &self,
         task_id: Uuid,
@@ -196,6 +203,13 @@ impl TuiBackend for AppContext {
     ) -> anyhow::Result<()> {
         self.time_entry_service
             .edit_time_entry(entry_id, start_time, end_time)
+            .await?;
+        Ok(())
+    }
+
+    async fn assign_time_entry(&self, entry_id: Uuid, task_id: Uuid) -> anyhow::Result<()> {
+        self.time_entry_service
+            .assign_time_entry(entry_id, task_id)
             .await?;
         Ok(())
     }
