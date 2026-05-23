@@ -14,6 +14,7 @@ use std::time::Duration;
 
 pub struct App {
     should_quit: bool,
+    welcome_active: bool,
     screens: Screens,
     current_screen: ScreenType,
     active_timer: ActiveTimer,
@@ -24,6 +25,7 @@ impl App {
     pub fn new() -> Self {
         Self {
             should_quit: false,
+            welcome_active: true,
             current_screen: ScreenType::ProjectOverview,
             screens: Screens::new(),
             active_timer: ActiveTimer::new(),
@@ -39,10 +41,20 @@ impl App {
         self.update_view_model(backend).await?;
         self.update_tick(backend).await?;
 
+        let mut tick_count: usize = 0;
+
         while !self.should_quit {
             let event = read_event(Duration::from_millis(250))?;
             match event {
                 TuiEvent::Tick => {
+                    if self.welcome_active {
+                        tick_count += 1;
+
+                        if tick_count > 4 {
+                            self.welcome_active = false;
+                        }
+                    }
+
                     self.update_tick(backend).await?;
                     terminal.draw(|frame| {
                         self.render(frame);
@@ -103,18 +115,18 @@ impl App {
             return;
         }
 
+        if self.welcome_active {
+            self.screens.welcome_screen.render(frame, area);
+            return;
+        }
+
         let main_block = Block::default()
             .borders(Borders::ALL)
             .border_type(BorderType::Thick)
             .title(" Chrono Forge ")
             .title_alignment(Alignment::Center);
+        let screen_rect = main_block.inner(area);
         frame.render_widget(main_block, area);
-
-        let mut screen_rect = area;
-        screen_rect.width -= 2;
-        screen_rect.height -= 2;
-        screen_rect.x += 1;
-        screen_rect.y += 1;
 
         let app_layout_rects = Layout::vertical([
             Constraint::Length(3), // tab view
