@@ -1,9 +1,10 @@
 use chrono::{DateTime, Datelike, Local, NaiveDate, TimeZone, Timelike, Utc};
 use crossterm::event::KeyCode;
-use ratatui::layout::{Constraint, HorizontalAlignment, Layout, Rect};
+use ratatui::layout::{Alignment, Constraint, HorizontalAlignment, Layout, Rect};
+use ratatui::prelude::Line;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
-use ratatui::Frame;
+use ratatui::{symbols, Frame};
 
 pub enum EditResult {
     None,
@@ -85,6 +86,8 @@ impl TimeEditDialog {
             Constraint::Length(1), // end time heading (4)
             Constraint::Length(1), // end time fields (5)
             Constraint::Length(1), // spacer (6)
+            Constraint::Length(1), // help box spacer (7)
+            Constraint::Length(1), // help box (8)
         ])
         .split(inner_block);
 
@@ -113,7 +116,24 @@ impl TimeEditDialog {
             &self.input_fields[9],
             &self.end_date_error_msg,
         );
+
+        self.render_help_box(frame, inner_chunks[7], inner_chunks[8]);
     }
+    fn render_help_box(&self, frame: &mut Frame, separator_area: Rect, text_area: Rect) {
+        let separator =
+            symbols::line::HORIZONTAL.repeat(text_area.width.saturating_sub(2) as usize);
+        let separator_widget = Paragraph::new(Line::from(separator));
+        let mut rect = separator_area;
+        rect.x = rect.x + 1;
+        frame.render_widget(separator_widget, rect);
+
+        // help box
+        let help_box = Paragraph::new(
+            Line::from("<Tab>: Next | <Left>: Prev digit | <Right>: Next digit | <Enter>: Confirm | <Esc>: Cancel").alignment(Alignment::Center),
+        );
+        frame.render_widget(help_box, text_area);
+    }
+
     fn calculate_draw_rect(&self, area: Rect) -> Rect {
         let height = 11;
         let height_percentage = height.min(area.height);
