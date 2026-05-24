@@ -2,8 +2,9 @@ use crate::app_action::AppAction;
 use crate::event::{read_event, TuiEvent};
 use crate::screens::{ScreenType, Screens};
 use crate::widgets::active_timer::ActiveTimer;
+use crate::widgets::tab_widget::TabWidget;
 use crate::TuiBackend;
-use crossterm::event::Event;
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Alignment, Constraint, Layout, Rect};
 use ratatui::prelude::Line;
@@ -18,17 +19,23 @@ pub struct App {
     screens: Screens,
     current_screen: ScreenType,
     active_timer: ActiveTimer,
+    tab_widget: TabWidget,
     enforce_vm_update_on_next_tick: bool,
 }
 
 impl App {
     pub fn new() -> Self {
+        let tab_widget = TabWidget::new()
+            .add_item("Overview", KeyCode::F(1), ScreenType::Overview)
+            .add_item("Settings", KeyCode::F(2), ScreenType::Settings);
+
         Self {
             should_quit: false,
             welcome_active: true,
-            current_screen: ScreenType::ProjectOverview,
+            current_screen: ScreenType::Overview,
             screens: Screens::new(),
             active_timer: ActiveTimer::new(),
+            tab_widget,
             enforce_vm_update_on_next_tick: false,
         }
     }
@@ -67,8 +74,10 @@ impl App {
                         self.render(frame);
                     })?;
 
-                    if let Some(action) = self.handle_event(ct_event) {
-                        self.handle_action(action, backend).await?
+                    if let Some(key_event) = ct_event.as_key_event() {
+                        if let Some(action) = self.handle_event(key_event) {
+                            self.handle_action(action, backend).await?
+                        }
                     }
                 }
             }
@@ -80,19 +89,14 @@ impl App {
     async fn update_view_model<B: TuiBackend>(&mut self, backend: &B) -> anyhow::Result<()> {
         let timer_active = backend.get_active_time().await?.is_some();
         match self.current_screen {
-            ScreenType::ProjectOverview => {
+            ScreenType::Overview => {
                 let view_model = backend.load_projects().await?;
                 self.screens
-                    .project_overview
+                    .overview
                     .set_view_model(view_model.clone(), timer_active);
                 Ok(())
             }
-            ScreenType::Timer => {
-                todo!()
-            }
-            ScreenType::Dashboard => {
-                todo!()
-            }
+            ScreenType::Settings => Ok(()),
         }
     }
 
@@ -111,7 +115,7 @@ impl App {
         let area = frame.area();
 
         if area.width < 150 || area.height < 40 {
-            self.render_terminal_to_small_text(frame, area);
+            self.render_terminal_too_small_text(frame, area);
             return;
         }
 
@@ -143,18 +147,17 @@ impl App {
         let help_text;
         let screen_area = app_layout_rects[2];
         match self.current_screen {
-            ScreenType::ProjectOverview => {
-                let screen = &mut self.screens.project_overview;
+            ScreenType::Overview => {
+                let screen = &mut self.screens.overview;
                 screen.render(frame, screen_area);
                 help_text = screen.get_help_text();
                 self.enforce_vm_update_on_next_tick =
                     screen.enforce_view_model_update_on_next_tick();
             }
-            ScreenType::Timer => {
-                todo!()
-            }
-            ScreenType::Dashboard => {
-                todo!()
+            ScreenType::Settings => {
+                let screen = &mut self.screens.settings;
+                screen.render(frame, screen_area);
+                help_text = "".to_string();
             }
         }
 
@@ -167,7 +170,7 @@ impl App {
         frame.render_widget(help_box, rect);
     }
 
-    fn render_terminal_to_small_text(&self, frame: &mut Frame, area: Rect) {
+    fn render_terminal_too_small_text(&self, frame: &mut Frame, area: Rect) {
         let vertical_layout = Layout::vertical([
             Constraint::Min(1),
             Constraint::Length(1),
@@ -179,10 +182,11 @@ impl App {
         frame.render_widget(text, vertical_layout[1]);
     }
 
-    fn render_header(&self, frame: &mut Frame, rect: Rect) {
+    fn render_header(&mut self, frame: &mut Frame, rect: Rect) {
         let tab_time_split =
             Layout::horizontal([Constraint::Min(1), Constraint::Length(15)]).split(rect);
 
+        self.tab_widget.render(frame, tab_time_split[0]);
         self.active_timer.render(frame, tab_time_split[1]);
     }
 
@@ -194,15 +198,15 @@ impl App {
         frame.render_widget(separator_widget, rect);
     }
 
-    fn handle_event(&mut self, event: Event) -> Option<AppAction> {
+    fn handle_event(&mut self, event: KeyEvent) -> Option<AppAction> {
+        if let Some(new_screen) = self.tab_widget.handle_input(event) {
+            self.current_screen = new_screen;
+            return None;
+        }
+
         match self.current_screen {
-            ScreenType::ProjectOverview => self.screens.project_overview.handle_event(event),
-            ScreenType::Timer => {
-                todo!()
-            }
-            ScreenType::Dashboard => {
-                todo!()
-            }
+            ScreenType::Overview => self.screens.overview.handle_event(event),
+            ScreenType::Settings => self.screens.settings.handle_input(event),
         }
     }
 

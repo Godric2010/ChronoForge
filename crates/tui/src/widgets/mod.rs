@@ -4,3 +4,4 @@ pub mod active_timer;
 pub mod selectable_card_list;
 pub mod time_edit_dialog;
 pub mod list_dialog;
+pub mod tab_widget;

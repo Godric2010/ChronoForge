@@ -11,7 +11,7 @@ use crate::widgets::selectable_card_list::SelectableCardList;
 use crate::widgets::text_edit_dialog::{DialogResult, TextEditDialog};
 use crate::widgets::time_edit_dialog::{EditResult, TimeEditDialog};
 use chrono::Utc;
-use crossterm::event::{Event, KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent};
 use domain::types::{Project, Task, TimeEntry};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::Frame;
@@ -117,26 +117,23 @@ impl OverviewScreen {
         }
     }
 
-    pub fn handle_event(&mut self, event: Event) -> Option<AppAction> {
-        if let Some(key_event) = event.as_key_event() {
-            return match self.mode {
-                Mode::ProjectSelection => self.handle_project_selection_events(key_event),
-                Mode::ProjectCreation => self.handle_project_creation_events(key_event),
-                Mode::ProjectEdit => self.handle_project_editing_events(key_event),
-                Mode::ProjectDeletion => self.handle_project_deletion_events(key_event),
-                Mode::TaskSelection => self.handle_task_selection_events(key_event),
-                Mode::TaskCreation => self.handle_task_creation_events(key_event),
-                Mode::TaskEdit => self.handle_task_editing_events(key_event),
-                Mode::TaskDeletion => self.handle_task_deletion_events(key_event),
-                Mode::TimeEntrySelection => self.handle_time_entry_selection_events(key_event),
-                Mode::TimeEntryCreation => self.handle_time_entry_creation_events(key_event),
-                Mode::TimeEntryEdit => self.handle_time_entry_edit_events(key_event),
-                Mode::TimeEntryDeletion => self.handle_time_entry_deletion_events(key_event),
-                Mode::TaskAssign => self.handle_task_reassignment_events(key_event),
-                Mode::TimeEntryAssign => self.handle_time_entry_reassignment_events(key_event),
-            };
-        }
-        None
+    pub fn handle_event(&mut self, key_event: KeyEvent) -> Option<AppAction> {
+        return match self.mode {
+            Mode::ProjectSelection => self.handle_project_selection_events(key_event),
+            Mode::ProjectCreation => self.handle_project_creation_events(key_event),
+            Mode::ProjectEdit => self.handle_project_editing_events(key_event),
+            Mode::ProjectDeletion => self.handle_project_deletion_events(key_event),
+            Mode::TaskSelection => self.handle_task_selection_events(key_event),
+            Mode::TaskCreation => self.handle_task_creation_events(key_event),
+            Mode::TaskEdit => self.handle_task_editing_events(key_event),
+            Mode::TaskDeletion => self.handle_task_deletion_events(key_event),
+            Mode::TimeEntrySelection => self.handle_time_entry_selection_events(key_event),
+            Mode::TimeEntryCreation => self.handle_time_entry_creation_events(key_event),
+            Mode::TimeEntryEdit => self.handle_time_entry_edit_events(key_event),
+            Mode::TimeEntryDeletion => self.handle_time_entry_deletion_events(key_event),
+            Mode::TaskAssign => self.handle_task_reassignment_events(key_event),
+            Mode::TimeEntryAssign => self.handle_time_entry_reassignment_events(key_event),
+        };
     }
 
     fn handle_project_selection_events(&mut self, key_event: KeyEvent) -> Option<AppAction> {
