@@ -559,9 +559,9 @@ impl ProjectOverviewScreen {
 
     fn enable_project_selection_mode(&mut self) {
         self.mode = Mode::ProjectSelection;
-        self.projects_list_widget.highlight = true;
-        self.task_list_widget.highlight = false;
-        self.time_entry_widget.highlight = false;
+        self.projects_list_widget.set_active(true, true);
+        self.task_list_widget.set_active(false, false);
+        self.time_entry_widget.set_active(false, false);
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
         self.time_edit_dialog = None;
@@ -573,9 +573,9 @@ impl ProjectOverviewScreen {
 
     fn enable_task_selection_mode(&mut self) {
         self.mode = Mode::TaskSelection;
-        self.projects_list_widget.highlight = false;
-        self.task_list_widget.highlight = true;
-        self.time_entry_widget.highlight = false;
+        self.projects_list_widget.set_active(false, true);
+        self.task_list_widget.set_active(true, true);
+        self.time_entry_widget.set_active(false, false);
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
         self.time_edit_dialog = None;
@@ -585,9 +585,9 @@ impl ProjectOverviewScreen {
 
     fn enable_time_entry_mode(&mut self) {
         self.mode = Mode::TimeEntrySelection;
-        self.projects_list_widget.highlight = false;
-        self.task_list_widget.highlight = false;
-        self.time_entry_widget.highlight = true;
+        self.projects_list_widget.set_active(false, true);
+        self.task_list_widget.set_active(false, true);
+        self.time_entry_widget.set_active(true, true);
         self.confirmation_dialog = None;
         self.text_edit_dialog = None;
         self.time_edit_dialog = None;

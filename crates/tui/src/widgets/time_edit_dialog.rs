@@ -290,7 +290,7 @@ impl TimeEditDialog {
 
         let date_time = date_time.unwrap();
 
-        let mut override_active = false;
+        let mut override_active;
         let mut end_time = None;
         if Utc::now() < date_time {
             self.end_date_error_msg = "// Time values cannot be set into the future!".to_string();

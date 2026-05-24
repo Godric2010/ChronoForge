@@ -140,7 +140,7 @@ impl App {
         self.render_header(frame, app_layout_rects[0]);
         self.render_separator(frame, app_layout_rects[1]);
 
-        let mut help_text = String::new();
+        let help_text;
         let screen_area = app_layout_rects[2];
         match self.current_screen {
             ScreenType::ProjectOverview => {

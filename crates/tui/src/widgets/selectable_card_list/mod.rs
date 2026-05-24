@@ -14,24 +14,37 @@ pub mod time_entry_card;
 pub struct SelectableCardList<Card: SelectableCard> {
     pub title: String,
     pub cards: Vec<Card>,
-    pub highlight: bool,
-    selected_index: usize,
+    is_active: bool,
+    selected_index: Option<usize>,
     pub item_height: u16,
 }
 
 impl<Card: SelectableCard> SelectableCardList<Card> {
+    pub fn set_active(&mut self, active: bool, keep_selected_item: bool) {
+        self.is_active = active;
+        if active {
+            self.selected_index = Some(0);
+        } else if !keep_selected_item {
+            self.selected_index = None
+        }
+    }
+
     pub fn get_selected_index(&mut self) -> Option<usize> {
         if self.cards.is_empty() {
             return None;
         }
-        if self.selected_index >= self.cards.len() {
-            self.selected_index = 0;
+
+        if let Some(index) = self.selected_index {
+            if index >= self.cards.len() {
+                self.selected_index = Some(0);
+            }
+            return Some(index);
         }
-        Some(self.selected_index)
+        None
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {
-        let border_color = if self.highlight {
+        let border_color = if self.is_active {
             Color::Rgb(255, 125, 0)
         } else {
             Color::Gray
@@ -63,8 +76,12 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
 
             let card = &mut self.cards[item_index];
 
-            if item_index == self.selected_index {
-                card.enable_highlight();
+            if let Some(selected_index) = self.selected_index {
+                if selected_index == item_index {
+                    card.enable_highlight();
+                } else {
+                    card.disable_highlight();
+                }
             } else {
                 card.disable_highlight();
             }
@@ -73,22 +90,29 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
         }
     }
     pub fn handle_event(&mut self, event: &crossterm::event::KeyEvent) {
+        if self.selected_index.is_none() {
+            return;
+        }
+
+        let mut selected_index = self.selected_index.unwrap();
+
         match event.code {
             KeyCode::Down => {
-                self.selected_index = self.selected_index + 1;
-                if self.selected_index >= self.cards.len() {
-                    self.selected_index = 0;
+                selected_index = selected_index + 1;
+                if selected_index >= self.cards.len() {
+                    selected_index = 0;
                 }
+                self.selected_index = Some(selected_index);
             }
             KeyCode::Up => {
                 if self.cards.is_empty() {
                     return;
                 }
-                if self.selected_index == 0 {
-                    self.selected_index = self.cards.len() - 1;
+                if selected_index == 0 {
+                    self.selected_index = Some(self.cards.len() - 1);
                     return;
                 }
-                self.selected_index = self.selected_index - 1;
+                self.selected_index = Some(selected_index - 1);
             }
             _ => return,
         }
