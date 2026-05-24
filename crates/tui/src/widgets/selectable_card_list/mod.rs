@@ -1,8 +1,8 @@
 use crate::widgets::selectable_card_list::card_trait::SelectableCard;
 use crossterm::event::KeyCode;
-use ratatui::layout::Rect;
-use ratatui::style::{Color, Style};
-use ratatui::widgets::{Block, Borders};
+use ratatui::layout::{Constraint, Layout, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::Frame;
 
 pub mod card_trait;
@@ -16,6 +16,8 @@ pub struct SelectableCardList<Card: SelectableCard> {
     pub cards: Vec<Card>,
     is_active: bool,
     selected_index: Option<usize>,
+    scroll_offset: usize,
+    visible_items_count: usize,
     pub item_height: u16,
 }
 
@@ -24,6 +26,7 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
         self.is_active = active;
         if active {
             self.selected_index = Some(0);
+            self.scroll_offset = 0;
         } else if !keep_selected_item {
             self.selected_index = None
         }
@@ -58,19 +61,49 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
         let inner = list_block.inner(area);
         frame.render_widget(list_block, area);
 
-        let visible_count = inner.height / self.item_height;
+        self.visible_items_count = (inner.height / self.item_height) as usize;
 
-        for i in 0..visible_count {
-            let item_index = i as usize;
+        let vertical_layout = Layout::vertical([
+            Constraint::Length(1),
+            Constraint::Min(self.item_height),
+            Constraint::Length(1),
+        ])
+        .split(inner);
+
+        let more_text_top: String = if self.scroll_offset > 0 {
+            "↑ more".to_string()
+        } else {
+            String::new()
+        };
+        let top_paragraph =
+            Paragraph::new(more_text_top).style(Style::default().add_modifier(Modifier::BOLD));
+        frame.render_widget(top_paragraph, vertical_layout[0]);
+
+        self.render_cards(frame, vertical_layout[1]);
+
+        let more_text_bottom: String =
+            if self.scroll_offset + self.visible_items_count < self.cards.len() {
+                "↓ more".to_string()
+            } else {
+                String::new()
+            };
+        let bottom_paragraph =
+            Paragraph::new(more_text_bottom).style(Style::default().add_modifier(Modifier::BOLD));
+        frame.render_widget(bottom_paragraph, vertical_layout[2]);
+    }
+
+    fn render_cards(&mut self, frame: &mut Frame, area: Rect) {
+        for i in 0..self.visible_items_count {
+            let item_index = self.scroll_offset + i;
 
             if item_index >= self.cards.len() {
                 break;
             }
 
             let item_area = Rect {
-                x: inner.x,
-                y: inner.y + i * self.item_height,
-                width: inner.width,
+                x: area.x,
+                y: area.y + i as u16 * self.item_height,
+                width: area.width,
                 height: self.item_height,
             };
 
@@ -89,6 +122,7 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
             card.render(frame, item_area);
         }
     }
+
     pub fn handle_event(&mut self, event: &crossterm::event::KeyEvent) {
         if self.selected_index.is_none() {
             return;
@@ -98,9 +132,12 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
 
         match event.code {
             KeyCode::Down => {
+                if selected_index >= self.cards.len() - 1 {
+                    return;
+                }
                 selected_index = selected_index + 1;
-                if selected_index >= self.cards.len() {
-                    selected_index = 0;
+                if selected_index >= self.scroll_offset + self.visible_items_count {
+                    self.scroll_offset += 1;
                 }
                 self.selected_index = Some(selected_index);
             }
@@ -109,10 +146,15 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
                     return;
                 }
                 if selected_index == 0 {
-                    self.selected_index = Some(self.cards.len() - 1);
                     return;
                 }
-                self.selected_index = Some(selected_index - 1);
+
+                selected_index = selected_index - 1;
+                if selected_index < self.scroll_offset {
+                    self.scroll_offset -= 1;
+                }
+
+                self.selected_index = Some(selected_index);
             }
             _ => return,
         }
