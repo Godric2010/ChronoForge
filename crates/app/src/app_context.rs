@@ -11,10 +11,10 @@ use storage::repositories::sqlite_active_timer_repository::SqliteActiveTimerRepo
 use storage::repositories::sqlite_project_repository::SQLiteProjectRepository;
 use storage::repositories::sqlite_task_repository::SQLiteTaskRepository;
 use storage::repositories::sqlite_time_entry_repository::SqliteTimeEntryRepository;
-use tui::screens::project_overview::project_overview_view_model::{
+use tui::screens::overview::overview_view_model::{
     ProjectViewModel, TaskViewModel, TimeEntryViewModel,
 };
-use tui::screens::project_overview::ProjectOverviewViewModel;
+use tui::screens::overview::OverviewViewModel;
 use tui::TuiBackend;
 
 pub struct AppContext {
@@ -68,7 +68,7 @@ impl AppContext {
 }
 
 impl AppContext {
-    async fn create_overview_view_model(&self) -> anyhow::Result<ProjectOverviewViewModel> {
+    async fn create_overview_view_model(&self) -> anyhow::Result<OverviewViewModel> {
         let all_projects = self.project_service.find_all().await?;
         let mut projects = Vec::<ProjectViewModel>::new();
         for project in all_projects {
@@ -76,7 +76,7 @@ impl AppContext {
             projects.push(project_vm);
         }
 
-        Ok(ProjectOverviewViewModel { projects })
+        Ok(OverviewViewModel { projects })
     }
 
     async fn create_project_view_model(
@@ -140,7 +140,7 @@ impl AppContext {
 
 #[async_trait::async_trait]
 impl TuiBackend for AppContext {
-    async fn load_projects(&self) -> anyhow::Result<ProjectOverviewViewModel> {
+    async fn load_projects(&self) -> anyhow::Result<OverviewViewModel> {
         self.create_overview_view_model().await
     }
 

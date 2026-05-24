@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use domain::types::{Project, Task, TimeEntry};
 
 #[derive(Default, Clone)]
-pub struct ProjectOverviewViewModel {
+pub struct OverviewViewModel {
     pub projects: Vec<ProjectViewModel>,
 }
 

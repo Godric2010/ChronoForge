@@ -1,6 +1,6 @@
 use crate::app_action::AppAction;
-use crate::screens::project_overview::mode::Mode;
-use crate::screens::project_overview::project_overview_view_model::ProjectOverviewViewModel;
+use crate::screens::overview::mode::Mode;
+use crate::screens::overview::overview_view_model::OverviewViewModel;
 use crate::widgets::confirmation_dialog::{ConfirmationDialog, ConfirmationResult};
 use crate::widgets::list_dialog;
 use crate::widgets::list_dialog::{ListDialog, ListItem};
@@ -17,8 +17,8 @@ use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::Frame;
 use uuid::Uuid;
 
-pub struct ProjectOverviewScreen {
-    view_model: ProjectOverviewViewModel,
+pub struct OverviewScreen {
+    view_model: OverviewViewModel,
     mode: Mode,
     projects_list_widget: SelectableCardList<ProjectCard>,
     task_list_widget: SelectableCardList<TaskCard>,
@@ -32,10 +32,10 @@ pub struct ProjectOverviewScreen {
     timer_active: bool,
 }
 
-impl ProjectOverviewScreen {
+impl OverviewScreen {
     pub fn new() -> Self {
         let mut this = Self {
-            view_model: ProjectOverviewViewModel::default(),
+            view_model: OverviewViewModel::default(),
             mode: Mode::ProjectSelection,
             projects_list_widget: SelectableCardList::<ProjectCard>::default(),
             task_list_widget: SelectableCardList::<TaskCard>::default(),
@@ -64,7 +64,7 @@ impl ProjectOverviewScreen {
         enforce
     }
 
-    pub fn set_view_model(&mut self, view_model: ProjectOverviewViewModel, timer_active: bool) {
+    pub fn set_view_model(&mut self, view_model: OverviewViewModel, timer_active: bool) {
         self.view_model = view_model;
         self.timer_active = timer_active;
 
