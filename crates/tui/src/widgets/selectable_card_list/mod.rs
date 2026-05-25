@@ -38,10 +38,12 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
         }
 
         if let Some(index) = self.selected_index {
-            if index >= self.cards.len() {
-                self.selected_index = Some(0);
-            }
-            return Some(index);
+            self.selected_index = if index >= self.cards.len() {
+                Some(0)
+            } else {
+                self.selected_index
+            };
+            return self.selected_index;
         }
         None
     }
