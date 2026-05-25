@@ -1,49 +1,39 @@
+use crate::widgets::dialog_widgets::DialogWidget;
 use chrono::{DateTime, Datelike, Local, NaiveDate, TimeZone, Timelike, Utc};
-use crossterm::event::KeyCode;
-use ratatui::layout::{Alignment, Constraint, HorizontalAlignment, Layout, Rect};
-use ratatui::prelude::Line;
-use ratatui::style::{Color, Modifier, Style};
-use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
-use ratatui::{symbols, Frame};
+use crossterm::event::{KeyCode, KeyEvent};
+use ratatui::layout::{Constraint, Layout, Rect};
+use ratatui::prelude::{Color, Modifier, Style};
+use ratatui::widgets::Paragraph;
+use ratatui::Frame;
 
-pub enum EditResult {
-    None,
-    Confirmed(DateTime<Utc>, DateTime<Utc>),
-    Cancelled,
-}
-
-pub struct TimeEditDialog {
-    title: String,
+pub struct TimeEntryWidget {
     start_time: Option<DateTime<Utc>>,
     end_time: Option<DateTime<Utc>>,
+
     selected_field: usize,
-    width_percentage: u16,
+
     start_date_error_msg: String,
     end_date_error_msg: String,
-    input_fields: [NumberInputField; 10],
+
+    input_fields: [DigitInputWidget; 10],
 }
 
-impl TimeEditDialog {
-    pub fn new(
-        title: &str,
-        start_time: DateTime<Utc>,
-        end_time: DateTime<Utc>,
-        width_percentage: u16,
-    ) -> Self {
+impl TimeEntryWidget {
+    pub fn new(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Self {
         let start_local = start_time.with_timezone(&Local);
         let end_local = end_time.with_timezone(&Local);
 
         let mut input_fields = [
-            NumberInputField::new(start_local.hour() as u16, 2, 0, 23),
-            NumberInputField::new(start_local.minute() as u16, 2, 0, 59),
-            NumberInputField::new(start_local.day() as u16, 2, 1, 31),
-            NumberInputField::new(start_local.month() as u16, 2, 1, 12),
-            NumberInputField::new(start_local.year() as u16, 4, 1970, 9999),
-            NumberInputField::new(end_local.hour() as u16, 2, 0, 23),
-            NumberInputField::new(end_local.minute() as u16, 2, 0, 59),
-            NumberInputField::new(end_local.day() as u16, 2, 1, 31),
-            NumberInputField::new(end_local.month() as u16, 2, 1, 12),
-            NumberInputField::new(end_local.year() as u16, 4, 1970, 9999),
+            DigitInputWidget::new(start_local.hour() as u16, 2, 0, 23),
+            DigitInputWidget::new(start_local.minute() as u16, 2, 0, 59),
+            DigitInputWidget::new(start_local.day() as u16, 2, 1, 31),
+            DigitInputWidget::new(start_local.month() as u16, 2, 1, 12),
+            DigitInputWidget::new(start_local.year() as u16, 4, 1970, 9999),
+            DigitInputWidget::new(end_local.hour() as u16, 2, 0, 23),
+            DigitInputWidget::new(end_local.minute() as u16, 2, 0, 59),
+            DigitInputWidget::new(end_local.day() as u16, 2, 1, 31),
+            DigitInputWidget::new(end_local.month() as u16, 2, 1, 12),
+            DigitInputWidget::new(end_local.year() as u16, 4, 1970, 9999),
         ];
         let selected_field = 0;
         input_fields[selected_field].set_highlight(true);
@@ -52,110 +42,14 @@ impl TimeEditDialog {
         let end_date_error_msg = String::default();
 
         Self {
-            title: title.to_string(),
             start_time: Some(start_time),
             end_time: Some(end_time),
             selected_field,
-            width_percentage,
             start_date_error_msg,
             end_date_error_msg,
             input_fields,
         }
     }
-
-    pub fn render(&mut self, frame: &mut Frame, area: Rect) {
-        let dialog_draw_rect = self.calculate_draw_rect(area);
-        frame.render_widget(Clear, dialog_draw_rect);
-
-        // outer block
-        let outer_block = Block::default()
-            .title(format!("< {} >", self.title.clone()))
-            .title_alignment(HorizontalAlignment::Center)
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded);
-
-        let inner_block = outer_block.inner(dialog_draw_rect);
-        frame.render_widget(outer_block, dialog_draw_rect);
-
-        // inner blocks
-        let inner_chunks = Layout::vertical([
-            Constraint::Length(1), // spacer
-            Constraint::Length(1), // start time heading (1)
-            Constraint::Length(1), // start time fields (2)
-            Constraint::Length(1), // separator (3)
-            Constraint::Length(1), // end time heading (4)
-            Constraint::Length(1), // end time fields (5)
-            Constraint::Length(1), // spacer (6)
-            Constraint::Length(1), // help box spacer (7)
-            Constraint::Length(1), // help box (8)
-        ])
-        .split(inner_block);
-
-        // start time heading
-        self.draw_heading("Start timer", frame, inner_chunks[1]);
-        self.draw_time_edit_fields(
-            frame,
-            inner_chunks[2],
-            &self.input_fields[0],
-            &self.input_fields[1],
-            &self.input_fields[2],
-            &self.input_fields[3],
-            &self.input_fields[4],
-            &self.start_date_error_msg,
-        );
-
-        // stop time heading
-        self.draw_heading("End time", frame, inner_chunks[4]);
-        self.draw_time_edit_fields(
-            frame,
-            inner_chunks[5],
-            &self.input_fields[5],
-            &self.input_fields[6],
-            &self.input_fields[7],
-            &self.input_fields[8],
-            &self.input_fields[9],
-            &self.end_date_error_msg,
-        );
-
-        self.render_help_box(frame, inner_chunks[7], inner_chunks[8]);
-    }
-    fn render_help_box(&self, frame: &mut Frame, separator_area: Rect, text_area: Rect) {
-        let separator =
-            symbols::line::HORIZONTAL.repeat(text_area.width.saturating_sub(2) as usize);
-        let separator_widget = Paragraph::new(Line::from(separator));
-        let mut rect = separator_area;
-        rect.x = rect.x + 1;
-        frame.render_widget(separator_widget, rect);
-
-        // help box
-        let help_box = Paragraph::new(
-            Line::from("<Tab>: Next | <Left>: Prev digit | <Right>: Next digit | <Enter>: Confirm | <Esc>: Cancel").alignment(Alignment::Center),
-        );
-        frame.render_widget(help_box, text_area);
-    }
-
-    fn calculate_draw_rect(&self, area: Rect) -> Rect {
-        let height = 11;
-        let height_percentage = height.min(area.height);
-        let vertical_chunks = Layout::vertical([
-            Constraint::Percentage((100 - height_percentage) / 2),
-            Constraint::Length(height),
-            Constraint::Percentage((100 - height_percentage) / 2),
-        ])
-        .split(area);
-
-        let dialog_row = vertical_chunks[1];
-
-        let horizontal_chunks = Layout::horizontal([
-            Constraint::Percentage((100 - self.width_percentage) / 2),
-            Constraint::Percentage(self.width_percentage),
-            Constraint::Percentage((100 - self.width_percentage) / 2),
-        ])
-        .split(dialog_row);
-
-        horizontal_chunks[1]
-    }
-
     fn draw_heading(&self, text: &str, frame: &mut Frame, area: Rect) {
         let heading = Paragraph::new(text).style(
             Style::default()
@@ -170,11 +64,11 @@ impl TimeEditDialog {
         &self,
         frame: &mut Frame,
         area: Rect,
-        hour: &NumberInputField,
-        minute: &NumberInputField,
-        day: &NumberInputField,
-        month: &NumberInputField,
-        year: &NumberInputField,
+        hour: &DigitInputWidget,
+        minute: &DigitInputWidget,
+        day: &DigitInputWidget,
+        month: &DigitInputWidget,
+        year: &DigitInputWidget,
         error_msg: &String,
     ) {
         let chunks = Layout::horizontal([
@@ -209,44 +103,6 @@ impl TimeEditDialog {
             Paragraph::new(error_msg.clone()).style(Style::default().fg(Color::Red));
         frame.render_widget(error_paragraph, chunks[10]);
     }
-
-    pub fn handle_event(&mut self, event: &crossterm::event::KeyEvent) -> EditResult {
-        match event.code {
-            KeyCode::Esc => EditResult::Cancelled,
-            KeyCode::Enter => {
-                let start_time = self.start_time;
-                if start_time.is_none() {
-                    return EditResult::None;
-                }
-
-                let end_time = self.end_time;
-                if end_time.is_none() {
-                    return EditResult::None;
-                }
-
-                EditResult::Confirmed(start_time.unwrap(), end_time.unwrap())
-            }
-            KeyCode::Tab => {
-                self.input_fields[self.selected_field].set_highlight(false);
-                self.selected_field = (self.selected_field + 1) % self.input_fields.len();
-                self.input_fields[self.selected_field].set_highlight(true);
-                EditResult::None
-            }
-            _ => {
-                let selected_field = &mut self.input_fields[self.selected_field];
-                selected_field.handle_event(event);
-
-                if self.selected_field < 5 {
-                    self.validate_start_date_time()
-                } else {
-                    self.validate_end_date_time()
-                }
-
-                EditResult::None
-            }
-        }
-    }
-
     fn validate_start_date_time(&mut self) {
         self.start_date_error_msg = String::new();
         if let Some(str) = self.input_fields[self.selected_field].get_invalid_value_error_msg() {
@@ -332,14 +188,13 @@ impl TimeEditDialog {
         }
         self.end_time = end_time;
     }
-
     fn create_date_time_from_values(
         &self,
-        hour: &NumberInputField,
-        minute: &NumberInputField,
-        day: &NumberInputField,
-        month: &NumberInputField,
-        year: &NumberInputField,
+        hour: &DigitInputWidget,
+        minute: &DigitInputWidget,
+        day: &DigitInputWidget,
+        month: &DigitInputWidget,
+        year: &DigitInputWidget,
     ) -> anyhow::Result<DateTime<Utc>> {
         let hour_value = hour.value as u32;
         let minute_value = minute.value as u32;
@@ -362,7 +217,80 @@ impl TimeEditDialog {
     }
 }
 
-struct NumberInputField {
+impl DialogWidget for TimeEntryWidget {
+    type Output = Option<(DateTime<Utc>, DateTime<Utc>)>;
+
+    fn handle_key(&mut self, key: KeyEvent) {
+        match key.code {
+            KeyCode::Tab => {
+                self.input_fields[self.selected_field].set_highlight(false);
+                self.selected_field = (self.selected_field + 1) % self.input_fields.len();
+                self.input_fields[self.selected_field].set_highlight(true);
+            }
+            _ => {
+                let selected_field = &mut self.input_fields[self.selected_field];
+                selected_field.handle_event(&key);
+
+                if self.selected_field < 5 {
+                    self.validate_start_date_time()
+                } else {
+                    self.validate_end_date_time()
+                }
+            }
+        }
+    }
+
+    fn output(&self) -> Self::Output {
+        let start_time = self.start_time?;
+        let end_time = self.end_time?;
+        Some((start_time, end_time))
+    }
+
+    fn height(&self) -> u16 {
+        7
+    }
+
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
+        let inner_chunks = Layout::vertical([
+            Constraint::Length(1), // spacer
+            Constraint::Length(1), // start time heading (1)
+            Constraint::Length(1), // start time fields (2)
+            Constraint::Length(1), // separator (3)
+            Constraint::Length(1), // end time heading (4)
+            Constraint::Length(1), // end time fields (5)
+            Constraint::Length(1), // spacer (6)
+        ])
+        .split(area);
+
+        // start time heading
+        self.draw_heading("Start timer", frame, inner_chunks[1]);
+        self.draw_time_edit_fields(
+            frame,
+            inner_chunks[2],
+            &self.input_fields[0],
+            &self.input_fields[1],
+            &self.input_fields[2],
+            &self.input_fields[3],
+            &self.input_fields[4],
+            &self.start_date_error_msg,
+        );
+
+        // stop time heading
+        self.draw_heading("End time", frame, inner_chunks[4]);
+        self.draw_time_edit_fields(
+            frame,
+            inner_chunks[5],
+            &self.input_fields[5],
+            &self.input_fields[6],
+            &self.input_fields[7],
+            &self.input_fields[8],
+            &self.input_fields[9],
+            &self.end_date_error_msg,
+        );
+    }
+}
+
+struct DigitInputWidget {
     highlight_enabled: bool,
     is_value_invalid: bool,
     override_invalid: bool,
@@ -374,7 +302,7 @@ struct NumberInputField {
     digit_chars: Vec<char>,
 }
 
-impl NumberInputField {
+impl DigitInputWidget {
     pub fn new(value: u16, character_limit: u8, min_value: u16, max_value: u16) -> Self {
         Self {
             highlight_enabled: false,

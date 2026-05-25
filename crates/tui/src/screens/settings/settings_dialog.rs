@@ -1,6 +1,6 @@
 use crate::app_action::AppAction;
 use crate::screens::dialog::{Dialog, DialogResult};
-use crate::widgets::dialog_widgets::text_input::TextInputWidget;
+use crate::widgets::dialog_widgets::TextInputWidget;
 use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
 use ratatui::Frame;

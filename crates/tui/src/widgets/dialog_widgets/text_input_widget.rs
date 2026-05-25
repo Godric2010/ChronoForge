@@ -4,16 +4,32 @@ use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
 
+pub enum TextInputMode {
+    AllowAll,
+    Naming,
+}
+
 pub struct TextInputWidget {
     content: String,
+    mode: TextInputMode,
     cursor: usize,
 }
 
 impl TextInputWidget {
-    pub fn new() -> Self {
+    pub fn new(mode: TextInputMode, content: Option<String>) -> Self {
+        let content_str = content.unwrap_or_else(|| String::new());
+
         Self {
-            content: String::new(),
-            cursor: 0,
+            mode,
+            cursor: content_str.len(),
+            content: content_str,
+        }
+    }
+
+    fn is_char_valid(&self, c: char) -> bool {
+        match self.mode {
+            TextInputMode::AllowAll => true,
+            TextInputMode::Naming => c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ',
         }
     }
 }
@@ -30,8 +46,10 @@ impl DialogWidget for TextInputWidget {
                 }
             }
             KeyCode::Char(c) => {
-                self.content.insert(self.cursor, c);
-                self.cursor += 1;
+                if self.is_char_valid(c) {
+                    self.content.insert(self.cursor, c);
+                    self.cursor += 1;
+                }
             }
             KeyCode::Left => {
                 if self.cursor > 0 {
