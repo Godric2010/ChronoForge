@@ -262,10 +262,12 @@ impl App {
             AppAction::AssignTimeEntry(time_entry_id, task_id) => {
                 backend.assign_time_entry(time_entry_id, task_id).await?;
             }
-            AppAction::ImportCsv(_) => {}
-            AppAction::ExportCsv(_) => {}
-            AppAction::Demo => {}
-            AppAction::CloseDialog => {}
+            AppAction::ImportCsv(path_str) => {
+                backend.import_csv(path_str).await?;
+            }
+            AppAction::ExportCsv(path_str) => {
+                backend.export_csv(path_str).await?;
+            }
         }
         Ok(())
     }

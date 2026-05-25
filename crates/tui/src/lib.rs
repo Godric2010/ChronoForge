@@ -50,4 +50,7 @@ pub trait TuiBackend {
 
     async fn start_timer(&self, task_id: Uuid) -> anyhow::Result<()>;
     async fn stop_timer(&self) -> anyhow::Result<()>;
+
+    async fn export_csv(&self, path_str: String) -> anyhow::Result<()>;
+    async fn import_csv(&self, path_str: String) -> anyhow::Result<()>;
 }

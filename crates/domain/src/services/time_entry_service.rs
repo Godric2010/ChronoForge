@@ -107,6 +107,14 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
         Ok(())
     }
 
+    pub async fn find_all(&self) -> AppResult<Vec<TimeEntry>> {
+        let all_entries = self.time_entry_repository.find_all().await;
+        if all_entries.is_err() {
+            return Err(AppError::Storage(all_entries.unwrap_err().to_string()));
+        }
+        Ok(all_entries.unwrap())
+    }
+
     pub async fn find_all_entries_of_task(&self, task_id: Uuid) -> AppResult<Vec<TimeEntry>> {
         self.is_task_id_valid(&task_id).await?;
         let result = self.time_entry_repository.find_by_task_id(task_id).await;

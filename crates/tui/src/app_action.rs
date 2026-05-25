@@ -3,7 +3,6 @@ use uuid::Uuid;
 
 pub enum AppAction {
     Quit,
-    CloseDialog,
 
     // Projects
     CreateProject(String),
@@ -29,5 +28,4 @@ pub enum AppAction {
     // Settings
     ImportCsv(String),
     ExportCsv(String),
-    Demo,
 }

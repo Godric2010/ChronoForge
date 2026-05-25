@@ -1,9 +1,12 @@
 use crate::app_context::AppContext;
+use crate::app_view_context::AppViewContext;
 use crate::cli::Cli;
 use clap::Parser;
 
 mod app_context;
+mod app_view_context;
 mod cli;
+mod csv_serializer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -18,7 +21,8 @@ async fn main() -> anyhow::Result<()> {
             cli.run(&context).await?;
         }
         None => {
-            tui::run(&context).await?;
+            let view_context = AppViewContext::new(&context);
+            tui::run(&view_context).await?;
         }
     }
 
