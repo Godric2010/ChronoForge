@@ -5,6 +5,7 @@ use crate::screens::welcome::WelcomeScreen;
 pub mod overview;
 pub mod welcome;
 pub mod settings;
+mod dialog;
 
 #[derive(Copy, Clone)]
 pub enum ScreenType {

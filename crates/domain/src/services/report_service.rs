@@ -5,6 +5,7 @@ use crate::repositories::task_repository::TaskRepository;
 use crate::repositories::time_entry_repository::TimeEntryRepository;
 use chrono::{DateTime, Utc};
 
+#[allow(dead_code)]
 pub struct ReportService<
     P: ProjectRepository,
     T: TaskRepository,

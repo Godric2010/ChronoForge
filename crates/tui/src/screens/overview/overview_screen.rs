@@ -118,7 +118,7 @@ impl OverviewScreen {
     }
 
     pub fn handle_event(&mut self, key_event: KeyEvent) -> Option<AppAction> {
-        return match self.mode {
+        match self.mode {
             Mode::ProjectSelection => self.handle_project_selection_events(key_event),
             Mode::ProjectCreation => self.handle_project_creation_events(key_event),
             Mode::ProjectEdit => self.handle_project_editing_events(key_event),
@@ -133,7 +133,7 @@ impl OverviewScreen {
             Mode::TimeEntryDeletion => self.handle_time_entry_deletion_events(key_event),
             Mode::TaskAssign => self.handle_task_reassignment_events(key_event),
             Mode::TimeEntryAssign => self.handle_time_entry_reassignment_events(key_event),
-        };
+        }
     }
 
     fn handle_project_selection_events(&mut self, key_event: KeyEvent) -> Option<AppAction> {

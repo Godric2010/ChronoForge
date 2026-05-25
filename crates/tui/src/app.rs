@@ -157,7 +157,7 @@ impl App {
             ScreenType::Settings => {
                 let screen = &mut self.screens.settings;
                 screen.render(frame, screen_area);
-                help_text = "".to_string();
+                help_text = screen.get_help_text();
             }
         }
 
@@ -262,6 +262,10 @@ impl App {
             AppAction::AssignTimeEntry(time_entry_id, task_id) => {
                 backend.assign_time_entry(time_entry_id, task_id).await?;
             }
+            AppAction::ImportCsv(_) => {}
+            AppAction::ExportCsv(_) => {}
+            AppAction::Demo => {}
+            AppAction::CloseDialog => {}
         }
         Ok(())
     }

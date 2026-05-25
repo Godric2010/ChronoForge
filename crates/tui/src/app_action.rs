@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 pub enum AppAction {
     Quit,
+    CloseDialog,
 
     // Projects
     CreateProject(String),
@@ -24,4 +25,9 @@ pub enum AppAction {
     // Timer
     StartTimer(Uuid),
     StopTimer,
+
+    // Settings
+    ImportCsv(String),
+    ExportCsv(String),
+    Demo,
 }
