@@ -42,6 +42,8 @@ mod time_entry_repository_tests {
             task_id: task_one_id,
             start_time: utc_date_time(2026, 05, 15),
             end_time: utc_date_time(2026, 05, 14),
+            created_at: utc_date_time(2026, 05, 15),
+            updated_at: utc_date_time(2026, 05, 14),
         };
 
         let result = repository.create(time_entry.clone()).await;
@@ -69,6 +71,8 @@ mod time_entry_repository_tests {
             task_id: task_one_id,
             start_time: utc_date_time(2025, 12, 23),
             end_time: utc_date_time(2025, 12, 24),
+            created_at: utc_date_time(2025, 12, 24),
+            updated_at: utc_date_time(2025, 12, 24),
         };
 
         let result = repository.create(original.clone()).await;
@@ -79,6 +83,8 @@ mod time_entry_repository_tests {
             task_id: task_two_id,
             start_time: utc_date_time(2026, 04, 25),
             end_time: utc_date_time(2026, 04, 26),
+            created_at: utc_date_time(2026, 04, 26),
+            updated_at: utc_date_time(2026, 04, 26),
         };
 
         let result = repository.update(updated.clone()).await;
@@ -106,6 +112,8 @@ mod time_entry_repository_tests {
             task_id: task_two_id,
             start_time: utc_date_time(2012, 12, 12),
             end_time: utc_date_time(2012, 12, 16),
+            created_at: utc_date_time(2012, 12, 16),
+            updated_at: utc_date_time(2012, 12, 16),
         };
         let result = repository.create(entry.clone()).await;
         assert!(result.is_ok());
@@ -129,18 +137,24 @@ mod time_entry_repository_tests {
             task_id: task_one_id,
             start_time: utc_date_time(2025, 12, 23),
             end_time: utc_date_time(2025, 12, 24),
+            created_at: utc_date_time(2025, 12, 24),
+            updated_at: utc_date_time(2025, 12, 24),
         };
         let two = TimeEntry {
             id: Uuid::new_v4(),
             task_id: task_one_id,
             start_time: utc_date_time(2025, 8, 23),
             end_time: utc_date_time(2025, 9, 24),
+            created_at: utc_date_time(2025, 9, 24),
+            updated_at: utc_date_time(2025, 9, 24),
         };
         let three = TimeEntry {
             id: Uuid::new_v4(),
             task_id: task_two_id,
             start_time: utc_date_time(2025, 2, 23),
             end_time: utc_date_time(2025, 4, 24),
+            created_at: utc_date_time(2025, 4,24 ),
+            updated_at: utc_date_time(2025, 4, 24),
         };
         repository.create(one.clone()).await.unwrap();
         repository.create(two.clone()).await.unwrap();
@@ -165,18 +179,24 @@ mod time_entry_repository_tests {
             task_id: task_one_id,
             start_time: utc_date_time(2025, 12, 23),
             end_time: utc_date_time(2025, 12, 24),
+            created_at: utc_date_time(2025, 12, 24),
+            updated_at: utc_date_time(2025, 12, 24),
         };
         let two = TimeEntry {
             id: Uuid::new_v4(),
             task_id: task_one_id,
             start_time: utc_date_time(2025, 8, 23),
             end_time: utc_date_time(2025, 9, 24),
+            created_at: utc_date_time(2025, 9, 24),
+            updated_at: utc_date_time(2025, 9, 24),
         };
         let three = TimeEntry {
             id: Uuid::new_v4(),
             task_id: task_two_id,
             start_time: utc_date_time(2025, 2, 23),
             end_time: utc_date_time(2025, 4, 24),
+            created_at: utc_date_time(2025, 4, 24),
+            updated_at: utc_date_time(2025, 4, 24),
         };
         repository.create(one.clone()).await.unwrap();
         repository.create(two.clone()).await.unwrap();

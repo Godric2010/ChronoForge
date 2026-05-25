@@ -1,9 +1,10 @@
 mod project_repository_tests {
-    use uuid::Uuid;
-    use domain::repositories::project_repository::ProjectRepository;
-    use domain::types::Project;
     use crate::integration_tests::test_db_builder;
     use crate::repositories::sqlite_project_repository::SQLiteProjectRepository;
+    use chrono::Utc;
+    use domain::repositories::project_repository::ProjectRepository;
+    use domain::types::Project;
+    use uuid::Uuid;
 
     async fn setup_tests() -> SQLiteProjectRepository {
         let pool = test_db_builder::create_pool().await;
@@ -17,6 +18,9 @@ mod project_repository_tests {
         let project = Project {
             id: Uuid::new_v4(),
             name: "ChronoForge".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
 
         repository.create(project.clone()).await.unwrap();
@@ -35,6 +39,9 @@ mod project_repository_tests {
         let project = Project {
             id: Uuid::new_v4(),
             name: "ChronoForge".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(project.clone()).await.unwrap();
 
@@ -49,16 +56,25 @@ mod project_repository_tests {
         let project_a = Project {
             id: Uuid::new_v4(),
             name: "ChronoForge".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
 
         let project_b = Project {
             id: Uuid::new_v4(),
             name: "MazeGame".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
 
         let project_c = Project {
             id: Uuid::new_v4(),
             name: "JAREP".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(project_a.clone()).await.unwrap();
         repository.create(project_b.clone()).await.unwrap();
@@ -89,6 +105,9 @@ mod project_repository_tests {
         let project_original = Project {
             id: Uuid::new_v4(),
             name: "ChronoForge".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
 
         repository.create(project_original.clone()).await.unwrap();
@@ -96,6 +115,9 @@ mod project_repository_tests {
         let updated_project = Project {
             id: project_original.id,
             name: "ZeitSchmiede".to_string(),
+            time_limit: project_original.time_limit,
+            created_at: project_original.created_at,
+            updated_at: Utc::now(),
         };
         repository.update(updated_project.clone()).await.unwrap();
         let stored_project = repository.find_by_id(&project_original.id).await.unwrap();
@@ -111,6 +133,9 @@ mod project_repository_tests {
         let project = Project {
             id: Uuid::new_v4(),
             name: "ChronoForge".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
 
         repository.create(project.clone()).await.unwrap();

@@ -3,6 +3,7 @@ use crate::errors::{AppError, AppResult};
 use crate::repositories::project_repository::ProjectRepository;
 use crate::services::naming_service;
 use crate::types::Project;
+use chrono::Utc;
 use uuid::Uuid;
 
 pub struct ProjectService<P: ProjectRepository> {
@@ -25,6 +26,9 @@ impl<P: ProjectRepository> ProjectService<P> {
         let project = Project {
             id: Uuid::new_v4(),
             name: unique_project_name,
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
 
         let result = self.project_repository.create(project.clone()).await;
@@ -66,9 +70,11 @@ impl<P: ProjectRepository> ProjectService<P> {
     }
 
     pub async fn edit_name(&self, project_id: Uuid, name: &str) -> AppResult<Project> {
-        if self.find_by_id(project_id).await.is_err() {
+        let project = self.find_by_id(project_id).await;
+        if project.is_err() {
             return Err(ProjectNotFound);
         }
+        let project = project.unwrap();
         if name.is_empty() {
             return Err(AppError::EmptyName);
         }
@@ -79,7 +85,11 @@ impl<P: ProjectRepository> ProjectService<P> {
         let edited_project = Project {
             id: project_id,
             name: unique_project_name,
+            time_limit: project.time_limit,
+            created_at: project.created_at,
+            updated_at: Utc::now(),
         };
+        
         let result = self.project_repository.update(edited_project.clone()).await;
         if result.is_err() {
             let error_msg = result.err().unwrap().to_string();

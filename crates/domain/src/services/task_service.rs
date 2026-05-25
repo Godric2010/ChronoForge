@@ -1,3 +1,4 @@
+use chrono::Utc;
 use crate::errors::{AppError, AppResult};
 use crate::repositories::project_repository::ProjectRepository;
 use crate::repositories::task_repository::TaskRepository;
@@ -32,6 +33,9 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             id: Uuid::new_v4(),
             name: unique_name,
             project_id: project.clone(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
 
         let result = self.task_repository.create(task.clone()).await;
@@ -76,6 +80,9 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             id: task.id,
             project_id: task.project_id,
             name: unique_name,
+            time_limit: task.time_limit,
+            created_at: task.created_at,
+            updated_at: Utc::now(),
         };
 
         let result = self.task_repository.update(new_task.clone()).await;
@@ -97,6 +104,9 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             id: task.id,
             project_id: project,
             name: unique_name,
+            time_limit: task.time_limit,
+            created_at: task.created_at,
+            updated_at: Utc::now(),
         };
 
         let result = self.task_repository.update(new_task.clone()).await;

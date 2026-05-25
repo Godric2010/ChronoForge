@@ -2,31 +2,19 @@
 mod task_repository_tests {
     use crate::integration_tests::test_db_builder;
     use crate::repositories::sqlite_task_repository::SQLiteTaskRepository;
+    use chrono::Utc;
     use domain::repositories::task_repository::TaskRepository;
     use domain::types::Task;
-    use sqlx::SqlitePool;
     use uuid::Uuid;
 
-    async fn setup_test(project_one_id: Uuid, project_two_id: Uuid) -> SQLiteTaskRepository{
+    async fn setup_test(project_one_id: Uuid, project_two_id: Uuid) -> SQLiteTaskRepository {
         let pool = test_db_builder::create_pool().await;
         test_db_builder::create_fake_project_entry(&pool, project_one_id, "Project1").await;
         test_db_builder::create_fake_project_entry(&pool, project_two_id, "Project2").await;
         let repository = SQLiteTaskRepository::new(pool.clone());
         repository
     }
-    async fn create_test_project(pool: &SqlitePool, id: Uuid, name: &str) {
-        sqlx::query(
-            r#"
-        INSERT INTO projects (id, name)
-        VALUES (?, ?)
-        "#,
-        )
-            .bind(id.to_string())
-            .bind(name)
-            .execute(pool)
-            .await
-            .unwrap();
-    }
+
     #[tokio::test]
     async fn create_project_and_store_it() {
         let project_id = Uuid::new_v4();
@@ -37,6 +25,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_id.clone(),
             name: "TestTask01".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task.clone()).await.unwrap();
 
@@ -58,6 +49,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_one_id.clone(),
             name: "TestTask01".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task.clone()).await.unwrap();
 
@@ -68,6 +62,9 @@ mod task_repository_tests {
             id: task.id,
             project_id: task.project_id,
             name: "TaskyMcTask".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
 
         repository.update(updated_name_task.clone()).await.unwrap();
@@ -82,6 +79,9 @@ mod task_repository_tests {
             id: updated_name_task.id,
             project_id: project_two_id.clone(),
             name: updated_name_task.name,
+            time_limit: updated_name_task.time_limit,
+            created_at: updated_name_task.created_at,
+            updated_at: Utc::now(),
         };
         repository
             .update(updated_project_task.clone())
@@ -105,6 +105,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_one_id.clone(),
             name: "TestTask01".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task_a.clone()).await.unwrap();
 
@@ -112,6 +115,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_one_id.clone(),
             name: "TestTask02".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task_b.clone()).await.unwrap();
 
@@ -119,6 +125,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_two_id.clone(),
             name: "TestTask01".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task_c.clone()).await.unwrap();
 
@@ -141,6 +150,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_a.clone(),
             name: "TestTask01".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task_a.clone()).await.unwrap();
 
@@ -148,6 +160,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_a.clone(),
             name: "TestTask02".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task_b.clone()).await.unwrap();
 
@@ -155,6 +170,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_b.clone(),
             name: "TestTask01".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task_c.clone()).await.unwrap();
 
@@ -172,6 +190,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_a.clone(),
             name: "TestTask01".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task_a.clone()).await.unwrap();
 
@@ -179,6 +200,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_a.clone(),
             name: "TestTask02".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task_b.clone()).await.unwrap();
 
@@ -186,6 +210,9 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_b.clone(),
             name: "TestTask01".to_string(),
+            time_limit: 0,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         repository.create(task_c.clone()).await.unwrap();
 

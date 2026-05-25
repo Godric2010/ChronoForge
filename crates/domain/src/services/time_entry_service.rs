@@ -40,6 +40,8 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
             task_id,
             start_time,
             end_time,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         let result = self.time_entry_repository.create(time_entry.clone()).await;
         if result.is_err() {
@@ -86,6 +88,8 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
             id: Uuid::new_v4(),
             start_time: active_timer.start_time,
             end_time: Utc::now(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
         };
         let result = self.time_entry_repository.create(time_entry.clone()).await;
         if result.is_err() {
@@ -141,6 +145,8 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
             task_id: time_entry.task_id,
             start_time: new_start_time,
             end_time: new_end_time,
+            created_at: time_entry.created_at,
+            updated_at: Utc::now(),
         };
         let result = self
             .time_entry_repository
@@ -165,6 +171,8 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
             task_id: new_task_id,
             start_time: time_entry.start_time,
             end_time: time_entry.end_time,
+            created_at: time_entry.created_at,
+            updated_at: Utc::now(),
         };
         let result = self
             .time_entry_repository

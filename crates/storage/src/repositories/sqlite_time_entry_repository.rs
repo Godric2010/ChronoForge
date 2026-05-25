@@ -20,6 +20,8 @@ impl SqliteTimeEntryRepository {
             task_id: Uuid::parse_str(&row.task_id)?,
             start_time: DateTime::parse_from_rfc3339(&row.start_time)?.with_timezone(&Utc),
             end_time: DateTime::parse_from_rfc3339(&row.end_time)?.with_timezone(&Utc),
+            created_at: DateTime::parse_from_rfc3339(&row.created_at)?.with_timezone(&Utc),
+            updated_at: DateTime::parse_from_rfc3339(&row.updated_at)?.with_timezone(&Utc),
         })
     }
 }
@@ -29,14 +31,16 @@ impl TimeEntryRepository for SqliteTimeEntryRepository {
     async fn create(&self, time_entry: TimeEntry) -> anyhow::Result<()> {
         sqlx::query(
             r#"
-INSERT INTO time_entries (id, task_id, start_time, end_time)
-VALUES (?, ?, ?, ?)
+INSERT INTO time_entries (id, task_id, start_time, end_time, created_at, updated_at)
+VALUES (?, ?, ?, ?,?, ?)
 "#,
         )
         .bind(time_entry.id.to_string())
         .bind(time_entry.task_id.to_string())
         .bind(time_entry.start_time.to_rfc3339())
         .bind(time_entry.end_time.to_rfc3339())
+        .bind(time_entry.created_at.to_rfc3339())
+        .bind(time_entry.updated_at.to_rfc3339())
         .execute(&self.pool)
         .await?;
 
@@ -47,13 +51,15 @@ VALUES (?, ?, ?, ?)
         sqlx::query(
             r#"
 UPDATE time_entries
-SET task_id = ?, start_time = ?, end_time = ?
+SET task_id = ?, start_time = ?, end_time = ?, created_at = ?, updated_at = ?
 WHERE id = ?
 "#,
         )
         .bind(time_entry.task_id.to_string())
         .bind(time_entry.start_time.to_rfc3339())
         .bind(time_entry.end_time.to_rfc3339())
+        .bind(time_entry.created_at.to_rfc3339())
+        .bind(time_entry.updated_at.to_rfc3339())
         .bind(time_entry.id.to_string())
         .execute(&self.pool)
         .await?;
@@ -64,7 +70,7 @@ WHERE id = ?
     async fn find_by_id(&self, id: Uuid) -> anyhow::Result<Option<TimeEntry>> {
         let row = sqlx::query_as::<_, TimeEntriesRow>(
             r#"
-SELECT id, task_id, start_time, end_time
+SELECT id, task_id, start_time, end_time, created_at, updated_at
 FROM time_entries
 WHERE id = ?
 "#,
@@ -84,7 +90,7 @@ WHERE id = ?
     async fn find_by_task_id(&self, task_id: Uuid) -> anyhow::Result<Vec<TimeEntry>> {
         let rows = sqlx::query_as::<_, TimeEntriesRow>(
             r#"
-SELECT id, task_id, start_time, end_time
+SELECT id, task_id, start_time, end_time, created_at, updated_at
 FROM time_entries
 WHERE task_id = ?
 "#,
@@ -104,7 +110,7 @@ WHERE task_id = ?
     async fn find_all(&self) -> anyhow::Result<Vec<TimeEntry>> {
         let rows = sqlx::query_as::<_, TimeEntriesRow>(
             r#"
-SELECT id, task_id, start_time, end_time
+SELECT id, task_id, start_time, end_time,created_at, updated_at
 FROM time_entries
 "#,
         )
@@ -137,4 +143,6 @@ struct TimeEntriesRow {
     task_id: String,
     start_time: String,
     end_time: String,
+    created_at: String,
+    updated_at: String,
 }
