@@ -36,6 +36,30 @@ impl TaskRepository for SQLiteTaskRepository {
         Ok(())
     }
 
+    async fn upsert(&self, task: Task) -> anyhow::Result<()> {
+        sqlx::query(
+            r#"
+                INSERT INTO tasks (id, project_id, name, time_limit, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (id) DO UPDATE SET
+                    name = excluded.name,
+                    project_id = excluded.project_id,
+                    time_limit = excluded.time_limit,
+                    updated_at = excluded.updated_at
+                    WHERE excluded.updated_at > tasks.updated_at
+                    "#,
+        )
+        .bind(task.id.to_string())
+        .bind(task.project_id.to_string())
+        .bind(&task.name)
+        .bind(task.time_limit)
+        .bind(task.created_at.to_rfc3339())
+        .bind(task.updated_at.to_rfc3339())
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
     async fn update(&self, task: Task) -> anyhow::Result<()> {
         sqlx::query(
             r#"

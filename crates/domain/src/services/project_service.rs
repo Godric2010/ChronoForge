@@ -42,6 +42,11 @@ impl<P: ProjectRepository> ProjectService<P> {
         Ok(project)
     }
 
+    pub async fn upsert(&self, project: Project) -> anyhow::Result<()> {
+        self.project_repository.upsert(project).await?;
+        Ok(())
+    }
+
     pub async fn find_by_id(&self, project_id: Uuid) -> AppResult<Project> {
         if project_id == Uuid::default() || project_id == Uuid::nil() {
             return Err(ProjectNotFound);
@@ -89,7 +94,7 @@ impl<P: ProjectRepository> ProjectService<P> {
             created_at: project.created_at,
             updated_at: Utc::now(),
         };
-        
+
         let result = self.project_repository.update(edited_project.clone()).await;
         if result.is_err() {
             let error_msg = result.err().unwrap().to_string();

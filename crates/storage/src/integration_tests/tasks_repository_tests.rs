@@ -2,7 +2,7 @@
 mod task_repository_tests {
     use crate::integration_tests::test_db_builder;
     use crate::repositories::sqlite_task_repository::SQLiteTaskRepository;
-    use chrono::Utc;
+    use chrono::{TimeZone, Utc};
     use domain::repositories::task_repository::TaskRepository;
     use domain::types::Task;
     use uuid::Uuid;
@@ -38,7 +38,70 @@ mod task_repository_tests {
         assert_eq!(stored_task.project_id, task.project_id);
         assert_eq!(stored_task.name, task.name);
     }
+    #[tokio::test]
+    async fn upsert_task_with_newer_version() {
+        let project_id = Uuid::new_v4();
+        let project_two_id = Uuid::new_v4();
+        let repository = setup_test(project_id, project_two_id).await;
+        let task = Task {
+            id: Uuid::new_v4(),
+            project_id: project_id.clone(),
+            name: "Task 01".to_string(),
+            time_limit: 0,
+            created_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+            updated_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+        };
 
+        repository.create(task.clone()).await.unwrap();
+
+        let mut updated_task = task.clone();
+        updated_task.name = "Task01".to_string();
+        updated_task.project_id = project_two_id.clone();
+        updated_task.time_limit = 20;
+        updated_task.updated_at = Utc.with_ymd_and_hms(2026, 05, 27, 22, 05, 0).unwrap();
+
+        repository.upsert(updated_task.clone()).await.unwrap();
+
+        let stored_project = repository.find_by_id(&task.id).await.unwrap();
+        assert!(stored_project.is_some());
+        let stored_project = stored_project.unwrap();
+        assert_eq!(updated_task.id, stored_project.id);
+        assert_eq!(updated_task.name, stored_project.name);
+        assert_eq!(updated_task.time_limit, stored_project.time_limit);
+        assert_eq!(updated_task.updated_at, stored_project.updated_at);
+    }
+    #[tokio::test]
+    async fn upsert_task_with_older_version() {
+        let project_id = Uuid::new_v4();
+        let project_two_id = Uuid::new_v4();
+        let repository = setup_test(project_id, project_two_id).await;
+        let task = Task {
+            id: Uuid::new_v4(),
+            project_id: project_id.clone(),
+            name: "My new Task".to_string(),
+            time_limit: 0,
+            created_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+            updated_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+        };
+
+        repository.create(task.clone()).await.unwrap();
+
+        let mut updated_task = task.clone();
+        updated_task.name = "A new Task".to_string();
+        updated_task.project_id = project_two_id.clone();
+        updated_task.time_limit = 20;
+        updated_task.updated_at = Utc.with_ymd_and_hms(2026, 05, 27, 20, 05, 0).unwrap();
+
+        repository.upsert(updated_task.clone()).await.unwrap();
+
+        let stored_project = repository.find_by_id(&task.id).await.unwrap();
+        assert!(stored_project.is_some());
+        let stored_project = stored_project.unwrap();
+        assert_eq!(task.id, stored_project.id);
+        assert_eq!(task.name, stored_project.name);
+        assert_eq!(task.time_limit, stored_project.time_limit);
+        assert_eq!(task.updated_at, stored_project.updated_at);
+    }
     #[tokio::test]
     async fn update_project_and_store_it() {
         let project_one_id = Uuid::new_v4();

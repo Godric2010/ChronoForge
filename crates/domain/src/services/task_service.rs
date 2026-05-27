@@ -44,6 +44,11 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         }
         Ok(task)
     }
+    
+    pub async fn upsert(&self, task: Task) -> anyhow::Result<()> {
+        self.task_repository.upsert(task).await?;
+        Ok(())
+    }
 
     pub async fn find_all(&self) -> AppResult<Vec<Task>> {
         let all_tasks = self.find_all_tasks().await?;

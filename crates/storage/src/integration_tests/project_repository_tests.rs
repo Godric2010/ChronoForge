@@ -1,7 +1,7 @@
 mod project_repository_tests {
     use crate::integration_tests::test_db_builder;
     use crate::repositories::sqlite_project_repository::SQLiteProjectRepository;
-    use chrono::Utc;
+    use chrono::{TimeZone, Utc};
     use domain::repositories::project_repository::ProjectRepository;
     use domain::types::Project;
     use uuid::Uuid;
@@ -30,6 +30,63 @@ mod project_repository_tests {
         let stored_project = stored_project.unwrap();
         assert_eq!(project.id, stored_project.id);
         assert_eq!(project.name, stored_project.name);
+    }
+
+    #[tokio::test]
+    async fn upsert_project_with_newer_version() {
+        let repository = setup_tests().await;
+        let project = Project {
+            id: Uuid::new_v4(),
+            name: "Chrono Forge".to_string(),
+            time_limit: 0,
+            created_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+            updated_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+        };
+
+        repository.create(project.clone()).await.unwrap();
+
+        let mut updated_project = project.clone();
+        updated_project.name = "ChronoForge".to_string();
+        updated_project.time_limit = 20;
+        updated_project.updated_at = Utc.with_ymd_and_hms(2026, 05, 27, 22, 05, 0).unwrap();
+
+        repository.upsert(updated_project.clone()).await.unwrap();
+
+        let stored_project = repository.find_by_id(&project.id).await.unwrap();
+        assert!(stored_project.is_some());
+        let stored_project = stored_project.unwrap();
+        assert_eq!(updated_project.id, stored_project.id);
+        assert_eq!(updated_project.name, stored_project.name);
+        assert_eq!(updated_project.time_limit, stored_project.time_limit);
+        assert_eq!(updated_project.updated_at, stored_project.updated_at);
+    }
+    #[tokio::test]
+    async fn upsert_project_with_older_version() {
+        let repository = setup_tests().await;
+        let project = Project {
+            id: Uuid::new_v4(),
+            name: "Maze_Game".to_string(),
+            time_limit: 0,
+            created_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+            updated_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+        };
+
+        repository.create(project.clone()).await.unwrap();
+
+        let mut updated_project = project.clone();
+        updated_project.name = "Maze Game".to_string();
+        updated_project.time_limit = 20;
+        updated_project.updated_at = Utc.with_ymd_and_hms(2026, 05, 27, 20, 05, 0).unwrap();
+
+        repository.upsert(updated_project.clone()).await.unwrap();
+
+        let stored_project = repository.find_by_id(&project.id).await.unwrap();
+        assert!(stored_project.is_some());
+        let stored_project = stored_project.unwrap();
+        assert_eq!(project.id, stored_project.id);
+        assert_eq!(project.name, stored_project.name);
+        assert_eq!(project.time_limit, stored_project.time_limit);
+        assert_eq!(project.updated_at, stored_project.updated_at);
     }
 
     #[tokio::test]

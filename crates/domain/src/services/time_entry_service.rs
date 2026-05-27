@@ -50,6 +50,11 @@ impl<T: TaskRepository, E: TimeEntryRepository, A: ActiveTimerRepository>
         Ok(time_entry)
     }
 
+    pub async fn upsert(&self, time_entry: TimeEntry) -> anyhow::Result<()> {
+        self.time_entry_repository.upsert(time_entry).await?;
+        Ok(())
+    }
+
     pub async fn start_timer(&self, task_id: Uuid) -> AppResult<ActiveTimer> {
         let active_timer = self.active_timer_repository.get_active_timer().await;
         if active_timer.is_err() {

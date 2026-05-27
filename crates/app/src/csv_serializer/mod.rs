@@ -38,23 +38,50 @@ impl<'a> CsvSerializer<'a> {
     }
 
     pub async fn import(&self, path_str: String) -> anyhow::Result<()> {
+        let import_path = self.prepare_import_directory(path_str)?;
+        let _meta = self.meta_serializer.read_from_file(&import_path)?;
+        self.project_serializer.import_csv(&import_path).await?;
+        self.tasks_serializer.import_csv(&import_path).await?;
+        self.time_entry_serializer.import_csv(&import_path).await?;
+
         Ok(())
     }
 
     fn prepare_export_directory(&self, path_str: String) -> anyhow::Result<PathBuf> {
         let base_path = self.expand_home_path(path_str)?;
-
-        if !base_path.exists() {
-            anyhow::bail!("Export path does not exist: {}", base_path.display());
-        }
-
-        if !base_path.is_dir() {
-            anyhow::bail!("Export path is not a directory: {}", base_path.display());
-        }
+        self.validate_path(&base_path)?;
 
         let export_dir = base_path.join("ChronoForge");
         fs::create_dir_all(&export_dir)?;
         Ok(export_dir)
+    }
+
+    fn prepare_import_directory(&self, path_str: String) -> anyhow::Result<PathBuf> {
+        let base_path = self.expand_home_path(path_str)?;
+        self.validate_path(&base_path)?;
+
+        let meta_path = base_path.join("meta.json");
+
+        if !meta_path.exists() {
+            anyhow::bail!(
+                "Missing meta.json file in import directory {}",
+                base_path.display()
+            );
+        }
+
+        Ok(base_path)
+    }
+
+    fn validate_path(&self, path_buf: &PathBuf) -> anyhow::Result<()> {
+        if !path_buf.exists() {
+            anyhow::bail!("Path does not exist: {}", path_buf.display());
+        }
+
+        if !path_buf.is_dir() {
+            anyhow::bail!("Path is not a directory: {}", path_buf.display());
+        }
+
+        Ok(())
     }
 
     fn expand_home_path(&self, path_str: String) -> anyhow::Result<PathBuf> {

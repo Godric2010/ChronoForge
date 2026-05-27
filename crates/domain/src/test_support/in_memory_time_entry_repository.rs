@@ -1,5 +1,5 @@
-use crate::types::TimeEntry;
 use crate::repositories::time_entry_repository::TimeEntryRepository;
+use crate::types::TimeEntry;
 use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
@@ -20,6 +20,28 @@ impl InMemoryTimeEntryRepository {
 impl TimeEntryRepository for InMemoryTimeEntryRepository {
     async fn create(&self, time_entry: TimeEntry) -> anyhow::Result<()> {
         self.time_entries.lock().unwrap().push(time_entry);
+        Ok(())
+    }
+
+    async fn upsert(&self, time_entry: TimeEntry) -> anyhow::Result<()> {
+        let time_entries = &mut self.time_entries.lock().unwrap();
+        let mut insertion_index: Option<usize> = None;
+        for (index, existing_entry) in time_entries.iter().enumerate() {
+            if existing_entry.id == time_entry.id {
+                if existing_entry.updated_at < time_entry.updated_at {
+                    insertion_index = Some(index);
+                    break;
+                }
+                return Ok(());
+            }
+        }
+
+        if let Some(index) = insertion_index {
+            self.time_entries.lock().unwrap().insert(index, time_entry);
+        } else {
+            self.time_entries.lock().unwrap().push(time_entry);
+        }
+
         Ok(())
     }
 

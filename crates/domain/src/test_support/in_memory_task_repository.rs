@@ -24,6 +24,28 @@ impl TaskRepository for InMemoryTaskRepository {
         Ok(())
     }
 
+    async fn upsert(&self, task: Task) -> anyhow::Result<()> {
+        let tasks = &mut self.tasks.lock().unwrap();
+        let mut insertion_index: Option<usize> = None;
+        for (index, existing_task) in tasks.iter().enumerate() {
+            if existing_task.id == task.id {
+                if existing_task.updated_at < task.updated_at {
+                    insertion_index = Some(index);
+                    break;
+                }
+                return Ok(());
+            }
+        }
+
+        if let Some(index) = insertion_index {
+            self.tasks.lock().unwrap().insert(index, task);
+        } else {
+            self.tasks.lock().unwrap().push(task);
+        }
+
+        Ok(())
+    }
+
     async fn update(&self, task: Task) -> anyhow::Result<()> {
         let mut tasks = self.tasks.lock().unwrap();
         if let Some(existing_task) = tasks.iter_mut().find(|t| t.id == task.id) {

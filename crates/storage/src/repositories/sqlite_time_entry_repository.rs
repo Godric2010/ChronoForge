@@ -47,6 +47,30 @@ VALUES (?, ?, ?, ?,?, ?)
         Ok(())
     }
 
+    async fn upsert(&self, time_entry: TimeEntry) -> anyhow::Result<()> {
+        sqlx::query(
+            r#"
+                INSERT INTO time_entries (id, task_id, start_time, end_time, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (id) DO UPDATE SET
+                    task_id = excluded.task_id,
+                    start_time = excluded.start_time,
+                    end_time = excluded.end_time,
+                    updated_at = excluded.updated_at
+                    WHERE excluded.updated_at > time_entries.updated_at
+                    "#,
+        )
+        .bind(time_entry.id.to_string())
+        .bind(time_entry.task_id.to_string())
+        .bind(time_entry.start_time.to_rfc3339())
+        .bind(time_entry.end_time.to_rfc3339())
+        .bind(time_entry.created_at.to_rfc3339())
+        .bind(time_entry.updated_at.to_rfc3339())
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
     async fn update(&self, time_entry: TimeEntry) -> anyhow::Result<()> {
         sqlx::query(
             r#"

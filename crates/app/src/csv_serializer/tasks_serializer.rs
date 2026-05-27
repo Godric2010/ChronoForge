@@ -1,15 +1,20 @@
 use domain::services::task_service::TaskService;
 use domain::types::Task;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use sqlx::types::chrono::{DateTime, Utc};
+use sqlx::types::Uuid;
 use std::path::PathBuf;
 use storage::repositories::sqlite_project_repository::SQLiteProjectRepository;
 use storage::repositories::sqlite_task_repository::SQLiteTaskRepository;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct TaskCsvRow {
     pub id: String,
     pub project_id: String,
     pub name: String,
+    pub time_limit: u32,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
 impl From<Task> for TaskCsvRow {
@@ -18,7 +23,24 @@ impl From<Task> for TaskCsvRow {
             id: value.id.to_string(),
             project_id: value.project_id.to_string(),
             name: value.name,
+            time_limit: value.time_limit,
+            created_at: value.created_at.to_rfc3339(),
+            updated_at: value.updated_at.to_rfc3339(),
         }
+    }
+}
+
+impl TryFrom<TaskCsvRow> for Task {
+    type Error = anyhow::Error;
+    fn try_from(value: TaskCsvRow) -> Result<Self, Self::Error> {
+        Ok(Self {
+            id: Uuid::parse_str(&value.id)?,
+            project_id: Uuid::parse_str(&value.project_id)?,
+            name: value.name,
+            time_limit: value.time_limit,
+            created_at: DateTime::parse_from_rfc3339(&value.created_at)?.with_timezone(&Utc),
+            updated_at: DateTime::parse_from_rfc3339(&value.updated_at)?.with_timezone(&Utc),
+        })
     }
 }
 
@@ -46,6 +68,24 @@ impl<'a> TasksSerializer<'a> {
             writer.serialize(row)?;
         }
         writer.flush()?;
+        Ok(())
+    }
+
+    pub async fn import_csv(&self, path: &PathBuf) -> anyhow::Result<()> {
+        let file_path = path.join("tasks.csv");
+        if !file_path.exists() {
+            anyhow::bail!("Missing tasks.csv file at {}", path.display());
+        }
+
+        let mut reader = csv::ReaderBuilder::new()
+            .delimiter(b';')
+            .from_path(file_path)?;
+
+        for result in reader.deserialize() {
+            let row: TaskCsvRow = result?;
+            let task = Task::try_from(row)?;
+            self.task_service.upsert(task).await?;
+        }
         Ok(())
     }
 }

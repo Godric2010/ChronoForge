@@ -1,8 +1,8 @@
+use sqlx::types::chrono::Utc;
 use std::fs::File;
 use std::path::PathBuf;
-use sqlx::types::chrono::Utc;
 
-pub const EXPORT_FORMAT_VERSION: u32 = 1;
+pub const EXPORT_FORMAT_VERSION: u32 = 2;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct SerializableMeta {
@@ -28,5 +28,18 @@ impl SerializableMeta {
         serde_json::to_writer_pretty(file, self)?;
 
         Ok(())
+    }
+
+    pub fn read_from_file(&self, path: &PathBuf) -> anyhow::Result<Self> {
+        let file_path = path.join("meta.json");
+        let file = File::open(file_path)?;
+
+        let meta: SerializableMeta = serde_json::from_reader(file)?;
+
+        if meta.format_version != EXPORT_FORMAT_VERSION {
+            anyhow::bail!("Unsupported format version: {}", meta.format_version);
+        }
+
+        Ok(meta)
     }
 }

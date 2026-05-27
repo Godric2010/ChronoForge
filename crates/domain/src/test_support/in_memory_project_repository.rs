@@ -25,6 +25,28 @@ impl ProjectRepository for InMemoryProjectRepository {
         Ok(())
     }
 
+    async fn upsert(&self, project: Project) -> anyhow::Result<()> {
+        let projects = &mut self.projects.lock().unwrap();
+        let mut insertion_index: Option<usize> = None;
+        for (index, existing_project) in projects.iter().enumerate() {
+            if existing_project.id == project.id {
+                if existing_project.updated_at < project.updated_at {
+                    insertion_index = Some(index);
+                    break;
+                }
+                return Ok(());
+            }
+        }
+
+        if let Some(index) = insertion_index {
+            self.projects.lock().unwrap().insert(index, project);
+        } else {
+            self.projects.lock().unwrap().push(project);
+        }
+
+        Ok(())
+    }
+
     async fn update(&self, project: Project) -> anyhow::Result<()> {
         let mut projects = self.projects.lock().unwrap();
         if let Some(existing) = projects.iter_mut().find(|p| p.id == project.id) {

@@ -44,6 +44,28 @@ impl ProjectRepository for SQLiteProjectRepository {
         Ok(())
     }
 
+    async fn upsert(&self, project: Project) -> anyhow::Result<()> {
+        sqlx::query(
+            r#"
+                INSERT INTO projects (id, name, time_limit, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT (id) DO UPDATE SET
+                    name = excluded.name,
+                    time_limit = excluded.time_limit,
+                    updated_at = excluded.updated_at
+                    WHERE excluded.updated_at > projects.updated_at
+                    "#,
+        )
+        .bind(project.id.to_string())
+        .bind(&project.name)
+        .bind(project.time_limit)
+        .bind(project.created_at.to_rfc3339())
+        .bind(project.updated_at.to_rfc3339())
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
     async fn update(&self, project: Project) -> anyhow::Result<()> {
         sqlx::query(
             r#"

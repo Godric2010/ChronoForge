@@ -59,6 +59,74 @@ mod time_entry_repository_tests {
         assert_eq!(time_entry.start_time, stored.start_time);
         assert_eq!(time_entry.end_time, stored.end_time);
     }
+    #[tokio::test]
+    async fn upsert_time_entry_with_newer_version() {
+        let task_one_id = Uuid::new_v4();
+        let task_two_id = Uuid::new_v4();
+        let repository = setup_test(task_one_id, task_two_id).await;
+
+        let time_entry = TimeEntry {
+            id: Uuid::new_v4(),
+            task_id: task_one_id,
+            start_time: utc_date_time(2026, 05, 15),
+            end_time: utc_date_time(2026, 05, 14),
+            created_at: utc_date_time(2026, 05, 15),
+            updated_at: utc_date_time(2026, 05, 14),
+        };
+
+        repository.create(time_entry.clone()).await.unwrap();
+
+        let mut updated_time_entry = time_entry.clone();
+        updated_time_entry.task_id = task_two_id.clone();
+        updated_time_entry.start_time = utc_date_time(2026, 05, 14);
+        updated_time_entry.end_time = utc_date_time(2026, 06, 14);
+        updated_time_entry.updated_at = Utc.with_ymd_and_hms(2026, 05, 27, 22, 05, 0).unwrap();
+
+        repository.upsert(updated_time_entry.clone()).await.unwrap();
+
+        let stored_project = repository.find_by_id(updated_time_entry.id).await.unwrap();
+        assert!(stored_project.is_some());
+        let stored_project = stored_project.unwrap();
+        assert_eq!(updated_time_entry.id, stored_project.id);
+        assert_eq!(updated_time_entry.task_id, stored_project.task_id);
+        assert_eq!(updated_time_entry.start_time, stored_project.start_time);
+        assert_eq!(updated_time_entry.end_time, stored_project.end_time);
+        assert_eq!(updated_time_entry.updated_at, stored_project.updated_at);
+    }
+    #[tokio::test]
+    async fn upsert_time_entry_with_older_version() {
+        let task_one_id = Uuid::new_v4();
+        let task_two_id = Uuid::new_v4();
+        let repository = setup_test(task_one_id, task_two_id).await;
+
+        let time_entry = TimeEntry {
+            id: Uuid::new_v4(),
+            task_id: task_one_id,
+            start_time: utc_date_time(2026, 05, 15),
+            end_time: utc_date_time(2026, 05, 14),
+            created_at: utc_date_time(2026, 05, 15),
+            updated_at: utc_date_time(2026, 05, 16),
+        };
+
+        repository.create(time_entry.clone()).await.unwrap();
+
+        let mut updated_time_entry = time_entry.clone();
+        updated_time_entry.task_id = task_two_id.clone();
+        updated_time_entry.start_time = utc_date_time(2026, 05, 14);
+        updated_time_entry.end_time = utc_date_time(2026, 06, 14);
+        updated_time_entry.updated_at = utc_date_time(2026, 05, 15);
+
+        repository.upsert(updated_time_entry.clone()).await.unwrap();
+
+        let stored_project = repository.find_by_id(updated_time_entry.id).await.unwrap();
+        assert!(stored_project.is_some());
+        let stored_project = stored_project.unwrap();
+        assert_eq!(time_entry.id, stored_project.id);
+        assert_eq!(time_entry.task_id, stored_project.task_id);
+        assert_eq!(time_entry.start_time, stored_project.start_time);
+        assert_eq!(time_entry.end_time, stored_project.end_time);
+        assert_eq!(time_entry.updated_at, stored_project.updated_at);
+    }
 
     #[tokio::test]
     async fn update_time_entry_and_its_values_are_updated_in_the_database() {
@@ -153,7 +221,7 @@ mod time_entry_repository_tests {
             task_id: task_two_id,
             start_time: utc_date_time(2025, 2, 23),
             end_time: utc_date_time(2025, 4, 24),
-            created_at: utc_date_time(2025, 4,24 ),
+            created_at: utc_date_time(2025, 4, 24),
             updated_at: utc_date_time(2025, 4, 24),
         };
         repository.create(one.clone()).await.unwrap();
