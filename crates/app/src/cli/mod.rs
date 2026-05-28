@@ -10,6 +10,7 @@ mod task_commands;
 mod timer_commands;
 
 #[derive(clap::Parser)]
+#[command(name = "chrono-forge", version, about = "A terminal based personal time tracking tool", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Command>,
@@ -21,18 +22,18 @@ pub enum Command {
     Project(ProjectCommand),
     #[command(subcommand, about = "Manage tasks")]
     Tasks(TaskCommands),
-    #[command(subcommand, about = "Start and stop timers")]
-    Entry(EntryCommands),
     #[command(subcommand, about = "Manage time entries")]
+    Entry(EntryCommands),
+    #[command(subcommand, about = "Start / Stop timer")]
     Timer(TimerCommands),
 }
 
 impl Cli {
     pub async fn run(&self, app: &AppContext) -> anyhow::Result<()> {
-        if self.command.is_some() {
+        if self.command.is_none() {
             return Err(anyhow::anyhow!("No command given!").into());
         };
-        
+
         let command = self.command.as_ref().unwrap();
         match &command {
             Command::Project(command) => command.run(app).await,

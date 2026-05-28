@@ -15,6 +15,7 @@ async fn main() -> anyhow::Result<()> {
     let database_url = database_url_next_to_exe()?;
     let context = AppContext::new(&database_url).await?;
 
+    dbg!(std::env::args().collect::<Vec<_>>());
     let cli = Cli::parse();
     match cli.command {
         Some(_) => {
