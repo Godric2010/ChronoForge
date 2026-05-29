@@ -17,7 +17,7 @@ pub struct TextInputWidget {
 
 impl TextInputWidget {
     pub fn new(mode: TextInputMode, content: Option<String>) -> Self {
-        let content_str = content.unwrap_or_else(|| String::new());
+        let content_str = content.unwrap_or_default();
 
         Self {
             mode,
@@ -39,29 +39,21 @@ impl DialogWidget for TextInputWidget {
 
     fn handle_key(&mut self, key: KeyEvent) {
         match key.code {
-            KeyCode::Backspace => {
-                if self.cursor > 0 {
-                    self.content.remove(self.cursor - 1);
-                    self.cursor -= 1;
-                }
+            KeyCode::Backspace if self.cursor > 0 => {
+                self.content.remove(self.cursor - 1);
+                self.cursor -= 1;
             }
-            KeyCode::Char(c) => {
-                if self.is_char_valid(c) {
-                    self.content.insert(self.cursor, c);
-                    self.cursor += 1;
-                }
+            KeyCode::Char(c) if self.is_char_valid(c) => {
+                self.content.insert(self.cursor, c);
+                self.cursor += 1;
             }
-            KeyCode::Left => {
-                if self.cursor > 0 {
-                    self.cursor -= 1;
-                }
+            KeyCode::Left if self.cursor > 0 => {
+                self.cursor -= 1;
             }
-            KeyCode::Right => {
-                if self.cursor < self.content.len() {
-                    self.cursor += 1;
-                }
+            KeyCode::Right if self.cursor < self.content.len() => {
+                self.cursor += 1;
             }
-            _ => return,
+            _ => (),
         }
     }
 

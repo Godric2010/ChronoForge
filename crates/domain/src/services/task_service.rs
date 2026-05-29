@@ -1,9 +1,9 @@
-use chrono::Utc;
 use crate::errors::{AppError, AppResult};
 use crate::repositories::project_repository::ProjectRepository;
 use crate::repositories::task_repository::TaskRepository;
 use crate::services::naming_service;
 use crate::types::Task;
+use chrono::Utc;
 use uuid::Uuid;
 
 pub struct TaskService<T: TaskRepository, P: ProjectRepository> {
@@ -27,24 +27,24 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         self.check_if_project_exists(project).await?;
 
         let tasks = self.find_all_tasks().await?;
-        let unique_name = self.create_unique_task_name(task_name, &tasks, project.clone());
+        let unique_name = self.create_unique_task_name(task_name, &tasks, *project);
 
         let task = Task {
             id: Uuid::new_v4(),
             name: unique_name,
-            project_id: project.clone(),
+            project_id: *project,
             time_limit: 0,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
 
         let result = self.task_repository.create(task.clone()).await;
-        if result.is_err() {
-            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        if let Err(error) = result {
+            return Err(AppError::Storage(error.to_string()));
         }
         Ok(task)
     }
-    
+
     pub async fn upsert(&self, task: Task) -> anyhow::Result<()> {
         self.task_repository.upsert(task).await?;
         Ok(())
@@ -91,8 +91,8 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         };
 
         let result = self.task_repository.update(new_task.clone()).await;
-        if result.is_err() {
-            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        if let Err(error) = result {
+            return Err(AppError::Storage(error.to_string()));
         }
         Ok(new_task)
     }
@@ -115,8 +115,8 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         };
 
         let result = self.task_repository.update(new_task.clone()).await;
-        if result.is_err() {
-            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        if let Err(error) = result {
+            return Err(AppError::Storage(error.to_string()));
         }
         Ok(new_task)
     }
@@ -126,8 +126,8 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             return Err(AppError::TaskNotFound);
         }
         let result = self.task_repository.delete(task_id).await;
-        if result.is_err() {
-            return Err(AppError::Storage(result.unwrap_err().to_string()));
+        if let Err(error) = result {
+            return Err(AppError::Storage(error.to_string()));
         }
         Ok(())
     }
@@ -141,8 +141,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             names.push(task.name.clone());
         }
 
-        let modified_name = naming_service::modify_name_with_count_of_equals(task_name, &names);
-        modified_name
+        naming_service::modify_name_with_count_of_equals(task_name, &names)
     }
 
     async fn check_if_project_exists(&self, project_id: &Uuid) -> AppResult<()> {
@@ -340,7 +339,7 @@ mod task_service_tests {
             .unwrap();
 
         let all_tasks = context.task_service.find_all().await;
-        assert_eq!(all_tasks.is_ok(), true);
+        assert!(all_tasks.is_ok());
         let all_tasks = all_tasks.unwrap();
         assert_eq!(all_tasks.len(), 5);
     }

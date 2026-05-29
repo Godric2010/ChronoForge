@@ -45,7 +45,7 @@ impl TimeEntryCard {
         let weekday_text = if self.older_than_week {
             format!("{} ({})", self.weekday, self.start_time.format("%%F"))
         } else {
-            format! {"{}", self.weekday}
+            self.weekday.to_string()
         };
 
         let weekday_paragraph = Paragraph::new(weekday_text).style(
@@ -55,14 +55,8 @@ impl TimeEntryCard {
         );
         frame.render_widget(weekday_paragraph, info_chunks[1]);
 
-        let start_time_string = self
-            .start_time
-            .format("%H:%M")
-            .to_string();
-        let end_time_string = self
-            .end_time
-            .format("%H:%M")
-            .to_string();
+        let start_time_string = self.start_time.format("%H:%M").to_string();
+        let end_time_string = self.end_time.format("%H:%M").to_string();
         let day_appendage = if self.duration_days > 0 {
             format!("(+{})", self.duration_days)
         } else {

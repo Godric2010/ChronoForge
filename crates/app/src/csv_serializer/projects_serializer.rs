@@ -3,7 +3,7 @@ use domain::types::Project;
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::types::Uuid;
-use std::path::PathBuf;
+use std::path::Path;
 use storage::repositories::sqlite_project_repository::SQLiteProjectRepository;
 
 #[derive(Serialize, Deserialize)]
@@ -50,7 +50,7 @@ impl<'a> ProjectsSerializer<'a> {
         Self { project_service }
     }
 
-    pub async fn export_csv(&self, path: &PathBuf) -> anyhow::Result<()> {
+    pub async fn export_csv(&self, path: &Path) -> anyhow::Result<()> {
         let file_path = path.join("projects.csv");
 
         let mut writer = csv::WriterBuilder::new()
@@ -66,7 +66,7 @@ impl<'a> ProjectsSerializer<'a> {
         Ok(())
     }
 
-    pub async fn import_csv(&self, path: &PathBuf) -> anyhow::Result<()> {
+    pub async fn import_csv(&self, path: &Path) -> anyhow::Result<()> {
         let file_path = path.join("projects.csv");
         if !file_path.exists() {
             anyhow::bail!("Missing projects.csv file at {}", path.display());

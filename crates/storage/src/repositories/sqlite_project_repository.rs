@@ -77,7 +77,7 @@ impl ProjectRepository for SQLiteProjectRepository {
         .bind(&project.name)
         .bind(project.time_limit)
         .bind(project.updated_at.to_rfc3339())
-        .bind(&project.id.to_string())
+        .bind(project.id.to_string())
         .execute(&self.pool)
         .await?;
 

@@ -1,6 +1,6 @@
 use sqlx::types::chrono::Utc;
 use std::fs::File;
-use std::path::PathBuf;
+use std::path::Path;
 
 pub const EXPORT_FORMAT_VERSION: u32 = 2;
 
@@ -22,7 +22,7 @@ impl SerializableMeta {
         }
     }
 
-    pub fn write_to_file(&self, path: &PathBuf) -> anyhow::Result<()> {
+    pub fn write_to_file(&self, path: &Path) -> anyhow::Result<()> {
         let file_path = path.join("meta.json");
         let file = File::create(file_path)?;
         serde_json::to_writer_pretty(file, self)?;
@@ -30,7 +30,7 @@ impl SerializableMeta {
         Ok(())
     }
 
-    pub fn read_from_file(&self, path: &PathBuf) -> anyhow::Result<Self> {
+    pub fn read_from_file(&self, path: &Path) -> anyhow::Result<Self> {
         let file_path = path.join("meta.json");
         let file = File::open(file_path)?;
 

@@ -1,5 +1,5 @@
-use crate::types::Task;
 use crate::repositories::task_repository::TaskRepository;
+use crate::types::Task;
 use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
@@ -56,7 +56,7 @@ impl TaskRepository for InMemoryTaskRepository {
 
     async fn find_by_id(&self, id: &Uuid) -> anyhow::Result<Option<Task>> {
         let tasks = self.tasks.lock().unwrap();
-        let task = tasks.iter().find(|t| t.id == id.clone());
+        let task = tasks.iter().find(|t| t.id == *id);
         Ok(task.cloned())
     }
 

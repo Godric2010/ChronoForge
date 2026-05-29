@@ -45,7 +45,7 @@ impl DialogWidget for YesNoWidget {
                     self.decision = YesNo::No;
                 }
             }
-            _ => return
+            _ => (),
         }
     }
 
@@ -68,7 +68,7 @@ impl DialogWidget for YesNoWidget {
             Constraint::Length(2),
             Constraint::Min(0),
         ])
-            .split(area);
+        .split(area);
 
         let styles = match self.decision {
             YesNo::Yes => {

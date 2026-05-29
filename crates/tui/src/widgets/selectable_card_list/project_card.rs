@@ -42,14 +42,12 @@ impl ProjectCard {
     }
 
     fn render_time_info(&self, area: Rect, frame: &mut Frame) {
-
         let time_info_block = Block::default()
             .borders(Borders::LEFT)
             .border_type(BorderType::LightTripleDashed);
 
         let inner = time_info_block.inner(area);
         frame.render_widget(time_info_block, area);
-
 
         let time_chunks = Layout::vertical([
             Constraint::Length(1),

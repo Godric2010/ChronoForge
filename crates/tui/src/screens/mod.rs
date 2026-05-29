@@ -2,10 +2,10 @@ use crate::screens::overview::OverviewScreen;
 use crate::screens::settings::SettingsScreen;
 use crate::screens::welcome::WelcomeScreen;
 
-pub mod overview;
-pub mod welcome;
-pub mod settings;
 mod dialog;
+pub mod overview;
+pub mod settings;
+pub mod welcome;
 
 #[derive(Copy, Clone)]
 pub enum ScreenType {
@@ -17,9 +17,13 @@ pub struct Screens {
     pub welcome_screen: WelcomeScreen,
     pub overview: OverviewScreen,
     pub settings: SettingsScreen,
-    
 }
 
+impl Default for Screens {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl Screens {
     pub fn new() -> Self {
         Self {

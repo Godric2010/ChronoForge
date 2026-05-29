@@ -18,7 +18,11 @@ pub struct SettingsScreen {
     selection_ref: SelectionRef,
     settings_dialog: Option<SettingsDialog>,
 }
-
+impl Default for SettingsScreen {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl SettingsScreen {
     pub fn new() -> Self {
         let item_name_width: u16 = 15;
@@ -63,7 +67,7 @@ impl SettingsScreen {
         let mut height_offset = 0;
         for section_index in 0..self.sections.len() {
             let item = &self.sections[section_index];
-            let mut item_rect = rect.clone();
+            let mut item_rect = rect;
             item_rect.y += height_offset;
 
             height_offset += item.get_height() + 1;

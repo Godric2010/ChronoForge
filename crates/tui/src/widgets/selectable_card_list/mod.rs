@@ -137,7 +137,7 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
                 if selected_index >= self.cards.len() - 1 {
                     return;
                 }
-                selected_index = selected_index + 1;
+                selected_index +=  1;
                 if selected_index >= self.scroll_offset + self.visible_items_count {
                     self.scroll_offset += 1;
                 }
@@ -151,14 +151,14 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
                     return;
                 }
 
-                selected_index = selected_index - 1;
+                selected_index -= 1;
                 if selected_index < self.scroll_offset {
                     self.scroll_offset -= 1;
                 }
 
                 self.selected_index = Some(selected_index);
             }
-            _ => return,
+            _ => (),
         }
     }
 }

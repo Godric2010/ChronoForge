@@ -11,8 +11,7 @@ mod task_repository_tests {
         let pool = test_db_builder::create_pool().await;
         test_db_builder::create_fake_project_entry(&pool, project_one_id, "Project1").await;
         test_db_builder::create_fake_project_entry(&pool, project_two_id, "Project2").await;
-        let repository = SQLiteTaskRepository::new(pool.clone());
-        repository
+        SQLiteTaskRepository::new(pool.clone())
     }
 
     #[tokio::test]
@@ -23,7 +22,7 @@ mod task_repository_tests {
 
         let task = Task {
             id: Uuid::new_v4(),
-            project_id: project_id.clone(),
+            project_id,
             name: "TestTask01".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -45,20 +44,20 @@ mod task_repository_tests {
         let repository = setup_test(project_id, project_two_id).await;
         let task = Task {
             id: Uuid::new_v4(),
-            project_id: project_id.clone(),
+            project_id,
             name: "Task 01".to_string(),
             time_limit: 0,
-            created_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
-            updated_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+            created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
+            updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         };
 
         repository.create(task.clone()).await.unwrap();
 
         let mut updated_task = task.clone();
         updated_task.name = "Task01".to_string();
-        updated_task.project_id = project_two_id.clone();
+        updated_task.project_id = project_two_id;
         updated_task.time_limit = 20;
-        updated_task.updated_at = Utc.with_ymd_and_hms(2026, 05, 27, 22, 05, 0).unwrap();
+        updated_task.updated_at = Utc.with_ymd_and_hms(2026, 5, 27, 22, 5, 0).unwrap();
 
         repository.upsert(updated_task.clone()).await.unwrap();
 
@@ -77,20 +76,20 @@ mod task_repository_tests {
         let repository = setup_test(project_id, project_two_id).await;
         let task = Task {
             id: Uuid::new_v4(),
-            project_id: project_id.clone(),
+            project_id,
             name: "My new Task".to_string(),
             time_limit: 0,
-            created_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
-            updated_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+            created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
+            updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         };
 
         repository.create(task.clone()).await.unwrap();
 
         let mut updated_task = task.clone();
         updated_task.name = "A new Task".to_string();
-        updated_task.project_id = project_two_id.clone();
+        updated_task.project_id = project_two_id;
         updated_task.time_limit = 20;
-        updated_task.updated_at = Utc.with_ymd_and_hms(2026, 05, 27, 20, 05, 0).unwrap();
+        updated_task.updated_at = Utc.with_ymd_and_hms(2026, 5, 27, 20, 5, 0).unwrap();
 
         repository.upsert(updated_task.clone()).await.unwrap();
 
@@ -110,7 +109,7 @@ mod task_repository_tests {
 
         let task = Task {
             id: Uuid::new_v4(),
-            project_id: project_one_id.clone(),
+            project_id: project_one_id,
             name: "TestTask01".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -140,7 +139,7 @@ mod task_repository_tests {
 
         let updated_project_task = Task {
             id: updated_name_task.id,
-            project_id: project_two_id.clone(),
+            project_id: project_two_id,
             name: updated_name_task.name,
             time_limit: updated_name_task.time_limit,
             created_at: updated_name_task.created_at,
@@ -166,7 +165,7 @@ mod task_repository_tests {
 
         let task_a = Task {
             id: Uuid::new_v4(),
-            project_id: project_one_id.clone(),
+            project_id: project_one_id,
             name: "TestTask01".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -176,7 +175,7 @@ mod task_repository_tests {
 
         let task_b = Task {
             id: Uuid::new_v4(),
-            project_id: project_one_id.clone(),
+            project_id: project_one_id,
             name: "TestTask02".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -186,7 +185,7 @@ mod task_repository_tests {
 
         let task_c = Task {
             id: Uuid::new_v4(),
-            project_id: project_two_id.clone(),
+            project_id: project_two_id,
             name: "TestTask01".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -211,7 +210,7 @@ mod task_repository_tests {
 
         let task_a = Task {
             id: Uuid::new_v4(),
-            project_id: project_a.clone(),
+            project_id: project_a,
             name: "TestTask01".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -221,7 +220,7 @@ mod task_repository_tests {
 
         let task_b = Task {
             id: Uuid::new_v4(),
-            project_id: project_a.clone(),
+            project_id: project_a,
             name: "TestTask02".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -231,7 +230,7 @@ mod task_repository_tests {
 
         let task_c = Task {
             id: Uuid::new_v4(),
-            project_id: project_b.clone(),
+            project_id: project_b,
             name: "TestTask01".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -251,7 +250,7 @@ mod task_repository_tests {
 
         let task_a = Task {
             id: Uuid::new_v4(),
-            project_id: project_a.clone(),
+            project_id: project_a,
             name: "TestTask01".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -261,7 +260,7 @@ mod task_repository_tests {
 
         let task_b = Task {
             id: Uuid::new_v4(),
-            project_id: project_a.clone(),
+            project_id: project_a,
             name: "TestTask02".to_string(),
             time_limit: 0,
             created_at: Utc::now(),
@@ -271,7 +270,7 @@ mod task_repository_tests {
 
         let task_c = Task {
             id: Uuid::new_v4(),
-            project_id: project_b.clone(),
+            project_id: project_b,
             name: "TestTask01".to_string(),
             time_limit: 0,
             created_at: Utc::now(),

@@ -1,4 +1,3 @@
-mod project_repository_tests {
     use crate::integration_tests::test_db_builder;
     use crate::repositories::sqlite_project_repository::SQLiteProjectRepository;
     use chrono::{TimeZone, Utc};
@@ -39,8 +38,8 @@ mod project_repository_tests {
             id: Uuid::new_v4(),
             name: "Chrono Forge".to_string(),
             time_limit: 0,
-            created_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
-            updated_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+            created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
+            updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         };
 
         repository.create(project.clone()).await.unwrap();
@@ -48,7 +47,7 @@ mod project_repository_tests {
         let mut updated_project = project.clone();
         updated_project.name = "ChronoForge".to_string();
         updated_project.time_limit = 20;
-        updated_project.updated_at = Utc.with_ymd_and_hms(2026, 05, 27, 22, 05, 0).unwrap();
+        updated_project.updated_at = Utc.with_ymd_and_hms(2026, 5, 27, 22, 5, 0).unwrap();
 
         repository.upsert(updated_project.clone()).await.unwrap();
 
@@ -67,8 +66,8 @@ mod project_repository_tests {
             id: Uuid::new_v4(),
             name: "Maze_Game".to_string(),
             time_limit: 0,
-            created_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
-            updated_at: Utc.with_ymd_and_hms(2026, 05, 27, 21, 05, 0).unwrap(),
+            created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
+            updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         };
 
         repository.create(project.clone()).await.unwrap();
@@ -76,7 +75,7 @@ mod project_repository_tests {
         let mut updated_project = project.clone();
         updated_project.name = "Maze Game".to_string();
         updated_project.time_limit = 20;
-        updated_project.updated_at = Utc.with_ymd_and_hms(2026, 05, 27, 20, 05, 0).unwrap();
+        updated_project.updated_at = Utc.with_ymd_and_hms(2026, 5, 27, 20, 5, 0).unwrap();
 
         repository.upsert(updated_project.clone()).await.unwrap();
 
@@ -203,4 +202,3 @@ mod project_repository_tests {
         let stored_project = repository.find_by_id(&project.id).await.unwrap();
         assert!(stored_project.is_none());
     }
-}

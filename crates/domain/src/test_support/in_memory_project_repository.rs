@@ -57,7 +57,7 @@ impl ProjectRepository for InMemoryProjectRepository {
 
     async fn find_by_id(&self, id: &Uuid) -> anyhow::Result<Option<Project>> {
         let projects = self.projects.lock().unwrap();
-        let result = projects.iter().find(|p| p.id == id.clone());
+        let result = projects.iter().find(|p| p.id == *id);
         Ok(result.cloned())
     }
 

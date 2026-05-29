@@ -39,12 +39,12 @@ impl ProjectCommand {
                 }
             }
             ProjectCommand::Delete { id } => {
-                let uuid = Uuid::from_str(&id)?;
+                let uuid = Uuid::from_str(id)?;
                 app.project_service.delete(uuid).await?;
                 println!("Deleted project {}", id);
             }
             ProjectCommand::Rename { id, name } => {
-                let uuid = Uuid::from_str(&id)?;
+                let uuid = Uuid::from_str(id)?;
                 let project = app.project_service.edit_name(uuid, name.as_str()).await?;
                 println!("Renamed project: {} ({})", project.name, project.id);
             }

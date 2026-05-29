@@ -1,4 +1,7 @@
-pub(crate) fn modify_name_with_count_of_equals(target_name: &str, other_names: &[String]) -> String {
+pub(crate) fn modify_name_with_count_of_equals(
+    target_name: &str,
+    other_names: &[String],
+) -> String {
     let mut next_suffix = 0;
 
     for other_name in other_names {

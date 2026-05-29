@@ -68,7 +68,7 @@ impl<'a> AppViewContext<'a> {
         }
 
         let mut sorted_entries = time_entry_vms.clone();
-        sorted_entries.sort_by(|a, b| b.end_time.cmp(&a.end_time));
+        sorted_entries.sort_by_key(| b| std::cmp::Reverse(b.end_time));
 
         Ok(TaskViewModel {
             task: task.clone(),
@@ -83,8 +83,8 @@ impl<'a> AppViewContext<'a> {
     ) -> anyhow::Result<TimeEntryViewModel> {
         Ok(TimeEntryViewModel {
             time_entry: time_entry.clone(),
-            start_time: time_entry.start_time.clone(),
-            end_time: time_entry.end_time.clone(),
+            start_time: time_entry.start_time,
+            end_time: time_entry.end_time,
         })
     }
 }

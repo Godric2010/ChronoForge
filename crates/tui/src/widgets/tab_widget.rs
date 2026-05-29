@@ -82,14 +82,14 @@ impl TabWidget {
             };
             width_offset += width;
 
-            let border_color;
+            let border_color =
             if index == self.active_index {
                 item.set_active(true);
-                border_color = Color::Rgb(255, 125, 0);
+                Color::Rgb(255, 125, 0)
             } else {
                 item.set_active(false);
-                border_color = Color::Gray;
-            }
+                 Color::Gray
+            };
 
             let tab_block = Block::default()
                 .borders(Borders::ALL)

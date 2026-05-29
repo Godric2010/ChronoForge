@@ -32,8 +32,7 @@ impl<P: ProjectRepository> ProjectService<P> {
         };
 
         let result = self.project_repository.create(project.clone()).await;
-        if result.is_err() {
-            let error = result.unwrap_err();
+        if let Err(error) = result {
             return Err(AppError::Storage(
                 "Unable to create project in database: ".to_string() + &error.to_string(),
             ));
@@ -64,10 +63,9 @@ impl<P: ProjectRepository> ProjectService<P> {
     pub async fn find_all(&self) -> AppResult<Vec<Project>> {
         let projects = self.project_repository.find_all().await;
 
-        if projects.is_err() {
-            let error_msg = projects.unwrap_err().to_string();
+        if let Err(error) = projects {
             return Err(AppError::Storage(
-                "Error when fetching all projects: ".to_string() + error_msg.as_str(),
+                "Error when fetching all projects: ".to_string() + error.to_string().as_str(),
             ));
         }
         let all_projects = projects.unwrap();
@@ -79,13 +77,13 @@ impl<P: ProjectRepository> ProjectService<P> {
         if project.is_err() {
             return Err(ProjectNotFound);
         }
-        let project = project.unwrap();
+        let project = project?;
         if name.is_empty() {
             return Err(AppError::EmptyName);
         }
 
         let all_projects = self.find_all().await?;
-        let unique_project_name = self.create_unique_project_name(&name, &all_projects);
+        let unique_project_name = self.create_unique_project_name(name, &all_projects);
 
         let edited_project = Project {
             id: project_id,
@@ -126,8 +124,7 @@ impl<P: ProjectRepository> ProjectService<P> {
             names.push(project.name.clone());
         }
 
-        let modified_name = naming_service::modify_name_with_count_of_equals(project_name, &names);
-        modified_name
+        naming_service::modify_name_with_count_of_equals(project_name, &names)
     }
 }
 
@@ -152,7 +149,7 @@ mod project_service_tests {
         let all_projects = all_projects_result.unwrap();
         assert_eq!(all_projects.len(), 1);
 
-        let test_project = all_projects.get(0).unwrap();
+        let test_project = all_projects.first().unwrap();
         assert_eq!(test_project.name, "MyProject");
         assert_ne!(test_project.id, Uuid::default());
     }
@@ -177,7 +174,7 @@ mod project_service_tests {
 
         let projects = service.find_all().await.unwrap();
         assert_eq!(projects.len(), 3);
-        assert_eq!(projects.get(0).unwrap().name, "Jane Doe");
+        assert_eq!(projects.first().unwrap().name, "Jane Doe");
         assert_eq!(projects.get(1).unwrap().name, "Jane Doe(1)");
         assert_eq!(projects.get(2).unwrap().name, "Jane Doe(2)");
     }
@@ -191,14 +188,14 @@ mod project_service_tests {
 
         let projects = service.find_all().await.unwrap();
         assert_eq!(projects.len(), 1);
-        let project_id = projects.get(0).unwrap().id;
+        let project_id = projects.first().unwrap().id;
 
         let result = service.find_by_id(project_id).await;
         assert!(result.is_ok());
 
         let project = result.unwrap();
         assert_eq!(project.id, project_id);
-        assert_eq!(project.name, projects.get(0).unwrap().name);
+        assert_eq!(project.name, projects.first().unwrap().name);
     }
 
     #[tokio::test]
@@ -228,7 +225,7 @@ mod project_service_tests {
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string()).await.unwrap();
         let projects = service.find_all().await.unwrap();
-        let project = projects.get(0).unwrap();
+        let project = projects.first().unwrap();
 
         let result = service.edit_name(project.id, "Batman").await;
         assert!(result.is_ok());
@@ -254,7 +251,7 @@ mod project_service_tests {
         service.create("Jane Doe".to_string()).await.unwrap();
         service.create("MyProject".to_string()).await.unwrap();
         let projects = service.find_all().await.unwrap();
-        let project = projects.get(0).unwrap();
+        let project = projects.first().unwrap();
 
         let result = service.edit_name(project.id, "MyProject").await;
         assert!(result.is_ok());
@@ -268,7 +265,7 @@ mod project_service_tests {
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string()).await.unwrap();
         let projects = service.find_all().await.unwrap();
-        let project = projects.get(0).unwrap();
+        let project = projects.first().unwrap();
         let result = service.edit_name(project.id, "").await;
         assert!(result.is_err());
         assert!(matches!(result.err().unwrap(), AppError::EmptyName));
@@ -280,7 +277,7 @@ mod project_service_tests {
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string()).await.unwrap();
         let projects = service.find_all().await.unwrap();
-        let project = projects.get(0).unwrap();
+        let project = projects.first().unwrap();
 
         let result = service.delete(project.id).await;
         assert!(result.is_ok());

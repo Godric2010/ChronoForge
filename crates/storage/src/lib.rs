@@ -1,5 +1,5 @@
-use sqlx::SqlitePool;
 use crate::repositories::sqlite_project_repository::SQLiteProjectRepository;
+use sqlx::SqlitePool;
 
 #[cfg(test)]
 pub mod integration_tests;

@@ -60,17 +60,7 @@ impl TimeEntryWidget {
         frame.render_widget(heading, area);
     }
 
-    fn draw_time_edit_fields(
-        &self,
-        frame: &mut Frame,
-        area: Rect,
-        hour: &DigitInputWidget,
-        minute: &DigitInputWidget,
-        day: &DigitInputWidget,
-        month: &DigitInputWidget,
-        year: &DigitInputWidget,
-        error_msg: &String,
-    ) {
+    fn draw_time_edit_fields(&self, frame: &mut Frame, area: Rect, data: TimeEditFieldRenderData) {
         let chunks = Layout::horizontal([
             Constraint::Length(2), // hour
             Constraint::Length(1), // :
@@ -86,21 +76,21 @@ impl TimeEntryWidget {
         ])
         .split(area);
 
-        hour.render(frame, chunks[0]);
+        data.hour.render(frame, chunks[0]);
         let colum = Paragraph::new(":");
         frame.render_widget(colum, chunks[1]);
-        minute.render(frame, chunks[2]);
+        data.minute.render(frame, chunks[2]);
 
-        day.render(frame, chunks[4]);
+        data.day.render(frame, chunks[4]);
         let separator = Paragraph::new("/");
         frame.render_widget(separator, chunks[5]);
-        month.render(frame, chunks[6]);
+        data.month.render(frame, chunks[6]);
         let separator = Paragraph::new("/");
         frame.render_widget(separator, chunks[7]);
-        year.render(frame, chunks[8]);
+        data.year.render(frame, chunks[8]);
 
         let error_paragraph =
-            Paragraph::new(error_msg.clone()).style(Style::default().fg(Color::Red));
+            Paragraph::new(data.error_msg.to_owned()).style(Style::default().fg(Color::Red));
         frame.render_widget(error_paragraph, chunks[10]);
     }
     fn validate_start_date_time(&mut self) {
@@ -119,8 +109,8 @@ impl TimeEntryWidget {
             &self.input_fields[4],
         );
 
-        if date_time.is_err() {
-            self.start_date_error_msg = date_time.unwrap_err().to_string();
+        if let Err(error) = date_time {
+            self.start_date_error_msg = error.to_string();
             self.start_time = None;
             return;
         }
@@ -158,8 +148,8 @@ impl TimeEntryWidget {
             &self.input_fields[9],
         );
 
-        if date_time.is_err() {
-            self.start_date_error_msg = date_time.unwrap_err().to_string();
+        if let Err(error) = date_time {
+            self.start_date_error_msg = error.to_string();
             self.start_time = None;
             return;
         }
@@ -267,12 +257,14 @@ impl DialogWidget for TimeEntryWidget {
         self.draw_time_edit_fields(
             frame,
             inner_chunks[2],
-            &self.input_fields[0],
-            &self.input_fields[1],
-            &self.input_fields[2],
-            &self.input_fields[3],
-            &self.input_fields[4],
-            &self.start_date_error_msg,
+            TimeEditFieldRenderData {
+                hour: &self.input_fields[0],
+                minute: &self.input_fields[1],
+                day: &self.input_fields[2],
+                month: &self.input_fields[3],
+                year: &self.input_fields[4],
+                error_msg: &self.start_date_error_msg,
+            },
         );
 
         // stop time heading
@@ -280,12 +272,14 @@ impl DialogWidget for TimeEntryWidget {
         self.draw_time_edit_fields(
             frame,
             inner_chunks[5],
-            &self.input_fields[5],
-            &self.input_fields[6],
-            &self.input_fields[7],
-            &self.input_fields[8],
-            &self.input_fields[9],
-            &self.end_date_error_msg,
+            TimeEditFieldRenderData {
+                hour: &self.input_fields[5],
+                minute: &self.input_fields[6],
+                day: &self.input_fields[7],
+                month: &self.input_fields[8],
+                year: &self.input_fields[9],
+                error_msg: &self.end_date_error_msg,
+            },
         );
     }
 }
@@ -360,7 +354,7 @@ impl DigitInputWidget {
         }
     }
 
-    pub fn handle_event(&mut self, event: &crossterm::event::KeyEvent) {
+    pub fn handle_event(&mut self, event: &KeyEvent) {
         match event.code {
             KeyCode::Up => {
                 self.value = (self.value + 1).min(self.max_value);
@@ -372,7 +366,7 @@ impl DigitInputWidget {
                 if self.cursor_position == 0 {
                     return;
                 }
-                self.cursor_position = (self.cursor_position - 1).max(0);
+                self.cursor_position -= 1;
             }
             KeyCode::Right => {
                 self.cursor_position = (self.cursor_position + 1).min(self.character_limit - 1);
@@ -386,15 +380,19 @@ impl DigitInputWidget {
                 let new_text: String = self.digit_chars.clone().into_iter().collect();
                 self.value = new_text.parse::<u16>().unwrap();
 
-                if self.value > self.max_value || self.value < self.min_value {
-                    self.is_value_invalid = true;
-                } else {
-                    self.is_value_invalid = false;
-                }
+                self.is_value_invalid = self.value > self.max_value || self.value < self.min_value;
 
                 self.cursor_position = (self.cursor_position + 1).min(self.character_limit - 1);
             }
             _ => {}
         }
     }
+}
+struct TimeEditFieldRenderData<'a> {
+    year: &'a DigitInputWidget,
+    month: &'a DigitInputWidget,
+    day: &'a DigitInputWidget,
+    hour: &'a DigitInputWidget,
+    minute: &'a DigitInputWidget,
+    error_msg: &'a str,
 }

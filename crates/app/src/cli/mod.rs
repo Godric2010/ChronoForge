@@ -23,7 +23,7 @@ pub enum Command {
     #[command(subcommand, about = "Manage tasks")]
     Tasks(TaskCommands),
     #[command(subcommand, about = "Manage time entries")]
-    Entry(EntryCommands),
+    Entry(Box<EntryCommands>),
     #[command(subcommand, about = "Start / Stop timer")]
     Timer(TimerCommands),
 }
@@ -31,7 +31,7 @@ pub enum Command {
 impl Cli {
     pub async fn run(&self, app: &AppContext) -> anyhow::Result<()> {
         if self.command.is_none() {
-            return Err(anyhow::anyhow!("No command given!").into());
+            return Err(anyhow::anyhow!("No command given!"));
         };
 
         let command = self.command.as_ref().unwrap();

@@ -89,12 +89,12 @@ impl DialogWidget for ListWidget {
                 if self.selected_index == 0 {
                     return;
                 }
-                self.selected_index = self.selected_index - 1;
+                self.selected_index -= 1;
                 if self.selected_index < self.scroll_offset {
                     self.scroll_offset -= 1;
                 }
             }
-            _ => return,
+            _ => (),
         }
     }
 

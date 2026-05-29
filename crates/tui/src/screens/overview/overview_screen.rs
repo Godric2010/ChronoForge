@@ -28,7 +28,11 @@ pub struct OverviewScreen {
     enforce_view_model_update_on_next_tick: bool,
     timer_active: bool,
 }
-
+impl Default for OverviewScreen {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl OverviewScreen {
     pub fn new() -> Self {
         let mut this = Self {
@@ -160,7 +164,7 @@ impl OverviewScreen {
                 _ => None,
             },
             KeyCode::Right => {
-                if let Some(_) = &self.get_selected_project() {
+                if self.get_selected_project().is_some() {
                     self.enable_task_selection_mode();
                 }
                 None
@@ -189,8 +193,7 @@ impl OverviewScreen {
                         let widget =
                             TextInputWidget::new(TextInputMode::Naming, Some(task.name.clone()));
                         let dialog = Dialog::new("Rename the task", widget);
-                        self.overview_dialog =
-                            Some(OverviewDialog::EditTask(dialog, task.id.clone()));
+                        self.overview_dialog = Some(OverviewDialog::EditTask(dialog, task.id));
                     }
                     None
                 }
@@ -201,7 +204,7 @@ impl OverviewScreen {
                         .iter()
                         .map(|project| ListItem {
                             name: project.project.name.clone(),
-                            id: project.project.id.clone(),
+                            id: project.project.id,
                         })
                         .collect::<Vec<ListItem>>();
 
@@ -240,7 +243,7 @@ impl OverviewScreen {
                 None
             }
             KeyCode::Right => {
-                if let Some(_) = &self.get_selected_task() {
+                if self.get_selected_task().is_some() {
                     self.enable_time_entry_mode();
                 }
                 None
@@ -282,7 +285,7 @@ impl OverviewScreen {
                         .iter()
                         .map(|task| ListItem {
                             name: task.task.name.clone(),
-                            id: task.task.id.clone(),
+                            id: task.task.id,
                         })
                         .collect::<Vec<ListItem>>();
 
@@ -384,7 +387,7 @@ impl OverviewScreen {
             .view_model
             .projects
             .iter()
-            .find(|p_vm| p_vm.project.id == project_id.clone())
+            .find(|p_vm| p_vm.project.id == *project_id)
             .unwrap();
 
         let tasks = &vm.tasks;
@@ -401,14 +404,14 @@ impl OverviewScreen {
             .view_model
             .projects
             .iter()
-            .find(|p_vm| p_vm.project.id == project_id.clone())
+            .find(|p_vm| p_vm.project.id == *project_id)
             .unwrap();
 
         let tasks = &project_vm.tasks;
-        let task_vm = tasks.iter().find(|t| t.task.id == task_id.clone()).unwrap();
+        let task_vm = tasks.iter().find(|t| t.task.id == *task_id).unwrap();
 
         let mut entries = task_vm.time_entries.clone();
-        entries.sort_by(|a, b| b.end_time.cmp(&a.end_time));
+        entries.sort_by_key(|b| std::cmp::Reverse(b.end_time));
 
         let time_entry_cards: Vec<TimeEntryCard> = task_vm
             .time_entries

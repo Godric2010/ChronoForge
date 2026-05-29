@@ -75,4 +75,3 @@ struct ActiveTimerRow {
     task_id: String,
     start_time: String,
 }
-

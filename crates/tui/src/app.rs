@@ -194,7 +194,7 @@ impl App {
         let separator = symbols::line::HORIZONTAL.repeat(area.width.saturating_sub(2) as usize);
         let separator_widget = Paragraph::new(Line::from(separator));
         let mut rect = area;
-        rect.x = rect.x + 1;
+        rect.x += 1;
         frame.render_widget(separator_widget, rect);
     }
 

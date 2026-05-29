@@ -46,7 +46,6 @@ impl TaskCard {
         let time_chunks = Layout::vertical([
             Constraint::Length(1),
             Constraint::Length(1),
-
             Constraint::Min(1),
         ])
         .split(inner);

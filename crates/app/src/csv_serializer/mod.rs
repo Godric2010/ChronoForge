@@ -9,7 +9,7 @@ use crate::csv_serializer::serialization_meta::SerializableMeta;
 use crate::csv_serializer::tasks_serializer::TasksSerializer;
 use crate::csv_serializer::time_entry_serializer::TimeEntrySerializer;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub struct CsvSerializer<'a> {
     meta_serializer: SerializableMeta,
@@ -72,7 +72,7 @@ impl<'a> CsvSerializer<'a> {
         Ok(base_path)
     }
 
-    fn validate_path(&self, path_buf: &PathBuf) -> anyhow::Result<()> {
+    fn validate_path(&self, path_buf: &Path) -> anyhow::Result<()> {
         if !path_buf.exists() {
             anyhow::bail!("Path does not exist: {}", path_buf.display());
         }

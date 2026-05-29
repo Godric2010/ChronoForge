@@ -3,7 +3,7 @@ use domain::types::Task;
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::types::Uuid;
-use std::path::PathBuf;
+use std::path::Path;
 use storage::repositories::sqlite_project_repository::SQLiteProjectRepository;
 use storage::repositories::sqlite_task_repository::SQLiteTaskRepository;
 
@@ -55,7 +55,7 @@ impl<'a> TasksSerializer<'a> {
         Self { task_service }
     }
 
-    pub async fn export_csv(&self, path: &PathBuf) -> anyhow::Result<()> {
+    pub async fn export_csv(&self, path: &Path) -> anyhow::Result<()> {
         let file_path = path.join("tasks.csv");
 
         let mut writer = csv::WriterBuilder::new()
@@ -71,7 +71,7 @@ impl<'a> TasksSerializer<'a> {
         Ok(())
     }
 
-    pub async fn import_csv(&self, path: &PathBuf) -> anyhow::Result<()> {
+    pub async fn import_csv(&self, path: &Path) -> anyhow::Result<()> {
         let file_path = path.join("tasks.csv");
         if !file_path.exists() {
             anyhow::bail!("Missing tasks.csv file at {}", path.display());

@@ -85,7 +85,7 @@ impl OverviewDialog {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(new_project_name) => OverviewDialogResult::Confirmed(
-                        AppAction::RenameProject(project_id.clone(), new_project_name),
+                        AppAction::RenameProject(*project_id, new_project_name),
                     ),
                 }
             }
@@ -95,7 +95,7 @@ impl OverviewDialog {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(task_name) => OverviewDialogResult::Confirmed(
-                        AppAction::CreateTask(task_name, project_id.clone()),
+                        AppAction::CreateTask(task_name, *project_id),
                     ),
                 }
             }
@@ -105,7 +105,7 @@ impl OverviewDialog {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(new_task_name) => OverviewDialogResult::Confirmed(
-                        AppAction::RenameTask(task_id.clone(), new_task_name),
+                        AppAction::RenameTask(*task_id, new_task_name),
                     ),
                 }
             }
@@ -116,9 +116,7 @@ impl OverviewDialog {
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(deletion_confirmed) => {
                         if deletion_confirmed {
-                            OverviewDialogResult::Confirmed(AppAction::DeleteProject(
-                                project_id.clone(),
-                            ))
+                            OverviewDialogResult::Confirmed(AppAction::DeleteProject(*project_id))
                         } else {
                             OverviewDialogResult::Cancelled
                         }
@@ -132,7 +130,7 @@ impl OverviewDialog {
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(deletion_confirmed) => {
                         if deletion_confirmed {
-                            OverviewDialogResult::Confirmed(AppAction::DeleteTask(task_id.clone()))
+                            OverviewDialogResult::Confirmed(AppAction::DeleteTask(*task_id))
                         } else {
                             OverviewDialogResult::Cancelled
                         }
@@ -146,9 +144,7 @@ impl OverviewDialog {
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(deletion_confirmed) => {
                         if deletion_confirmed {
-                            OverviewDialogResult::Confirmed(AppAction::DeleteTimeEntry(
-                                entry_id.clone(),
-                            ))
+                            OverviewDialogResult::Confirmed(AppAction::DeleteTimeEntry(*entry_id))
                         } else {
                             OverviewDialogResult::Cancelled
                         }
@@ -160,9 +156,9 @@ impl OverviewDialog {
                 match result {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
-                    DialogResult::Confirmed(project_id) => OverviewDialogResult::Confirmed(
-                        AppAction::AssignTask(task_id.clone(), project_id.clone()),
-                    ),
+                    DialogResult::Confirmed(project_id) => {
+                        OverviewDialogResult::Confirmed(AppAction::AssignTask(*task_id, project_id))
+                    }
                 }
             }
             OverviewDialog::AssignTimeEntry(dialog, entry_id) => {
@@ -171,7 +167,7 @@ impl OverviewDialog {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(task_id) => OverviewDialogResult::Confirmed(
-                        AppAction::AssignTimeEntry(entry_id.clone(), task_id.clone()),
+                        AppAction::AssignTimeEntry(*entry_id, task_id),
                     ),
                 }
             }
@@ -183,7 +179,7 @@ impl OverviewDialog {
                     DialogResult::Confirmed(times) => {
                         if let Some(times) = times {
                             OverviewDialogResult::Confirmed(AppAction::CreateTimeEntry(
-                                task_id.clone(),
+                                *task_id,
                                 times.0,
                                 times.1,
                             ))
@@ -201,9 +197,7 @@ impl OverviewDialog {
                     DialogResult::Confirmed(times) => {
                         if let Some(times) = times {
                             OverviewDialogResult::Confirmed(AppAction::EditTimeEntry(
-                                entry_id.clone(),
-                                times.0,
-                                times.1,
+                                *entry_id, times.0, times.1,
                             ))
                         } else {
                             OverviewDialogResult::Cancelled
