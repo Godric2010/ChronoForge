@@ -1,0 +1,103 @@
+name: Build Release Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example 0.1.0"
+        required: true
+        default: "0.1.0"
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            binary_name: chrono-forge
+            archive_name: chrono-forge-v${{ inputs.version }}-linux-x86_64.tar.gz
+
+          - name: windows-x86_64
+            os: windows-latest
+            binary_name: chrono-forge.exe
+            archive_name: chrono-forge-v${{ inputs.version }}-windows-x86_64.zip
+
+          - name: macos-x86_64
+            os: macos-13
+            binary_name: chrono-forge
+            archive_name: chrono-forge-v${{ inputs.version }}-macos-x86_64.tar.gz
+
+          - name: macos-aarch64
+            os: macos-latest
+            binary_name: chrono-forge
+            archive_name: chrono-forge-v${{ inputs.version }}-macos-aarch64.tar.gz
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        run: cargo test --all
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Prepare package directory
+        shell: bash
+        run: |
+          PACKAGE_DIR="chrono-forge-v${{ inputs.version }}-${{ matrix.name }}"
+          mkdir -p "dist/$PACKAGE_DIR"
+
+          cp "target/release/${{ matrix.binary_name }}" "dist/$PACKAGE_DIR/"
+          cp README.md "dist/$PACKAGE_DIR/"
+          cp CHANGELOG.md "dist/$PACKAGE_DIR/"
+          cp LICENSE "dist/$PACKAGE_DIR/"
+
+          echo "PACKAGE_DIR=$PACKAGE_DIR" >> "$GITHUB_ENV"
+
+      - name: Create tar.gz package
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cd dist
+          tar -czf "${{ matrix.archive_name }}" "$PACKAGE_DIR"
+
+      - name: Create zip package
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "dist/${env:PACKAGE_DIR}" `
+            -DestinationPath "dist/${{ matrix.archive_name }}"
+
+      - name: Generate checksum
+        shell: bash
+        run: |
+          cd dist
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "${{ matrix.archive_name }}" > "${{ matrix.archive_name }}.sha256"
+          else
+            shasum -a 256 "${{ matrix.archive_name }}" > "${{ matrix.archive_name }}.sha256"
+          fi
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.archive_name }}
+          path: |
+            dist/${{ matrix.archive_name }}
+            dist/${{ matrix.archive_name }}.sha256
