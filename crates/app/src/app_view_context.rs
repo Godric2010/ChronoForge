@@ -68,7 +68,7 @@ impl<'a> AppViewContext<'a> {
         }
 
         let mut sorted_entries = time_entry_vms.clone();
-        sorted_entries.sort_by_key(| b| std::cmp::Reverse(b.end_time));
+        sorted_entries.sort_by_key(|b| std::cmp::Reverse(b.end_time));
 
         Ok(TaskViewModel {
             task: task.clone(),

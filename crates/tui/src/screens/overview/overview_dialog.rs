@@ -179,9 +179,7 @@ impl OverviewDialog {
                     DialogResult::Confirmed(times) => {
                         if let Some(times) = times {
                             OverviewDialogResult::Confirmed(AppAction::CreateTimeEntry(
-                                *task_id,
-                                times.0,
-                                times.1,
+                                *task_id, times.0, times.1,
                             ))
                         } else {
                             OverviewDialogResult::Cancelled
