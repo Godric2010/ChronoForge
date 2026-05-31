@@ -378,8 +378,8 @@ impl OverviewScreen {
                 )
             })
             .collect();
-        self.projects_list_widget.item_height = 7;
-        self.projects_list_widget.cards = project_cards;
+        self.projects_list_widget
+            .update_list_items(project_cards, 7);
     }
 
     fn fill_task_list(&mut self, project_id: &Uuid) {
@@ -395,8 +395,7 @@ impl OverviewScreen {
             .iter()
             .map(|t| TaskCard::new(t.task.name.clone(), t.total_task_time_min))
             .collect();
-        self.task_list_widget.item_height = 5;
-        self.task_list_widget.cards = task_cards;
+        self.task_list_widget.update_list_items(task_cards, 5);
     }
 
     fn fill_time_entry_list(&mut self, project_id: &Uuid, task_id: &Uuid) {
@@ -419,7 +418,7 @@ impl OverviewScreen {
             .map(|te| TimeEntryCard::new(te.start_time, te.end_time))
             .collect();
 
-        self.time_entry_widget.item_height = 6;
-        self.time_entry_widget.cards = time_entry_cards;
+        self.time_entry_widget
+            .update_list_items(time_entry_cards, 6);
     }
 }
