@@ -131,6 +131,9 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
         }
 
         let mut selected_index = self.selected_index.unwrap();
+        if self.cards.is_empty() {
+            return;
+        }
 
         match event.code {
             KeyCode::Down => {
@@ -144,9 +147,6 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
                 self.selected_index = Some(selected_index);
             }
             KeyCode::Up => {
-                if self.cards.is_empty() {
-                    return;
-                }
                 if selected_index == 0 {
                     return;
                 }

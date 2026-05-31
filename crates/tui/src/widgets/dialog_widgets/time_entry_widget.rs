@@ -117,7 +117,7 @@ impl TimeEntryWidget {
 
         let date_time = date_time.unwrap();
 
-        let override_active;
+        let mut override_active;
         let mut start_time = None;
         if Utc::now() < date_time {
             self.start_date_error_msg = "// Time values cannot be set into the future!".to_string();
@@ -126,7 +126,14 @@ impl TimeEntryWidget {
             override_active = false;
             start_time = Some(date_time);
         }
-
+        if let Some(end_time) = self.end_time {
+            if date_time > end_time {
+                self.start_date_error_msg =
+                    "// End time cannot be set before start time".to_string();
+                override_active = true;
+                start_time = None;
+            }
+        }
         for idx in 0..5 {
             self.input_fields[idx].override_invalid(override_active);
         }
@@ -149,8 +156,8 @@ impl TimeEntryWidget {
         );
 
         if let Err(error) = date_time {
-            self.start_date_error_msg = error.to_string();
-            self.start_time = None;
+            self.end_date_error_msg = error.to_string();
+            self.end_time = None;
             return;
         }
 
@@ -223,6 +230,12 @@ impl DialogWidget for TimeEntryWidget {
             KeyCode::Tab => {
                 self.input_fields[self.selected_field].set_highlight(false);
                 self.selected_field = (self.selected_field + 1) % self.input_fields.len();
+                self.input_fields[self.selected_field].set_highlight(true);
+            }
+            KeyCode::BackTab => {
+                self.input_fields[self.selected_field].set_highlight(false);
+                self.selected_field =
+                    (self.selected_field + self.input_fields.len() - 1) % self.input_fields.len();
                 self.input_fields[self.selected_field].set_highlight(true);
             }
             _ => {
@@ -367,8 +380,8 @@ impl DigitInputWidget {
             KeyCode::Up => {
                 self.value = (self.value + 1).min(self.max_value);
             }
-            KeyCode::Down => {
-                self.value = (self.value - 1).max(self.min_value);
+            KeyCode::Down if self.value > self.min_value => {
+                self.value -= 1;
             }
             KeyCode::Left => {
                 if self.cursor_position == 0 {
@@ -403,4 +416,150 @@ struct TimeEditFieldRenderData<'a> {
     hour: &'a DigitInputWidget,
     minute: &'a DigitInputWidget,
     error_msg: &'a str,
+}
+
+#[cfg(test)]
+mod time_entry_widget_tests {
+    use super::*;
+    use crate::widgets::test_helper::{char_key, key};
+
+    #[test]
+    fn digit_field_down_on_zero_does_not_crash() {
+        let mut digit_input_widget = DigitInputWidget::new(0, 2, 0, 99);
+        digit_input_widget.handle_event(&key(KeyCode::Down));
+        assert_eq!(digit_input_widget.value, 0);
+    }
+
+    #[test]
+    fn digit_field_up_on_max_value_does_not_increase() {
+        let mut digit_input_widget = DigitInputWidget::new(2, 1, 0, 2);
+        digit_input_widget.handle_event(&key(KeyCode::Up));
+        assert_eq!(digit_input_widget.value, 2);
+    }
+
+    #[test]
+    fn digit_field_down_on_min_value_does_not_decrease() {
+        let mut digit_input_widget = DigitInputWidget::new(1, 1, 1, 2);
+        digit_input_widget.handle_event(&key(KeyCode::Down));
+        assert_eq!(digit_input_widget.value, 1);
+    }
+
+    #[test]
+    fn digit_field_right_moves_to_next_char_until_limit() {
+        let mut digit_input_widget = DigitInputWidget::new(0, 2, 0, 99);
+        digit_input_widget.handle_event(&key(KeyCode::Right));
+        digit_input_widget.handle_event(&char_key('3'));
+        assert_eq!(digit_input_widget.value, 3);
+
+        digit_input_widget.handle_event(&key(KeyCode::Right));
+        digit_input_widget.handle_event(&char_key('5'));
+        assert_eq!(digit_input_widget.value, 5);
+    }
+
+    #[test]
+    fn digit_field_left_moves_to_prev_char_until_first() {
+        let mut digit_input_widget = DigitInputWidget::new(0, 2, 0, 99);
+        digit_input_widget.handle_event(&key(KeyCode::Right));
+        digit_input_widget.handle_event(&char_key('3'));
+        assert_eq!(digit_input_widget.value, 3);
+
+        digit_input_widget.handle_event(&key(KeyCode::Left));
+        digit_input_widget.handle_event(&key(KeyCode::Left));
+        digit_input_widget.handle_event(&char_key('1'));
+        assert_eq!(digit_input_widget.value, 13);
+    }
+
+    #[test]
+    fn digit_field_only_numerics_are_valid() {
+        let mut digit_input_widget = DigitInputWidget::new(0, 4, 0, 99);
+        let keys = vec![
+            char_key('4'),
+            char_key('a'),
+            char_key('/'),
+            char_key('1'),
+            char_key('$'),
+            char_key('2'),
+            char_key(' '),
+            char_key('3'),
+        ];
+
+        for key in keys {
+            digit_input_widget.handle_event(&key);
+        }
+        assert_eq!(digit_input_widget.value, 4123);
+    }
+
+    #[test]
+    fn time_entry_widget_tab_cycles_through_input_fields() {
+        let start = Utc.with_ymd_and_hms(2025, 1, 1, 10, 0, 0).unwrap();
+        let end = Utc.with_ymd_and_hms(2026, 1, 1, 11, 0, 0).unwrap();
+        let mut widget = TimeEntryWidget::new(start, end);
+
+        assert_eq!(widget.selected_field, 0);
+
+        widget.handle_key(key(KeyCode::Tab));
+        assert_eq!(widget.selected_field, 1);
+
+        let tab_strokes = 9;
+        for _ in 0..tab_strokes {
+            widget.handle_key(key(KeyCode::Tab));
+        }
+        assert_eq!(widget.selected_field, 0);
+    }
+
+    #[test]
+    fn time_entry_widget_back_tab_cycles_backwards_through_input_fields() {
+        let start = Utc.with_ymd_and_hms(2025, 1, 1, 10, 0, 0).unwrap();
+        let end = Utc.with_ymd_and_hms(2026, 1, 1, 11, 0, 0).unwrap();
+        let mut widget = TimeEntryWidget::new(start, end);
+        assert_eq!(widget.selected_field, 0);
+
+        widget.handle_key(key(KeyCode::BackTab));
+        assert_eq!(widget.selected_field, 9);
+    }
+
+    #[test]
+    fn time_entry_widget_invalid_day_returns_none() {
+        let start = Utc.with_ymd_and_hms(2025, 1, 1, 10, 0, 0).unwrap();
+        let end = Utc.with_ymd_and_hms(2026, 1, 1, 11, 0, 0).unwrap();
+        let mut widget = TimeEntryWidget::new(start, end);
+
+        widget.handle_key(key(KeyCode::Tab));
+        widget.handle_key(key(KeyCode::Tab));
+        widget.handle_key(char_key('3'));
+        widget.handle_key(char_key('4'));
+
+        assert!(widget.output().is_none());
+
+        widget.handle_key(char_key('1'));
+        assert!(widget.output().is_some());
+    }
+
+    #[test]
+    fn time_entry_widget_start_time_before_end_time_returns_none() {
+        let start = Utc.with_ymd_and_hms(2025, 1, 1, 10, 0, 0).unwrap();
+        let end = Utc.with_ymd_and_hms(2025, 1, 1, 11, 0, 0).unwrap();
+
+        let mut widget = TimeEntryWidget::new(start, end);
+
+        for _ in 0..5 {
+            widget.handle_key(key(KeyCode::Tab));
+        }
+
+        widget.handle_key(key(KeyCode::Down));
+        widget.handle_key(key(KeyCode::Down));
+        assert!(widget.output().is_none());
+
+        widget.handle_key(key(KeyCode::Up));
+        widget.handle_key(key(KeyCode::Up));
+        assert!(widget.output().is_some());
+
+        for _ in 0..5 {
+            widget.handle_key(key(KeyCode::BackTab));
+        }
+
+        widget.handle_key(key(KeyCode::Up));
+        widget.handle_key(key(KeyCode::Up));
+        assert!(widget.output().is_none());
+    }
 }

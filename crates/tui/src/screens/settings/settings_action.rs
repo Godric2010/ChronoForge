@@ -17,12 +17,12 @@ impl SettingsActionPurpose {
     pub fn build(&self) -> SettingsDialog {
         match self {
             SettingsActionPurpose::ImportCSV => {
-                let widget = TextInputWidget::new(TextInputMode::AllowAll, None);
+                let widget = TextInputWidget::new(TextInputMode::Ascii, None);
                 let dialog = Dialog::<TextInputWidget>::new("Set path to import CSV from", widget);
                 SettingsDialog::ImportCsv(dialog)
             }
             SettingsActionPurpose::ExportCSV => {
-                let widget = TextInputWidget::new(TextInputMode::AllowAll, None);
+                let widget = TextInputWidget::new(TextInputMode::Ascii, None);
                 let dialog = Dialog::<TextInputWidget>::new("Set path to export CSV", widget);
                 SettingsDialog::ExportCSV(dialog)
             }

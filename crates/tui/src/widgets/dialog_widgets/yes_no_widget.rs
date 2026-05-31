@@ -100,3 +100,54 @@ impl DialogWidget for YesNoWidget {
         frame.render_widget(no_paragraph, horizontal[3]);
     }
 }
+
+#[cfg(test)]
+mod yes_no_widget_tests {
+    use super::*;
+    use crate::widgets::test_helper::{char_key, key};
+
+    #[test]
+    fn yes_no_defaults_to_no() {
+        let widget = YesNoWidget::new();
+        assert!(!widget.output())
+    }
+
+    #[test]
+    fn yes_no_widget_accepts_y_and_n() {
+        let mut widget = YesNoWidget::new();
+        widget.handle_key(char_key('y'));
+        assert!(widget.output());
+
+        widget.handle_key(char_key('n'));
+        assert!(!widget.output());
+    }
+
+    #[test]
+    fn yes_no_widget_toggles_with_left_and_right() {
+        let mut widget = YesNoWidget::new();
+        assert!(!widget.output());
+
+        widget.handle_key(key(KeyCode::Left));
+        assert!(widget.output());
+
+        widget.handle_key(key(KeyCode::Right));
+        assert!(!widget.output());
+    }
+
+    #[test]
+    fn yes_no_widget_ignores_unknown_keys() {
+        let mut widget = YesNoWidget::new();
+
+        widget.handle_key(key(KeyCode::Tab));
+        assert!(!widget.output());
+
+        widget.handle_key(key(KeyCode::Enter));
+        assert!(!widget.output());
+
+        widget.handle_key(key(KeyCode::Esc));
+        assert!(!widget.output());
+
+        widget.handle_key(char_key('x'));
+        assert!(!widget.output());
+    }
+}

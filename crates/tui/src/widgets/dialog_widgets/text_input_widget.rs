@@ -5,7 +5,7 @@ use ratatui::widgets::Paragraph;
 use ratatui::Frame;
 
 pub enum TextInputMode {
-    AllowAll,
+    Ascii,
     Naming,
 }
 
@@ -28,7 +28,7 @@ impl TextInputWidget {
 
     fn is_char_valid(&self, c: char) -> bool {
         match self.mode {
-            TextInputMode::AllowAll => true,
+            TextInputMode::Ascii => c.is_ascii(),
             TextInputMode::Naming => c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ',
         }
     }
@@ -78,5 +78,72 @@ impl DialogWidget for TextInputWidget {
         frame.render_widget(paragraph, area);
 
         frame.set_cursor_position((area.x + self.cursor as u16, area.y));
+    }
+}
+#[cfg(test)]
+mod text_input_widget_tests {
+    use super::*;
+    use crate::widgets::test_helper::{char_key, key};
+    #[test]
+    fn text_input_accepts_valid_naming_chars() {
+        let mut widget = TextInputWidget::new(TextInputMode::Naming, None);
+        widget.handle_key(char_key('A'));
+        widget.handle_key(char_key('b'));
+        widget.handle_key(char_key('-'));
+        widget.handle_key(char_key('_'));
+        widget.handle_key(char_key(' '));
+        widget.handle_key(char_key('1'));
+        assert_eq!(widget.output(), "Ab-_ 1");
+    }
+
+    #[test]
+    fn text_input_rejects_invalid_naming_chars() {
+        let mut widget = TextInputWidget::new(TextInputMode::Naming, None);
+        widget.handle_key(char_key('A'));
+        widget.handle_key(char_key('/'));
+        widget.handle_key(char_key('\\'));
+        widget.handle_key(char_key(':'));
+        widget.handle_key(char_key('*'));
+        widget.handle_key(char_key('%'));
+        assert_eq!(widget.output(), "A");
+    }
+
+    #[test]
+    fn text_input_backspace_on_empty_string_does_not_crash() {
+        let mut widget = TextInputWidget::new(TextInputMode::Naming, None);
+        widget.handle_key(key(KeyCode::Backspace));
+        assert_eq!(widget.output(), "");
+    }
+
+    #[test]
+    fn text_input_can_insert_in_middle() {
+        let mut widget = TextInputWidget::new(TextInputMode::Naming, Some("ac".to_string()));
+        widget.handle_key(key(KeyCode::Left));
+        widget.handle_key(char_key('b'));
+        assert_eq!(widget.output(), "abc");
+    }
+
+    #[test]
+    fn text_input_survives_hostile_input_sequence() {
+        let mut widget = TextInputWidget::new(TextInputMode::Ascii, None);
+
+        let keys = vec![
+            key(KeyCode::Backspace),
+            key(KeyCode::Left),
+            key(KeyCode::Right),
+            key(KeyCode::Up),
+            key(KeyCode::Down),
+            key(KeyCode::Home),
+            char_key('a'),
+            char_key('ä'),
+            char_key('😊'),
+            key(KeyCode::Backspace),
+            key(KeyCode::Enter),
+            key(KeyCode::Esc),
+        ];
+
+        for key in keys {
+            widget.handle_key(key);
+        }
     }
 }
