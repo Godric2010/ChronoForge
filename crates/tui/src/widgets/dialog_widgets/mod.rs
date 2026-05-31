@@ -1,3 +1,4 @@
+pub mod error_widget;
 mod list_widget;
 mod text_input_widget;
 mod time_entry_widget;
@@ -12,8 +13,17 @@ use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
 use ratatui::Frame;
 
+pub enum WidgetType {
+    Input,
+    Error,
+}
+
 pub trait DialogWidget {
     type Output;
+
+    fn get_type(&self) -> WidgetType;
+
+    fn get_help_text(&self) -> String;
 
     fn handle_key(&mut self, key: KeyEvent);
     fn output(&self) -> Self::Output;

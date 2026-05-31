@@ -7,6 +7,7 @@ mod app_action;
 mod event;
 pub mod screens;
 mod terminal;
+mod ui_error_message;
 mod widgets;
 
 pub async fn run<B: TuiBackend>(backend: &B) -> anyhow::Result<()> {

@@ -1,4 +1,4 @@
-use crate::widgets::dialog_widgets::DialogWidget;
+use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
@@ -36,6 +36,14 @@ impl TextInputWidget {
 
 impl DialogWidget for TextInputWidget {
     type Output = String;
+
+    fn get_type(&self) -> WidgetType {
+        WidgetType::Input
+    }
+
+    fn get_help_text(&self) -> String {
+        "<Enter>: Confirm | <Esc>: Cancel".to_string()
+    }
 
     fn handle_key(&mut self, key: KeyEvent) {
         match key.code {

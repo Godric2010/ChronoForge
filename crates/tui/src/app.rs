@@ -1,7 +1,10 @@
 use crate::app_action::AppAction;
 use crate::event::{read_event, TuiEvent};
+use crate::screens::dialog::{Dialog, DialogResult};
 use crate::screens::{ScreenType, Screens};
+use crate::ui_error_message::UiErrorMessage;
 use crate::widgets::active_timer::ActiveTimer;
+use crate::widgets::dialog_widgets::error_widget::ErrorWidget;
 use crate::widgets::tab_widget::TabWidget;
 use crate::TuiBackend;
 use crossterm::event::{KeyCode, KeyEvent};
@@ -21,6 +24,7 @@ pub struct App {
     active_timer: ActiveTimer,
     tab_widget: TabWidget,
     enforce_vm_update_on_next_tick: bool,
+    error_dialog: Option<Dialog<ErrorWidget>>,
 }
 
 impl App {
@@ -37,6 +41,7 @@ impl App {
             active_timer: ActiveTimer::new(),
             tab_widget,
             enforce_vm_update_on_next_tick: false,
+            error_dialog: None,
         }
     }
 
@@ -75,8 +80,12 @@ impl App {
                     })?;
 
                     if let Some(key_event) = ct_event.as_key_event() {
+                        if self.handle_error_input(key_event) {
+                            continue;
+                        }
+
                         if let Some(action) = self.handle_event(key_event) {
-                            self.handle_action(action, backend).await?
+                            self.handle_action(action, backend).await
                         }
                     }
                 }
@@ -84,6 +93,23 @@ impl App {
         }
 
         Ok(())
+    }
+
+    fn handle_error_input(&mut self, event: KeyEvent) -> bool {
+        if let Some(error_dialog) = &mut self.error_dialog {
+            let output = error_dialog.handle_input(event);
+            match output {
+                DialogResult::None => {}
+                DialogResult::Cancelled => {
+                    self.error_dialog = None;
+                }
+                DialogResult::Confirmed(_) => {
+                    self.error_dialog = None;
+                }
+            }
+            return true;
+        }
+        false
     }
 
     async fn update_view_model<B: TuiBackend>(&mut self, backend: &B) -> anyhow::Result<()> {
@@ -168,6 +194,10 @@ impl App {
         let mut rect = app_layout_rects[4];
         rect.y += 1;
         frame.render_widget(help_box, rect);
+
+        if let Some(error_dialog) = &mut self.error_dialog {
+            error_dialog.render(frame, area);
+        }
     }
 
     fn render_terminal_too_small_text(&self, frame: &mut Frame, area: Rect) {
@@ -210,7 +240,16 @@ impl App {
         }
     }
 
-    async fn handle_action<B: TuiBackend>(
+    async fn handle_action<B: TuiBackend>(&mut self, action: AppAction, backend: &B) {
+        if let Err(error) = self.try_handle_action(action, backend).await {
+            let ui_error_message = UiErrorMessage::from_anyhow(error);
+            let error_widget = ErrorWidget::new(ui_error_message);
+            let dialog = Dialog::new("Invalid operation!", error_widget);
+            self.error_dialog = Some(dialog);
+        }
+    }
+
+    async fn try_handle_action<B: TuiBackend>(
         &mut self,
         action: AppAction,
         backend: &B,

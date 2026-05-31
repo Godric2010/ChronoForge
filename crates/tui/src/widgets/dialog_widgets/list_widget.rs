@@ -1,4 +1,4 @@
-use crate::widgets::dialog_widgets::DialogWidget;
+use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::prelude::{Modifier, Style};
@@ -76,6 +76,14 @@ impl ListWidget {
 
 impl DialogWidget for ListWidget {
     type Output = Uuid;
+
+    fn get_type(&self) -> WidgetType {
+        WidgetType::Input
+    }
+
+    fn get_help_text(&self) -> String {
+        "<Enter>: Confirm | <Esc>: Cancel | <Up/Down>".to_string()
+    }
 
     fn handle_key(&mut self, key: KeyEvent) {
         match key.code {

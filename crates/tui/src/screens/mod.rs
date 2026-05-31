@@ -2,7 +2,7 @@ use crate::screens::overview::OverviewScreen;
 use crate::screens::settings::SettingsScreen;
 use crate::screens::welcome::WelcomeScreen;
 
-mod dialog;
+pub(crate) mod dialog;
 pub mod overview;
 pub mod settings;
 pub mod welcome;

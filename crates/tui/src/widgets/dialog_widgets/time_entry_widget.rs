@@ -1,4 +1,4 @@
-use crate::widgets::dialog_widgets::DialogWidget;
+use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use chrono::{DateTime, Datelike, Local, NaiveDate, TimeZone, Timelike, Utc};
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -209,6 +209,14 @@ impl TimeEntryWidget {
 
 impl DialogWidget for TimeEntryWidget {
     type Output = Option<(DateTime<Utc>, DateTime<Utc>)>;
+
+    fn get_type(&self) -> WidgetType {
+        WidgetType::Input
+    }
+
+    fn get_help_text(&self) -> String {
+        "<Enter>: Confirm | <Esc>: Cancel | <Tab>: Next field | <Up>: Increase value | <Down>: Decrease value".to_string()
+    }
 
     fn handle_key(&mut self, key: KeyEvent) {
         match key.code {

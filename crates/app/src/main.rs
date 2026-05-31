@@ -4,6 +4,7 @@ use crate::cli::Cli;
 use clap::Parser;
 
 mod app_context;
+mod app_error;
 mod app_view_context;
 mod cli;
 mod csv_serializer;

@@ -1,4 +1,5 @@
 use crate::app_context::AppContext;
+use crate::app_error::AppError;
 use crate::csv_serializer::CsvSerializer;
 use domain::types::{Project, Task, TimeEntry};
 use sqlx::types::chrono::{DateTime, Utc};
@@ -190,22 +191,46 @@ impl<'a> TuiBackend for AppViewContext<'a> {
     }
 
     async fn start_timer(&self, task_id: Uuid) -> anyhow::Result<()> {
-        self.app.time_entry_service.start_timer(task_id).await?;
+        self.app
+            .time_entry_service
+            .start_timer(task_id)
+            .await
+            .map_err(|_| AppError::IllegalAction {
+                action: "Cannot start timer!".to_string(),
+            })?;
         Ok(())
     }
 
     async fn stop_timer(&self) -> anyhow::Result<()> {
-        self.app.time_entry_service.stop_timer().await?;
+        self.app
+            .time_entry_service
+            .stop_timer()
+            .await
+            .map_err(|_| AppError::IllegalAction {
+                action: "Cannot stop timer!".to_string(),
+            })?;
         Ok(())
     }
 
     async fn export_csv(&self, path_str: String) -> anyhow::Result<()> {
-        CsvSerializer::new(self.app).export(path_str).await?;
+        CsvSerializer::new(self.app)
+            .export(path_str.clone())
+            .await
+            .map_err(|source| AppError::CsvExportFailed {
+                path: path_str,
+                source,
+            })?;
         Ok(())
     }
 
     async fn import_csv(&self, path_str: String) -> anyhow::Result<()> {
-        CsvSerializer::new(self.app).import(path_str).await?;
+        CsvSerializer::new(self.app)
+            .import(path_str.clone())
+            .await
+            .map_err(|source| AppError::CsvImportFailed {
+                path: path_str,
+                source,
+            })?;
         Ok(())
     }
 }

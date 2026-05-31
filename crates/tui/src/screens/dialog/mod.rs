@@ -1,7 +1,8 @@
-use crate::widgets::dialog_widgets::DialogWidget;
+use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::{Alignment, Constraint, HorizontalAlignment, Layout, Rect};
 use ratatui::prelude::Line;
+use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use ratatui::{symbols, Frame};
 
@@ -30,11 +31,16 @@ impl<Widget: DialogWidget> Dialog<Widget> {
         frame.render_widget(Clear, dialog_draw_rect);
 
         // outer block
+        let frame_color = match self.widget.get_type() {
+            WidgetType::Input => Color::Gray,
+            WidgetType::Error => Color::Red,
+        };
         let outer_block = Block::default()
             .title(format!("< {} >", self.title))
             .title_alignment(HorizontalAlignment::Center)
             .borders(Borders::ALL)
-            .border_type(BorderType::Rounded);
+            .border_type(BorderType::Rounded)
+            .border_style(Style::default().fg(frame_color));
         frame.render_widget(outer_block, dialog_draw_rect);
 
         // inner blocks
@@ -97,9 +103,7 @@ impl<Widget: DialogWidget> Dialog<Widget> {
     }
 
     fn render_help_text(&self, frame: &mut Frame, area: Rect) {
-        let help_box = Paragraph::new(
-            Line::from("<Enter>: Confirm | <Esc>: Cancel").alignment(Alignment::Center),
-        );
+        let help_box = Paragraph::new(self.widget.get_help_text()).alignment(Alignment::Center);
         frame.render_widget(help_box, area);
     }
 }

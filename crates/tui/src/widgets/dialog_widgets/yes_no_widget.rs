@@ -1,4 +1,4 @@
-use crate::widgets::dialog_widgets::DialogWidget;
+use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Modifier, Style};
@@ -23,6 +23,14 @@ impl YesNoWidget {
 
 impl DialogWidget for YesNoWidget {
     type Output = bool;
+
+    fn get_type(&self) -> WidgetType {
+        WidgetType::Input
+    }
+
+    fn get_help_text(&self) -> String {
+        "<Enter>: Confirm | <Esc>: Cancel | <Left/Right> | [Y]es | [N]o".to_string()
+    }
 
     fn handle_key(&mut self, key: KeyEvent) {
         match key.code {
