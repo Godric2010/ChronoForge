@@ -241,12 +241,8 @@ impl DialogWidget for TimeEntryWidget {
             _ => {
                 let selected_field = &mut self.input_fields[self.selected_field];
                 selected_field.handle_event(&key);
-
-                if self.selected_field < 5 {
-                    self.validate_start_date_time()
-                } else {
-                    self.validate_end_date_time()
-                }
+                self.validate_start_date_time();
+                self.validate_end_date_time();
             }
         }
     }

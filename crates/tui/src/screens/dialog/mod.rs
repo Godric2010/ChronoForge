@@ -32,7 +32,7 @@ impl<Widget: DialogWidget> Dialog<Widget> {
 
         // outer block
         let frame_color = match self.widget.get_type() {
-            WidgetType::Input => Color::Gray,
+            WidgetType::Input => Color::Rgb(255, 150, 0),
             WidgetType::Error => Color::Red,
         };
         let outer_block = Block::default()
