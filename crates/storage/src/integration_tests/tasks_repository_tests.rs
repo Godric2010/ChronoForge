@@ -24,7 +24,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id,
             name: "TestTask01".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -46,7 +46,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id,
             name: "Task 01".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
             updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         };
@@ -56,7 +56,7 @@ mod task_repository_tests {
         let mut updated_task = task.clone();
         updated_task.name = "Task01".to_string();
         updated_task.project_id = project_two_id;
-        updated_task.time_limit = 20;
+        updated_task.time_limit = Some(20);
         updated_task.updated_at = Utc.with_ymd_and_hms(2026, 5, 27, 22, 5, 0).unwrap();
 
         repository.upsert(updated_task.clone()).await.unwrap();
@@ -78,7 +78,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id,
             name: "My new Task".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
             updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         };
@@ -88,7 +88,7 @@ mod task_repository_tests {
         let mut updated_task = task.clone();
         updated_task.name = "A new Task".to_string();
         updated_task.project_id = project_two_id;
-        updated_task.time_limit = 20;
+        updated_task.time_limit = Some(20);
         updated_task.updated_at = Utc.with_ymd_and_hms(2026, 5, 27, 20, 5, 0).unwrap();
 
         repository.upsert(updated_task.clone()).await.unwrap();
@@ -111,7 +111,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_one_id,
             name: "TestTask01".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -124,7 +124,7 @@ mod task_repository_tests {
             id: task.id,
             project_id: task.project_id,
             name: "TaskyMcTask".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -167,7 +167,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_one_id,
             name: "TestTask01".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -177,7 +177,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_one_id,
             name: "TestTask02".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -187,7 +187,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_two_id,
             name: "TestTask01".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -212,7 +212,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_a,
             name: "TestTask01".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -222,7 +222,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_a,
             name: "TestTask02".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -232,7 +232,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_b,
             name: "TestTask01".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -252,7 +252,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_a,
             name: "TestTask01".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -262,7 +262,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_a,
             name: "TestTask02".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -272,7 +272,7 @@ mod task_repository_tests {
             id: Uuid::new_v4(),
             project_id: project_b,
             name: "TestTask01".to_string(),
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };

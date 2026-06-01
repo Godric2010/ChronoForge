@@ -17,7 +17,7 @@ async fn create_project_should_store_it() {
     let project = Project {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
-        time_limit: 0,
+        time_limit: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -37,7 +37,7 @@ async fn upsert_project_with_newer_version() {
     let project = Project {
         id: Uuid::new_v4(),
         name: "Chrono Forge".to_string(),
-        time_limit: 0,
+        time_limit: None,
         created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
     };
@@ -46,7 +46,7 @@ async fn upsert_project_with_newer_version() {
 
     let mut updated_project = project.clone();
     updated_project.name = "ChronoForge".to_string();
-    updated_project.time_limit = 20;
+    updated_project.time_limit = Some(20);
     updated_project.updated_at = Utc.with_ymd_and_hms(2026, 5, 27, 22, 5, 0).unwrap();
 
     repository.upsert(updated_project.clone()).await.unwrap();
@@ -65,7 +65,7 @@ async fn upsert_project_with_older_version() {
     let project = Project {
         id: Uuid::new_v4(),
         name: "Maze_Game".to_string(),
-        time_limit: 0,
+        time_limit: None,
         created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
     };
@@ -74,7 +74,7 @@ async fn upsert_project_with_older_version() {
 
     let mut updated_project = project.clone();
     updated_project.name = "Maze Game".to_string();
-    updated_project.time_limit = 20;
+    updated_project.time_limit = Some(20);
     updated_project.updated_at = Utc.with_ymd_and_hms(2026, 5, 27, 20, 5, 0).unwrap();
 
     repository.upsert(updated_project.clone()).await.unwrap();
@@ -95,7 +95,7 @@ async fn find_by_id_should_return_none_when_project_doesnt_exist() {
     let project = Project {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
-        time_limit: 0,
+        time_limit: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -112,7 +112,7 @@ async fn find_all_should_return_all_projects() {
     let project_a = Project {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
-        time_limit: 0,
+        time_limit: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -120,7 +120,7 @@ async fn find_all_should_return_all_projects() {
     let project_b = Project {
         id: Uuid::new_v4(),
         name: "MazeGame".to_string(),
-        time_limit: 0,
+        time_limit: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -128,7 +128,7 @@ async fn find_all_should_return_all_projects() {
     let project_c = Project {
         id: Uuid::new_v4(),
         name: "JAREP".to_string(),
-        time_limit: 0,
+        time_limit: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -161,7 +161,7 @@ async fn update_should_update_existing_project() {
     let project_original = Project {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
-        time_limit: 0,
+        time_limit: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -189,7 +189,7 @@ async fn delete_should_delete_existing_project() {
     let project = Project {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
-        time_limit: 0,
+        time_limit: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };

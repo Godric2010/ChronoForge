@@ -26,7 +26,7 @@ impl<P: ProjectRepository> ProjectService<P> {
         let project = Project {
             id: Uuid::new_v4(),
             name: unique_project_name,
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };

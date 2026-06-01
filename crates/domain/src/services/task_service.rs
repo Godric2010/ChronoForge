@@ -33,7 +33,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             id: Uuid::new_v4(),
             name: unique_name,
             project_id: *project,
-            time_limit: 0,
+            time_limit: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };

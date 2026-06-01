@@ -25,6 +25,22 @@ struct ProjectRow {
     updated_at: String,
 }
 
+impl ProjectRow {
+    pub fn parse(&self) -> anyhow::Result<Project> {
+        Ok(Project {
+            id: Uuid::parse_str(&self.id)?,
+            name: self.name.clone(),
+            time_limit: if self.time_limit > 0 {
+                Some(self.time_limit)
+            } else {
+                None
+            },
+            created_at: DateTime::parse_from_rfc3339(&self.created_at)?.with_timezone(&Utc),
+            updated_at: DateTime::parse_from_rfc3339(&self.updated_at)?.with_timezone(&Utc),
+        })
+    }
+}
+
 #[async_trait]
 impl ProjectRepository for SQLiteProjectRepository {
     async fn create(&self, project: Project) -> anyhow::Result<()> {
@@ -99,13 +115,7 @@ impl ProjectRepository for SQLiteProjectRepository {
         let Some(row) = row else {
             return Ok(None);
         };
-        Ok(Some(Project {
-            id: Uuid::parse_str(&row.id)?,
-            name: row.name,
-            time_limit: row.time_limit,
-            created_at: DateTime::parse_from_rfc3339(&row.created_at)?.with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&row.updated_at)?.with_timezone(&Utc),
-        }))
+        Ok(Some(row.parse()?))
     }
 
     async fn find_all(&self) -> anyhow::Result<Vec<Project>> {
@@ -121,15 +131,7 @@ impl ProjectRepository for SQLiteProjectRepository {
 
         let projects = rows
             .into_iter()
-            .map(|row| {
-                Ok(Project {
-                    id: Uuid::parse_str(&row.id)?,
-                    name: row.name,
-                    time_limit: row.time_limit,
-                    created_at: DateTime::parse_from_rfc3339(&row.created_at)?.with_timezone(&Utc),
-                    updated_at: DateTime::parse_from_rfc3339(&row.updated_at)?.with_timezone(&Utc),
-                })
-            })
+            .map(|row| row.parse())
             .collect::<anyhow::Result<Vec<Project>>>()?;
         Ok(projects)
     }
