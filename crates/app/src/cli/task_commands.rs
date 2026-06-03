@@ -18,11 +18,18 @@ pub enum TaskCommands {
         id: String,
     },
     #[command(about = "Set a new task name")]
-    Edit {
+    Rename {
         #[arg(help = "The id of the task to edit")]
         id: String,
         #[arg(help = "The new task name")]
         name: String,
+    },
+    #[command(about = "Set a time limit for the task (in minutes)")]
+    EditTimeLimit {
+        #[arg(help = "The id of the task to edit")]
+        id: String,
+        #[arg(help = "The time limit (in minutes)")]
+        time_limit: u32,
     },
     #[command(about = "Assign a task to a new project")]
     Assign {
@@ -52,7 +59,7 @@ impl TaskCommands {
                 app.task_service.delete(uuid).await?;
                 println!("Deleted task {}", uuid);
             }
-            TaskCommands::Edit { id, name } => {
+            TaskCommands::Rename { id, name } => {
                 let uuid = Uuid::parse_str(id)?;
                 let task = app.task_service.edit_task_name(uuid, name).await?;
                 println!("Renamed Task {} ({})", task.name, task.id);
@@ -65,6 +72,21 @@ impl TaskCommands {
                     .assign_to_project(uuid, project_uuid)
                     .await?;
                 println!("Assigned Task {} to project {}", task.id, task.project_id);
+            }
+            TaskCommands::EditTimeLimit { id, time_limit } => {
+                let uuid = Uuid::parse_str(id)?;
+                let time_limit = if *time_limit > 0 {
+                    Some(*time_limit)
+                } else {
+                    None
+                };
+                app.task_service.edit_time_limit(uuid, time_limit).await?;
+                let task = app.task_service.find_by_id(uuid).await?;
+                println!(
+                    "Edited time limit of task \"{}\". ({} min)",
+                    task.name,
+                    task.time_limit.unwrap_or(0)
+                );
             }
         }
         Ok(())

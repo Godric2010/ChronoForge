@@ -23,6 +23,13 @@ pub enum ProjectCommand {
         #[arg(help = "The new name of the project")]
         name: String,
     },
+    #[command(about = "Set the time limit of the project (in minutes)")]
+    EditTimeLimit {
+        #[arg(help = "The project id to edit")]
+        id: String,
+        #[arg(help = "The time limit (in minutes)")]
+        time_limit: u32,
+    },
 }
 
 impl ProjectCommand {
@@ -47,6 +54,23 @@ impl ProjectCommand {
                 let uuid = Uuid::from_str(id)?;
                 let project = app.project_service.edit_name(uuid, name.as_str()).await?;
                 println!("Renamed project: {} ({})", project.name, project.id);
+            }
+            ProjectCommand::EditTimeLimit { id, time_limit } => {
+                let uuid = Uuid::from_str(id)?;
+                let time_limit = if *time_limit > 0 {
+                    Some(*time_limit)
+                } else {
+                    None
+                };
+                app.project_service
+                    .edit_time_limit(uuid, time_limit)
+                    .await?;
+                let project = app.project_service.find_by_id(uuid).await?;
+                println!(
+                    "Set project \"{}\" time limit to: {} min",
+                    project.name,
+                    project.time_limit.unwrap_or_default()
+                );
             }
         }
         Ok(())
