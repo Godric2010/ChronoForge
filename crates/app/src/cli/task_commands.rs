@@ -38,7 +38,7 @@ impl TaskCommands {
         match self {
             TaskCommands::Create { name, project_id } => {
                 let project_uuid = Uuid::parse_str(project_id)?;
-                let task = app.task_service.create(name, &project_uuid).await?;
+                let task = app.task_service.create(name, &project_uuid, None).await?;
                 println!("Created task {} ({})", task.name, task.id);
             }
             TaskCommands::List => {

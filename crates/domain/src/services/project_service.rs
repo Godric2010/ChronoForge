@@ -15,7 +15,11 @@ impl<P: ProjectRepository> ProjectService<P> {
         Self { project_repository }
     }
 
-    pub async fn create(&self, project_name: String) -> AppResult<Project> {
+    pub async fn create(
+        &self,
+        project_name: String,
+        time_limit: Option<u32>,
+    ) -> AppResult<Project> {
         if project_name.is_empty() {
             return Err(AppError::EmptyName);
         }
@@ -26,7 +30,7 @@ impl<P: ProjectRepository> ProjectService<P> {
         let project = Project {
             id: Uuid::new_v4(),
             name: unique_project_name,
-            time_limit: None,
+            time_limit,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -103,6 +107,34 @@ impl<P: ProjectRepository> ProjectService<P> {
         Ok(edited_project)
     }
 
+    pub async fn edit_time_limit(
+        &self,
+        project_id: Uuid,
+        time_limit: Option<u32>,
+    ) -> AppResult<()> {
+        let project = self.find_by_id(project_id).await;
+        if project.is_err() {
+            return Err(ProjectNotFound);
+        }
+        let project = project?;
+
+        let edited_project = Project {
+            id: project_id,
+            name: project.name,
+            time_limit,
+            created_at: project.created_at,
+            updated_at: Utc::now(),
+        };
+
+        let result = self.project_repository.update(edited_project.clone()).await;
+        if let Err(error) = result {
+            return Err(AppError::Storage(
+                "Unable to edit time limit: ".to_string() + &error.to_string(),
+            ));
+        }
+        Ok(())
+    }
+
     pub async fn delete(&self, project_id: Uuid) -> AppResult<()> {
         if self.find_by_id(project_id).await.is_err() {
             return Err(ProjectNotFound);
@@ -140,7 +172,7 @@ mod project_service_tests {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
 
-        let result = service.create("MyProject".to_string()).await;
+        let result = service.create("MyProject".to_string(), Some(60)).await;
         assert!(result.is_ok());
 
         let all_projects_result = service.find_all().await;
@@ -152,13 +184,34 @@ mod project_service_tests {
         let test_project = all_projects.first().unwrap();
         assert_eq!(test_project.name, "MyProject");
         assert_ne!(test_project.id, Uuid::default());
+        assert_eq!(test_project.time_limit, Some(60));
+    }
+
+    #[tokio::test]
+    async fn create_project_without_time_limit() {
+        let project_repo = InMemoryProjectRepository::new();
+        let service = ProjectService::new(project_repo);
+
+        let result = service.create("MyProject".to_string(), None).await;
+        assert!(result.is_ok());
+
+        let all_projects_result = service.find_all().await;
+        assert!(all_projects_result.is_ok());
+
+        let all_projects = all_projects_result.unwrap();
+        assert_eq!(all_projects.len(), 1);
+
+        let test_project = all_projects.first().unwrap();
+        assert_eq!(test_project.name, "MyProject");
+        assert_ne!(test_project.id, Uuid::default());
+        assert_eq!(test_project.time_limit, None);
     }
 
     #[tokio::test]
     async fn create_project_with_empty_name() {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
-        let result = service.create("".to_string()).await;
+        let result = service.create("".to_string(), None).await;
         assert!(result.is_err());
         assert!(matches!(result.err().unwrap(), AppError::EmptyName));
     }
@@ -168,9 +221,9 @@ mod project_service_tests {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
 
-        service.create("Jane Doe".to_string()).await.unwrap();
-        service.create("Jane Doe".to_string()).await.unwrap();
-        service.create("Jane Doe".to_string()).await.unwrap();
+        service.create("Jane Doe".to_string(), None).await.unwrap();
+        service.create("Jane Doe".to_string(), None).await.unwrap();
+        service.create("Jane Doe".to_string(), None).await.unwrap();
 
         let projects = service.find_all().await.unwrap();
         assert_eq!(projects.len(), 3);
@@ -183,7 +236,7 @@ mod project_service_tests {
     async fn get_project_by_existing_id() {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
-        let result = service.create("Jane Doe".to_string()).await;
+        let result = service.create("Jane Doe".to_string(), None).await;
         assert!(result.is_ok());
 
         let projects = service.find_all().await.unwrap();
@@ -223,7 +276,7 @@ mod project_service_tests {
     async fn edit_project_name() {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
-        service.create("Jane Doe".to_string()).await.unwrap();
+        service.create("Jane Doe".to_string(), None).await.unwrap();
         let projects = service.find_all().await.unwrap();
         let project = projects.first().unwrap();
 
@@ -248,8 +301,8 @@ mod project_service_tests {
     async fn edit_project_name_to_existing_name() {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
-        service.create("Jane Doe".to_string()).await.unwrap();
-        service.create("MyProject".to_string()).await.unwrap();
+        service.create("Jane Doe".to_string(), None).await.unwrap();
+        service.create("MyProject".to_string(), None).await.unwrap();
         let projects = service.find_all().await.unwrap();
         let project = projects.first().unwrap();
 
@@ -263,7 +316,7 @@ mod project_service_tests {
     async fn edit_project_name_to_invalid_name() {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
-        service.create("Jane Doe".to_string()).await.unwrap();
+        service.create("Jane Doe".to_string(), None).await.unwrap();
         let projects = service.find_all().await.unwrap();
         let project = projects.first().unwrap();
         let result = service.edit_name(project.id, "").await;
@@ -272,10 +325,54 @@ mod project_service_tests {
     }
 
     #[tokio::test]
+    async fn edit_project_time_limit_with_valid_time() {
+        let project_repo = InMemoryProjectRepository::new();
+        let service = ProjectService::new(project_repo);
+        service
+            .create("Time Limit Project".to_string(), None)
+            .await
+            .unwrap();
+        let projects = service.find_all().await.unwrap();
+        let project = projects.first().unwrap();
+
+        let result = service.edit_time_limit(project.id, Some(60)).await;
+        assert!(result.is_ok());
+
+        let target = service.find_by_id(project.id).await.unwrap();
+        assert_eq!(target.time_limit, Some(60));
+    }
+    #[tokio::test]
+    async fn edit_project_time_limit_with_none_time_limit() {
+        let project_repo = InMemoryProjectRepository::new();
+        let service = ProjectService::new(project_repo);
+        service
+            .create("Time Limit Project".to_string(), Some(60))
+            .await
+            .unwrap();
+        let projects = service.find_all().await.unwrap();
+        let project = projects.first().unwrap();
+
+        let result = service.edit_time_limit(project.id, None).await;
+        assert!(result.is_ok());
+
+        let target = service.find_by_id(project.id).await.unwrap();
+        assert_eq!(target.time_limit, None);
+    }
+    #[tokio::test]
+    async fn edit_project_time_limit_with_invalid_id() {
+        let project_repo = InMemoryProjectRepository::new();
+        let service = ProjectService::new(project_repo);
+
+        let result = service.edit_time_limit(Uuid::new_v4(), Some(280)).await;
+        assert!(result.is_err());
+        assert!(matches!(result.err().unwrap(), ProjectNotFound));
+    }
+
+    #[tokio::test]
     async fn delete_project_by_existing_id() {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
-        service.create("Jane Doe".to_string()).await.unwrap();
+        service.create("Jane Doe".to_string(), None).await.unwrap();
         let projects = service.find_all().await.unwrap();
         let project = projects.first().unwrap();
 

@@ -19,7 +19,12 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         }
     }
 
-    pub async fn create(&self, task_name: &str, project: &Uuid) -> AppResult<Task> {
+    pub async fn create(
+        &self,
+        task_name: &str,
+        project: &Uuid,
+        time_limit: Option<u32>,
+    ) -> AppResult<Task> {
         if task_name.is_empty() {
             return Err(AppError::EmptyName);
         }
@@ -33,7 +38,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             id: Uuid::new_v4(),
             name: unique_name,
             project_id: *project,
-            time_limit: None,
+            time_limit,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -95,6 +100,33 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             return Err(AppError::Storage(error.to_string()));
         }
         Ok(new_task)
+    }
+
+    pub async fn edit_time_limit(&self, task_id: Uuid, time_limit: Option<u32>) -> AppResult<()> {
+        let task = self.find_by_id(task_id).await;
+        if task.is_err() {
+            return Err(AppError::TaskNotFound);
+        }
+
+        let task = task?;
+
+        let edited_task = Task {
+            id: task.id,
+            project_id: task.project_id,
+            name: task.name,
+            time_limit,
+            created_at: task.created_at,
+            updated_at: Utc::now(),
+        };
+
+        let result = self.task_repository.update(edited_task.clone()).await;
+        if let Err(error) = result {
+            return Err(AppError::Storage(
+                "Unable to edit time limit: ".to_string() + &error.to_string(),
+            ));
+        }
+
+        Ok(())
     }
 
     pub async fn assign_to_project(&self, task_id: Uuid, project: Uuid) -> AppResult<Task> {
@@ -196,7 +228,7 @@ mod task_service_tests {
     }
 
     async fn create_project_and_get_id(context: &Context, name: &str) -> Option<Uuid> {
-        let project = context.project_service.create(name.to_string()).await;
+        let project = context.project_service.create(name.to_string(), None).await;
         if project.is_err() {
             return None;
         }
@@ -211,13 +243,37 @@ mod task_service_tests {
         assert_ne!(project_id, None);
         let project_id = project_id.unwrap();
 
-        let result = context.task_service.create("Task01", &project_id).await;
+        let result = context
+            .task_service
+            .create("Task01", &project_id, Some(60))
+            .await;
         assert!(result.is_ok());
         let task = result.unwrap();
         assert_eq!(task.project_id, project_id);
         assert_ne!(task.id, Uuid::default());
         assert_eq!(task.name, "Task01");
+        assert_eq!(task.time_limit, Some(60));
     }
+
+    #[tokio::test]
+    async fn create_new_task_without_time_limit() {
+        let context = Context::new();
+        let project_id = create_project_and_get_id(&context, "Project01").await;
+        assert_ne!(project_id, None);
+        let project_id = project_id.unwrap();
+
+        let result = context
+            .task_service
+            .create("Task01", &project_id, None)
+            .await;
+        assert!(result.is_ok());
+        let task = result.unwrap();
+        assert_eq!(task.project_id, project_id);
+        assert_ne!(task.id, Uuid::default());
+        assert_eq!(task.name, "Task01");
+        assert_eq!(task.time_limit, None);
+    }
+
     #[tokio::test]
     async fn create_task_with_invalid_name() {
         let context = Context::new();
@@ -225,7 +281,7 @@ mod task_service_tests {
         assert_ne!(project_id, None);
         let project_id = project_id.unwrap();
 
-        let result = context.task_service.create("", &project_id).await;
+        let result = context.task_service.create("", &project_id, None).await;
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), AppError::EmptyName));
     }
@@ -233,7 +289,10 @@ mod task_service_tests {
     async fn create_task_with_invalid_project_id() {
         let context = Context::new();
 
-        let result = context.task_service.create("Task01", &Uuid::new_v4()).await;
+        let result = context
+            .task_service
+            .create("Task01", &Uuid::new_v4(), None)
+            .await;
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), AppError::ProjectNotFound));
     }
@@ -248,21 +307,21 @@ mod task_service_tests {
         tasks.push(
             context
                 .task_service
-                .create("Task", &project_id)
+                .create("Task", &project_id, None)
                 .await
                 .unwrap(),
         );
         tasks.push(
             context
                 .task_service
-                .create("Task", &project_id)
+                .create("Task", &project_id, None)
                 .await
                 .unwrap(),
         );
         tasks.push(
             context
                 .task_service
-                .create("Task", &project_id)
+                .create("Task", &project_id, None)
                 .await
                 .unwrap(),
         );
@@ -287,14 +346,14 @@ mod task_service_tests {
         tasks.push(
             context
                 .task_service
-                .create("Task", &project_id_a)
+                .create("Task", &project_id_a, None)
                 .await
                 .unwrap(),
         );
         tasks.push(
             context
                 .task_service
-                .create("Task", &project_id_b)
+                .create("Task", &project_id_b, None)
                 .await
                 .unwrap(),
         );
@@ -314,27 +373,27 @@ mod task_service_tests {
 
         context
             .task_service
-            .create("Task 1", &project_id)
+            .create("Task 1", &project_id, None)
             .await
             .unwrap();
         context
             .task_service
-            .create("Task 2", &project_id)
+            .create("Task 2", &project_id, None)
             .await
             .unwrap();
         context
             .task_service
-            .create("Task 3", &project_id)
+            .create("Task 3", &project_id, None)
             .await
             .unwrap();
         context
             .task_service
-            .create("Task 4", &project_id)
+            .create("Task 4", &project_id, None)
             .await
             .unwrap();
         context
             .task_service
-            .create("Task 5", &project_id)
+            .create("Task 5", &project_id, None)
             .await
             .unwrap();
 
@@ -351,7 +410,7 @@ mod task_service_tests {
         let project_id = project_id.unwrap();
         let task = context
             .task_service
-            .create("Task 1", &project_id)
+            .create("Task 1", &project_id, None)
             .await
             .unwrap();
 
@@ -368,7 +427,7 @@ mod task_service_tests {
         let project_id = project_id.unwrap();
         let _task = context
             .task_service
-            .create("Task 1", &project_id)
+            .create("Task 1", &project_id, None)
             .await
             .unwrap();
 
@@ -392,17 +451,17 @@ mod task_service_tests {
 
         context
             .task_service
-            .create("Task 1", &project_id_a)
+            .create("Task 1", &project_id_a, None)
             .await
             .unwrap();
         context
             .task_service
-            .create("Task 2", &project_id_b)
+            .create("Task 2", &project_id_b, None)
             .await
             .unwrap();
         context
             .task_service
-            .create("Task 3", &project_id_a)
+            .create("Task 3", &project_id_a, None)
             .await
             .unwrap();
 
@@ -426,7 +485,10 @@ mod task_service_tests {
         assert_ne!(project_id, None);
         let project_id = project_id.unwrap();
 
-        let task = context.task_service.create("Task 1", &project_id).await;
+        let task = context
+            .task_service
+            .create("Task 1", &project_id, None)
+            .await;
         assert!(task.is_ok());
         let task = task.unwrap();
 
@@ -452,7 +514,10 @@ mod task_service_tests {
         assert_ne!(project_id, None);
         let project_id = project_id.unwrap();
 
-        let task = context.task_service.create("Task 1", &project_id).await;
+        let task = context
+            .task_service
+            .create("Task 1", &project_id, None)
+            .await;
         assert!(task.is_ok());
         let task = task.unwrap();
 
@@ -487,11 +552,14 @@ mod task_service_tests {
 
         context
             .task_service
-            .create("Task 1", &project_id)
+            .create("Task 1", &project_id, None)
             .await
             .unwrap();
 
-        let task = context.task_service.create("Task 2", &project_id).await;
+        let task = context
+            .task_service
+            .create("Task 2", &project_id, None)
+            .await;
         assert!(task.is_ok());
         let task = task.unwrap();
 
@@ -516,7 +584,7 @@ mod task_service_tests {
 
         let task = context
             .task_service
-            .create("Task 1", &project_id_a)
+            .create("Task 1", &project_id_a, None)
             .await
             .unwrap();
 
@@ -541,7 +609,7 @@ mod task_service_tests {
 
         let task = context
             .task_service
-            .create("Task 1", &project_id_a)
+            .create("Task 1", &project_id_a, None)
             .await
             .unwrap();
 
@@ -566,18 +634,18 @@ mod task_service_tests {
 
         context
             .task_service
-            .create("Task", &project_id_b)
+            .create("Task", &project_id_b, None)
             .await
             .unwrap();
         context
             .task_service
-            .create("Task", &project_id_b)
+            .create("Task", &project_id_b, None)
             .await
             .unwrap();
 
         let task = context
             .task_service
-            .create("Task", &project_id_a)
+            .create("Task", &project_id_a, None)
             .await
             .unwrap();
 
@@ -591,5 +659,66 @@ mod task_service_tests {
         assert_eq!(result.project_id, project_id_b);
         assert_eq!(result.name, "Task(2)");
         assert_eq!(result.id, task.id);
+    }
+
+    #[tokio::test]
+    async fn edit_task_time_limit_with_valid_time() {
+        let context = Context::new();
+        let project_id = create_project_and_get_id(&context, "Project01").await;
+        assert_ne!(project_id, None);
+        let project_id = project_id.unwrap();
+
+        let task = context
+            .task_service
+            .create("Task 1", &project_id, None)
+            .await
+            .unwrap();
+
+        let result = context
+            .task_service
+            .edit_time_limit(task.id, Some(60))
+            .await;
+        assert!(result.is_ok());
+
+        let edited_task = context.task_service.find_by_id(task.id).await;
+        assert!(edited_task.is_ok());
+        let edited_task = edited_task.unwrap();
+
+        assert_eq!(edited_task.id, task.id);
+        assert_eq!(edited_task.time_limit, Some(60));
+    }
+    #[tokio::test]
+    async fn edit_task_time_limit_with_none_time_limit() {
+        let context = Context::new();
+        let project_id = create_project_and_get_id(&context, "Project01").await;
+        assert_ne!(project_id, None);
+        let project_id = project_id.unwrap();
+
+        let task = context
+            .task_service
+            .create("Task 1", &project_id, Some(24))
+            .await
+            .unwrap();
+
+        let result = context.task_service.edit_time_limit(task.id, None).await;
+        assert!(result.is_ok());
+
+        let edited_task = context.task_service.find_by_id(task.id).await;
+        assert!(edited_task.is_ok());
+        let edited_task = edited_task.unwrap();
+
+        assert_eq!(edited_task.id, task.id);
+        assert_eq!(edited_task.time_limit, None);
+    }
+
+    #[tokio::test]
+    async fn edit_task_time_limit_with_invalid_task_id() {
+        let context = Context::new();
+        let result = context
+            .task_service
+            .edit_time_limit(Uuid::new_v4(), Some(60))
+            .await;
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), AppError::TaskNotFound));
     }
 }

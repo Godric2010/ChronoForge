@@ -99,7 +99,7 @@ impl<'a> TuiBackend for AppViewContext<'a> {
     async fn create_project(&self, project_name: &str) -> anyhow::Result<()> {
         self.app
             .project_service
-            .create(project_name.to_string())
+            .create(project_name.to_string(), None)
             .await?;
         Ok(())
     }
@@ -115,7 +115,10 @@ impl<'a> TuiBackend for AppViewContext<'a> {
     }
 
     async fn create_task(&self, name: String, project_id: Uuid) -> anyhow::Result<()> {
-        self.app.task_service.create(&name, &project_id).await?;
+        self.app
+            .task_service
+            .create(&name, &project_id, None)
+            .await?;
         Ok(())
     }
 

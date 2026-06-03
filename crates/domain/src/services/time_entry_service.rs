@@ -247,18 +247,30 @@ mod time_entry_service_tests {
             let task_service = TaskService::new(task_repo.clone(), project_repo.clone());
 
             let project_01 = project_service
-                .create("Project01".to_string())
+                .create("Project01".to_string(), None)
                 .await
                 .unwrap();
             let project_02 = project_service
-                .create("Project02".to_string())
+                .create("Project02".to_string(), None)
                 .await
                 .unwrap();
 
-            let task_01 = task_service.create("Task01", &project_01.id).await.unwrap();
-            let task_02 = task_service.create("Task02", &project_02.id).await.unwrap();
-            let task_03 = task_service.create("Task03", &project_01.id).await.unwrap();
-            let task_04 = task_service.create("Task04", &project_02.id).await.unwrap();
+            let task_01 = task_service
+                .create("Task01", &project_01.id, None)
+                .await
+                .unwrap();
+            let task_02 = task_service
+                .create("Task02", &project_02.id, None)
+                .await
+                .unwrap();
+            let task_03 = task_service
+                .create("Task03", &project_01.id, None)
+                .await
+                .unwrap();
+            let task_04 = task_service
+                .create("Task04", &project_02.id, None)
+                .await
+                .unwrap();
 
             let task_ids = vec![task_01.id, task_02.id, task_03.id, task_04.id];
             Self { service, task_ids }

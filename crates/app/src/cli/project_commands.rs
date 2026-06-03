@@ -29,7 +29,7 @@ impl ProjectCommand {
     pub async fn run(&self, app: &AppContext) -> anyhow::Result<()> {
         match self {
             ProjectCommand::Create { name } => {
-                let project = app.project_service.create(name.clone()).await?;
+                let project = app.project_service.create(name.clone(), None).await?;
                 println!("Created project {} ({})", project.name, project.id);
             }
             ProjectCommand::List => {
