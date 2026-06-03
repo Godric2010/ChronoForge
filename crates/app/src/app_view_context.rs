@@ -47,6 +47,7 @@ impl<'a> AppViewContext<'a> {
         Ok(ProjectViewModel {
             project: project.clone(),
             total_project_time_min: project_time_minutes,
+            time_limit: project.time_limit,
             tasks: task_vms,
         })
     }
@@ -74,6 +75,7 @@ impl<'a> AppViewContext<'a> {
         Ok(TaskViewModel {
             task: task.clone(),
             total_task_time_min: task_time_minutes,
+            time_limit: task.time_limit,
             time_entries: sorted_entries,
         })
     }

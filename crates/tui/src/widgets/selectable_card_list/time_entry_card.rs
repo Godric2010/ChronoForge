@@ -43,7 +43,13 @@ impl TimeEntryCard {
         .split(area);
 
         let weekday_text = if self.older_than_week {
-            format!("{} ({})", self.weekday, self.start_time.format("%%F"))
+            let start_time_day = self.start_time.day();
+            let start_time_month = self.start_time.month();
+            let start_time_year = self.start_time.year();
+            format!(
+                "{} ({:02}/{:02}/{:04})",
+                self.weekday, start_time_day, start_time_month, start_time_year
+            )
         } else {
             self.weekday.to_string()
         };

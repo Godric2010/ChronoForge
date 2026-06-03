@@ -5,6 +5,7 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::Frame;
 
+mod card_render_helper;
 pub mod card_trait;
 pub mod project_card;
 pub mod task_card;

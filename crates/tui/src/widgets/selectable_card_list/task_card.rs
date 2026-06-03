@@ -1,5 +1,6 @@
+use crate::widgets::selectable_card_list::card_render_helper::*;
 use crate::widgets::selectable_card_list::card_trait::SelectableCard;
-use ratatui::layout::{Constraint, HorizontalAlignment, Layout, Rect};
+use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::prelude::{Color, Modifier, Style};
 use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
 use ratatui::Frame;
@@ -8,22 +9,24 @@ use ratatui::Frame;
 pub struct TaskCard {
     pub task_name: String,
     pub total_minutes: u32,
+    pub time_limit: Option<u32>,
     is_selected: bool,
 }
 
 impl TaskCard {
-    pub fn new(task_name: String, total_minutes: u32) -> Self {
+    pub fn new(task_name: String, total_minutes: u32, time_limit: Option<u32>) -> Self {
         Self {
             task_name,
             total_minutes,
+            time_limit,
             is_selected: false,
         }
     }
     fn render_task_info(&self, area: Rect, frame: &mut Frame) {
         let info_chunks = Layout::vertical([
-            Constraint::Length(1), // spacer
+            Constraint::Min(1),    // spacer
             Constraint::Length(1), // task name
-            Constraint::Length(1), // spacer
+            Constraint::Min(1),    // spacer
         ])
         .split(area);
 
@@ -33,30 +36,6 @@ impl TaskCard {
                 .fg(Color::White),
         );
         frame.render_widget(name_paragraph, info_chunks[1]);
-    }
-
-    fn render_time_info(&self, area: Rect, frame: &mut Frame) {
-        let time_info_block = Block::default()
-            .borders(Borders::LEFT)
-            .border_type(BorderType::LightTripleDashed);
-
-        let inner = time_info_block.inner(area);
-        frame.render_widget(time_info_block, area);
-
-        let time_chunks = Layout::vertical([
-            Constraint::Length(1),
-            Constraint::Length(1),
-            Constraint::Min(1),
-        ])
-        .split(inner);
-
-        let time_paragraph = Paragraph::new(format!(
-            "{:02}:{:02}",
-            self.total_minutes / 60,
-            self.total_minutes % 60
-        ))
-        .alignment(HorizontalAlignment::Center);
-        frame.render_widget(time_paragraph, time_chunks[1]);
     }
 }
 
@@ -94,6 +73,10 @@ impl SelectableCard for TaskCard {
         let time_side = vertical_chunks[2];
 
         self.render_task_info(info_side, frame);
-        self.render_time_info(time_side, frame);
+        if let Some(time_limit) = self.time_limit {
+            render_time_info_with_time_limit(time_side, frame, self.total_minutes, time_limit);
+        } else {
+            render_time_info(time_side, frame, self.total_minutes);
+        }
     }
 }

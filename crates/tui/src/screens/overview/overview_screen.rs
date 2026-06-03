@@ -375,6 +375,7 @@ impl OverviewScreen {
                     p.project.name.clone(),
                     p.tasks.len(),
                     p.total_project_time_min,
+                    p.time_limit,
                 )
             })
             .collect();
@@ -393,9 +394,9 @@ impl OverviewScreen {
         let tasks = &vm.tasks;
         let task_cards: Vec<TaskCard> = tasks
             .iter()
-            .map(|t| TaskCard::new(t.task.name.clone(), t.total_task_time_min))
+            .map(|t| TaskCard::new(t.task.name.clone(), t.total_task_time_min, t.time_limit))
             .collect();
-        self.task_list_widget.update_list_items(task_cards, 5);
+        self.task_list_widget.update_list_items(task_cards, 7);
     }
 
     fn fill_time_entry_list(&mut self, project_id: &Uuid, task_id: &Uuid) {
