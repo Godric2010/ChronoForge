@@ -29,7 +29,12 @@ pub trait TuiBackend {
         time_limit: Option<u32>,
     ) -> anyhow::Result<()>;
     async fn delete_project(&self, project_id: Uuid) -> anyhow::Result<()>;
-    async fn rename_project(&self, project_id: Uuid, name: &str) -> anyhow::Result<()>;
+    async fn edit_project(
+        &self,
+        project_id: Uuid,
+        name: &str,
+        time_limit: Option<u32>,
+    ) -> anyhow::Result<()>;
 
     async fn create_task(&self, name: String, project_id: Uuid) -> anyhow::Result<()>;
     async fn delete_task(&self, project_id: Uuid) -> anyhow::Result<()>;

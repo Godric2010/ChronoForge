@@ -261,8 +261,8 @@ impl App {
             AppAction::CreateProject(name, time_limit) => {
                 backend.create_project(&name, time_limit).await?;
             }
-            AppAction::RenameProject(id, name) => {
-                backend.rename_project(id, &name).await?;
+            AppAction::EditProject(id, name, time_limit) => {
+                backend.edit_project(id, &name, time_limit).await?;
             }
             AppAction::DeleteProject(id) => {
                 backend.delete_project(id).await?;

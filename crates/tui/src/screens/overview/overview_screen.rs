@@ -142,9 +142,8 @@ impl OverviewScreen {
                 }
                 'e' => {
                     if let Some(project) = &self.get_selected_project() {
-                        let widget =
-                            TextInputWidget::new(TextInputMode::Naming, Some(project.name.clone()));
-                        let dialog = Dialog::new("Rename the project", widget);
+                        let widget = ProjectEditWidget::new(project);
+                        let dialog = Dialog::new("Edit the project", widget);
                         self.overview_dialog =
                             Some(OverviewDialog::EditProjectName(dialog, project.id));
                     }

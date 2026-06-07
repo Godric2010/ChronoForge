@@ -16,7 +16,7 @@ pub enum OverviewDialogResult {
 
 pub enum OverviewDialog {
     CreateProject(Dialog<ProjectEditWidget>),
-    EditProjectName(Dialog<TextInputWidget>, Uuid),
+    EditProjectName(Dialog<ProjectEditWidget>, Uuid),
     DeleteProject(Dialog<YesNoWidget>, Uuid),
 
     CreateTask(Dialog<TextInputWidget>, Uuid),
@@ -86,8 +86,8 @@ impl OverviewDialog {
                 match result {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
-                    DialogResult::Confirmed(new_project_name) => OverviewDialogResult::Confirmed(
-                        AppAction::RenameProject(*project_id, new_project_name),
+                    DialogResult::Confirmed(output) => OverviewDialogResult::Confirmed(
+                        AppAction::EditProject(*project_id, output.project_name, output.time_limit),
                     ),
                 }
             }

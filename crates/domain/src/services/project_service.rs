@@ -25,7 +25,7 @@ impl<P: ProjectRepository> ProjectService<P> {
         }
 
         let projects = self.find_all().await?;
-        let unique_project_name = self.create_unique_project_name(&project_name, &projects);
+        let unique_project_name = self.create_unique_project_name(&project_name, None, &projects);
 
         let project = Project {
             id: Uuid::new_v4(),
@@ -87,7 +87,8 @@ impl<P: ProjectRepository> ProjectService<P> {
         }
 
         let all_projects = self.find_all().await?;
-        let unique_project_name = self.create_unique_project_name(name, &all_projects);
+        let unique_project_name =
+            self.create_unique_project_name(name, Some(&project_id), &all_projects);
 
         let edited_project = Project {
             id: project_id,
@@ -150,9 +151,20 @@ impl<P: ProjectRepository> ProjectService<P> {
         Ok(())
     }
 
-    fn create_unique_project_name(&self, project_name: &str, projects: &[Project]) -> String {
+    fn create_unique_project_name(
+        &self,
+        project_name: &str,
+        project_id: Option<&Uuid>,
+        projects: &[Project],
+    ) -> String {
         let mut names = Vec::new();
         for project in projects {
+            if let Some(project_id) = project_id {
+                if *project_id == project.id {
+                    continue;
+                }
+            }
+
             names.push(project.name.clone());
         }
 

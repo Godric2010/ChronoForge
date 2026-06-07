@@ -115,8 +115,17 @@ impl<'a> TuiBackend for AppViewContext<'a> {
         Ok(())
     }
 
-    async fn rename_project(&self, project_id: Uuid, name: &str) -> anyhow::Result<()> {
+    async fn edit_project(
+        &self,
+        project_id: Uuid,
+        name: &str,
+        time_limit: Option<u32>,
+    ) -> anyhow::Result<()> {
         self.app.project_service.edit_name(project_id, name).await?;
+        self.app
+            .project_service
+            .edit_time_limit(project_id, time_limit)
+            .await?;
         Ok(())
     }
 
