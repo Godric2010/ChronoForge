@@ -98,10 +98,14 @@ impl<'a> TuiBackend for AppViewContext<'a> {
         self.create_overview_view_model().await
     }
 
-    async fn create_project(&self, project_name: &str) -> anyhow::Result<()> {
+    async fn create_project(
+        &self,
+        project_name: &str,
+        time_limit: Option<u32>,
+    ) -> anyhow::Result<()> {
         self.app
             .project_service
-            .create(project_name.to_string(), None)
+            .create(project_name.to_string(), time_limit)
             .await?;
         Ok(())
     }

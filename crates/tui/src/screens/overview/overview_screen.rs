@@ -4,7 +4,8 @@ use crate::screens::overview::mode::Mode;
 use crate::screens::overview::overview_dialog::{OverviewDialog, OverviewDialogResult};
 use crate::screens::overview::overview_view_model::OverviewViewModel;
 use crate::widgets::dialog_widgets::{
-    ListItem, ListWidget, TextInputMode, TextInputWidget, TimeEntryWidget, YesNoWidget,
+    ListItem, ListWidget, ProjectEditWidget, TextInputMode, TextInputWidget, TimeEntryWidget,
+    YesNoWidget,
 };
 use crate::widgets::selectable_card_list::project_card::ProjectCard;
 use crate::widgets::selectable_card_list::task_card::TaskCard;
@@ -134,7 +135,7 @@ impl OverviewScreen {
             KeyCode::Char(c) => match c {
                 'q' => Some(AppAction::Quit),
                 'n' => {
-                    let widget = TextInputWidget::new(TextInputMode::Naming, None);
+                    let widget = ProjectEditWidget::empty();
                     let dialog = Dialog::new("Create new project", widget);
                     self.overview_dialog = Some(OverviewDialog::CreateProject(dialog));
                     None

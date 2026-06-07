@@ -1,6 +1,8 @@
 use crate::app_action::AppAction;
 use crate::screens::dialog::{Dialog, DialogResult};
-use crate::widgets::dialog_widgets::{ListWidget, TextInputWidget, TimeEntryWidget, YesNoWidget};
+use crate::widgets::dialog_widgets::{
+    ListWidget, ProjectEditWidget, TextInputWidget, TimeEntryWidget, YesNoWidget,
+};
 use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
 use ratatui::Frame;
@@ -13,7 +15,7 @@ pub enum OverviewDialogResult {
 }
 
 pub enum OverviewDialog {
-    CreateProject(Dialog<TextInputWidget>),
+    CreateProject(Dialog<ProjectEditWidget>),
     EditProjectName(Dialog<TextInputWidget>, Uuid),
     DeleteProject(Dialog<YesNoWidget>, Uuid),
 
@@ -74,9 +76,9 @@ impl OverviewDialog {
                 match result {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
-                    DialogResult::Confirmed(project_name) => {
-                        OverviewDialogResult::Confirmed(AppAction::CreateProject(project_name))
-                    }
+                    DialogResult::Confirmed(output) => OverviewDialogResult::Confirmed(
+                        AppAction::CreateProject(output.project_name, output.time_limit),
+                    ),
                 }
             }
             OverviewDialog::EditProjectName(dialog, project_id) => {

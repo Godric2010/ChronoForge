@@ -23,7 +23,11 @@ pub async fn run<B: TuiBackend>(backend: &B) -> anyhow::Result<()> {
 #[async_trait::async_trait]
 pub trait TuiBackend {
     async fn load_projects(&self) -> anyhow::Result<OverviewViewModel>;
-    async fn create_project(&self, project_name: &str) -> anyhow::Result<()>;
+    async fn create_project(
+        &self,
+        project_name: &str,
+        time_limit: Option<u32>,
+    ) -> anyhow::Result<()>;
     async fn delete_project(&self, project_id: Uuid) -> anyhow::Result<()>;
     async fn rename_project(&self, project_id: Uuid, name: &str) -> anyhow::Result<()>;
 

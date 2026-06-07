@@ -5,7 +5,7 @@ pub enum AppAction {
     Quit,
 
     // Projects
-    CreateProject(String),
+    CreateProject(String, Option<u32>),
     RenameProject(Uuid, String),
     DeleteProject(Uuid),
 

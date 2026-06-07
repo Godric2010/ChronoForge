@@ -258,8 +258,8 @@ impl App {
             AppAction::Quit => {
                 self.should_quit = true;
             }
-            AppAction::CreateProject(name) => {
-                backend.create_project(&name).await?;
+            AppAction::CreateProject(name, time_limit) => {
+                backend.create_project(&name, time_limit).await?;
             }
             AppAction::RenameProject(id, name) => {
                 backend.rename_project(id, &name).await?;
