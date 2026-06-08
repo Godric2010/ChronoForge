@@ -10,8 +10,8 @@ pub enum AppAction {
     DeleteProject(Uuid),
 
     // Tasks
-    CreateTask(String, Uuid),
-    RenameTask(Uuid, String),
+    CreateTask(String, Option<u32>, Uuid),
+    RenameTask(Uuid, String, Option<u32>),
     AssignTask(Uuid, Uuid),
     DeleteTask(Uuid),
 

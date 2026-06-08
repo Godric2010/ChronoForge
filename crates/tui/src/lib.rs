@@ -36,9 +36,19 @@ pub trait TuiBackend {
         time_limit: Option<u32>,
     ) -> anyhow::Result<()>;
 
-    async fn create_task(&self, name: String, project_id: Uuid) -> anyhow::Result<()>;
+    async fn create_task(
+        &self,
+        name: String,
+        time_limit: Option<u32>,
+        project_id: Uuid,
+    ) -> anyhow::Result<()>;
     async fn delete_task(&self, project_id: Uuid) -> anyhow::Result<()>;
-    async fn rename_task(&self, task_id: Uuid, name: String) -> anyhow::Result<()>;
+    async fn edit_task(
+        &self,
+        task_id: Uuid,
+        name: String,
+        time_limit: Option<u32>,
+    ) -> anyhow::Result<()>;
     async fn assign_task(&self, task_id: Uuid, project_id: Uuid) -> anyhow::Result<()>;
 
     async fn create_time_entry(

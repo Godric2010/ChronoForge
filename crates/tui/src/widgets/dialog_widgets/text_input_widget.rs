@@ -4,6 +4,7 @@ use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
 
+#[allow(dead_code)]
 pub enum TextInputMode {
     Ascii,
     Naming,

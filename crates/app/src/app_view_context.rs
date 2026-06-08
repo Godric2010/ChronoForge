@@ -129,10 +129,15 @@ impl<'a> TuiBackend for AppViewContext<'a> {
         Ok(())
     }
 
-    async fn create_task(&self, name: String, project_id: Uuid) -> anyhow::Result<()> {
+    async fn create_task(
+        &self,
+        name: String,
+        time_limit: Option<u32>,
+        project_id: Uuid,
+    ) -> anyhow::Result<()> {
         self.app
             .task_service
-            .create(&name, &project_id, None)
+            .create(&name, &project_id, time_limit)
             .await?;
         Ok(())
     }
@@ -142,8 +147,17 @@ impl<'a> TuiBackend for AppViewContext<'a> {
         Ok(())
     }
 
-    async fn rename_task(&self, task_id: Uuid, name: String) -> anyhow::Result<()> {
+    async fn edit_task(
+        &self,
+        task_id: Uuid,
+        name: String,
+        time_limit: Option<u32>,
+    ) -> anyhow::Result<()> {
         self.app.task_service.edit_task_name(task_id, &name).await?;
+        self.app
+            .task_service
+            .edit_time_limit(task_id, time_limit)
+            .await?;
         Ok(())
     }
 

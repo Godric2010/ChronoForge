@@ -68,22 +68,23 @@ impl TimeEditElement {
         if !self.active {
             return;
         }
+        if key.modifiers.contains(KeyModifiers::SHIFT) {
+            match key.code {
+                KeyCode::Up => {
+                    self.increase_hour();
+                    return;
+                }
+                KeyCode::Down => {
+                    self.decrease_hour();
+                    return;
+                }
+                _ => {}
+            }
+        }
 
         match key.code {
-            KeyCode::Up => {
-                if key.modifiers == KeyModifiers::CONTROL {
-                    self.increase_hour()
-                } else {
-                    self.increase_minute()
-                }
-            }
-            KeyCode::Down => {
-                if key.modifiers == KeyModifiers::CONTROL {
-                    self.decrease_hour()
-                } else {
-                    self.decrease_minute()
-                }
-            }
+            KeyCode::Up => self.increase_minute(),
+            KeyCode::Down => self.decrease_minute(),
             KeyCode::Left => {
                 if self.cursor_pos == 0 {
                     return;

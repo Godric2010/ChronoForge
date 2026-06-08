@@ -4,8 +4,7 @@ use crate::screens::overview::mode::Mode;
 use crate::screens::overview::overview_dialog::{OverviewDialog, OverviewDialogResult};
 use crate::screens::overview::overview_view_model::OverviewViewModel;
 use crate::widgets::dialog_widgets::{
-    ListItem, ListWidget, ProjectEditWidget, TextInputMode, TextInputWidget, TimeEntryWidget,
-    YesNoWidget,
+    ListItem, ListWidget, ProjectEditWidget, TaskEditWidget, TimeEntryWidget, YesNoWidget,
 };
 use crate::widgets::selectable_card_list::project_card::ProjectCard;
 use crate::widgets::selectable_card_list::task_card::TaskCard;
@@ -182,7 +181,7 @@ impl OverviewScreen {
                 'q' => Some(AppAction::Quit),
                 'n' => {
                     let selected_project = self.get_selected_project()?.id;
-                    let widget = TextInputWidget::new(TextInputMode::Naming, None);
+                    let widget = TaskEditWidget::empty();
                     let dialog = Dialog::new("Create new task", widget);
                     self.overview_dialog =
                         Some(OverviewDialog::CreateTask(dialog, selected_project));
@@ -190,9 +189,8 @@ impl OverviewScreen {
                 }
                 'e' => {
                     if let Some(task) = &self.get_selected_task() {
-                        let widget =
-                            TextInputWidget::new(TextInputMode::Naming, Some(task.name.clone()));
-                        let dialog = Dialog::new("Rename the task", widget);
+                        let widget = TaskEditWidget::new(task);
+                        let dialog = Dialog::new("Edit the task", widget);
                         self.overview_dialog = Some(OverviewDialog::EditTask(dialog, task.id));
                     }
                     None

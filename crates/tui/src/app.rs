@@ -267,11 +267,11 @@ impl App {
             AppAction::DeleteProject(id) => {
                 backend.delete_project(id).await?;
             }
-            AppAction::CreateTask(name, project_id) => {
-                backend.create_task(name, project_id).await?;
+            AppAction::CreateTask(name, time_limit, project_id) => {
+                backend.create_task(name, time_limit, project_id).await?;
             }
-            AppAction::RenameTask(task_id, new_name) => {
-                backend.rename_task(task_id, new_name).await?;
+            AppAction::RenameTask(task_id, new_name, time_limit) => {
+                backend.edit_task(task_id, new_name, time_limit).await?;
             }
             AppAction::DeleteTask(task_id) => {
                 backend.delete_task(task_id).await?;

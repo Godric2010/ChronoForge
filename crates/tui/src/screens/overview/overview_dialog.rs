@@ -1,7 +1,7 @@
 use crate::app_action::AppAction;
 use crate::screens::dialog::{Dialog, DialogResult};
 use crate::widgets::dialog_widgets::{
-    ListWidget, ProjectEditWidget, TextInputWidget, TimeEntryWidget, YesNoWidget,
+    ListWidget, ProjectEditWidget, TaskEditWidget, TimeEntryWidget, YesNoWidget,
 };
 use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
@@ -19,8 +19,8 @@ pub enum OverviewDialog {
     EditProjectName(Dialog<ProjectEditWidget>, Uuid),
     DeleteProject(Dialog<YesNoWidget>, Uuid),
 
-    CreateTask(Dialog<TextInputWidget>, Uuid),
-    EditTask(Dialog<TextInputWidget>, Uuid),
+    CreateTask(Dialog<TaskEditWidget>, Uuid),
+    EditTask(Dialog<TaskEditWidget>, Uuid),
     AssignTask(Dialog<ListWidget>, Uuid),
     DeleteTask(Dialog<YesNoWidget>, Uuid),
 
@@ -96,8 +96,8 @@ impl OverviewDialog {
                 match result {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
-                    DialogResult::Confirmed(task_name) => OverviewDialogResult::Confirmed(
-                        AppAction::CreateTask(task_name, *project_id),
+                    DialogResult::Confirmed(output) => OverviewDialogResult::Confirmed(
+                        AppAction::CreateTask(output.task_name, output.time_limit, *project_id),
                     ),
                 }
             }
@@ -106,8 +106,8 @@ impl OverviewDialog {
                 match result {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
-                    DialogResult::Confirmed(new_task_name) => OverviewDialogResult::Confirmed(
-                        AppAction::RenameTask(*task_id, new_task_name),
+                    DialogResult::Confirmed(output) => OverviewDialogResult::Confirmed(
+                        AppAction::RenameTask(*task_id, output.task_name, output.time_limit),
                     ),
                 }
             }

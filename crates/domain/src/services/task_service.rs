@@ -32,7 +32,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         self.check_if_project_exists(project).await?;
 
         let tasks = self.find_all_tasks().await?;
-        let unique_name = self.create_unique_task_name(task_name, &tasks, *project);
+        let unique_name = self.create_unique_task_name(task_name, None, *project, &tasks);
 
         let task = Task {
             id: Uuid::new_v4(),
@@ -84,7 +84,8 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         let tasks = self.find_all_tasks().await?;
         let task = self.find_by_id(task_id).await?;
 
-        let unique_name = self.create_unique_task_name(new_name, &tasks, task.project_id);
+        let unique_name =
+            self.create_unique_task_name(new_name, Some(&task.id), task.project_id, &tasks);
 
         let new_task = Task {
             id: task.id,
@@ -135,7 +136,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         let tasks = self.find_all_tasks().await?;
         let task = self.find_by_id(task_id).await?;
 
-        let unique_name = self.create_unique_task_name(&task.name, &tasks, project);
+        let unique_name = self.create_unique_task_name(&task.name, Some(&task.id), project, &tasks);
 
         let new_task = Task {
             id: task.id,
@@ -164,9 +165,20 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         Ok(())
     }
 
-    fn create_unique_task_name(&self, task_name: &str, tasks: &[Task], project_id: Uuid) -> String {
+    fn create_unique_task_name(
+        &self,
+        task_name: &str,
+        task_id: Option<&Uuid>,
+        project_id: Uuid,
+        tasks: &[Task],
+    ) -> String {
         let mut names = Vec::new();
         for task in tasks {
+            if let Some(task_id) = task_id {
+                if *task_id == task.id {
+                    continue;
+                }
+            }
             if task.project_id != project_id {
                 continue;
             }
