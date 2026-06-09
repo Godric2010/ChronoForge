@@ -1,6 +1,6 @@
 use crate::app_action::AppAction;
 use crate::screens::dialog::{Dialog, DialogResult};
-use crate::widgets::dialog_widgets::TextInputWidget;
+use crate::widgets::dialog_widgets::PathWidget;
 use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
 use ratatui::Frame;
@@ -12,8 +12,8 @@ pub enum SettingsDialogResult {
 }
 
 pub enum SettingsDialog {
-    ImportCsv(Dialog<TextInputWidget>),
-    ExportCSV(Dialog<TextInputWidget>),
+    ImportCsv(Dialog<PathWidget>),
+    ExportCSV(Dialog<PathWidget>),
 }
 
 impl SettingsDialog {

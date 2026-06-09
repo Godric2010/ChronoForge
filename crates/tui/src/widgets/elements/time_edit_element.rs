@@ -23,7 +23,7 @@ impl TimeEditElement {
             max_hour,
             active: false,
             size: ElementSize {
-                width: 10,
+                width: if max_hour.is_some() { 5 } else { 10 },
                 height: 1,
             },
             hour_digit_chars: format!("{:0width$}", hour, width = 2).chars().collect(),
@@ -47,7 +47,7 @@ impl TimeEditElement {
         &self.size
     }
 
-    pub fn render(&mut self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
+    pub fn render(&self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
         let rect = Rect::new(pos_x, pos_y, self.size.width, self.size.height);
 
         let time_string = format!("{:02}:{:02}", self.hour, self.minute);
