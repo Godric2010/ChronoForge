@@ -10,7 +10,8 @@ use storage::repositories::sqlite_project_repository::SQLiteProjectRepository;
 pub struct ProjectCsvRow {
     pub id: String,
     pub name: String,
-    pub time_limit: u32,
+    #[serde(default)]
+    pub time_limit: Option<u32>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -20,7 +21,7 @@ impl From<Project> for ProjectCsvRow {
         Self {
             id: value.id.to_string(),
             name: value.name,
-            time_limit: value.time_limit.unwrap_or_default(),
+            time_limit: value.time_limit,
             created_at: value.created_at.to_rfc3339(),
             updated_at: value.updated_at.to_rfc3339(),
         }
@@ -34,11 +35,7 @@ impl TryFrom<ProjectCsvRow> for Project {
         Ok(Self {
             id: Uuid::parse_str(&value.id)?,
             name: value.name,
-            time_limit: if value.time_limit > 0 {
-                Some(value.time_limit)
-            } else {
-                None
-            },
+            time_limit: value.time_limit,
             created_at: DateTime::parse_from_rfc3339(&value.created_at)?.with_timezone(&Utc),
             updated_at: DateTime::parse_from_rfc3339(&value.updated_at)?.with_timezone(&Utc),
         })
