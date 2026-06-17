@@ -1,6 +1,8 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crate::widgets::elements::{CheckboxElement, InputMode, TextEditElement, TimeEditElement};
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use domain::types::Task;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::prelude::{Color, Modifier, Style};
@@ -12,15 +14,45 @@ pub struct TaskEditOutput {
     pub time_limit: Option<u32>,
 }
 
+#[derive(Clone, Copy)]
+enum TaskEditActions {
+    Next,
+    Previous,
+}
+
 pub struct TaskEditWidget {
     name_input: TextEditElement,
     time_limit_checkbox: CheckboxElement,
     time_limit_input: TimeEditElement,
 
     active_element_index: u8,
+    input_map: InputMap<TaskEditActions>,
 }
 
 impl TaskEditWidget {
+    fn create_input_map() -> InputMap<TaskEditActions> {
+        let key_bindings = vec![
+            KeyBinding {
+                key_code: KeyCode::Tab,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Tab".to_string(),
+                key_description: "Next input field".to_string(),
+                action: TaskEditActions::Next,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::BackTab,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "BackTab".to_string(),
+                key_description: "Prev input field".to_string(),
+                action: TaskEditActions::Previous,
+                display_in_footer: false,
+            },
+        ];
+
+        InputMap::new("Task Edit Action", key_bindings)
+    }
+
     pub fn empty() -> Self {
         let mut name_input = TextEditElement::new(None, InputMode::Naming);
         name_input.set_active(true);
@@ -29,6 +61,7 @@ impl TaskEditWidget {
             time_limit_checkbox: CheckboxElement::new("Set time limit:".to_string(), 20, false),
             time_limit_input: TimeEditElement::new(0, 0, None),
             active_element_index: 0,
+            input_map: Self::create_input_map(),
         }
     }
 
@@ -61,6 +94,7 @@ impl TaskEditWidget {
             ),
             time_limit_input: TimeEditElement::new(time_limit_h, time_limit_m, None),
             active_element_index: 0,
+            input_map: Self::create_input_map(),
         }
     }
 
@@ -85,6 +119,22 @@ impl TaskEditWidget {
             _ => {}
         }
     }
+    fn select_next_field(&mut self, max_element_idx: u8) {
+        self.active_element_index += 1;
+        if self.active_element_index >= max_element_idx {
+            self.active_element_index = 0;
+        }
+        self.enable_field();
+    }
+
+    fn select_prev_field(&mut self, max_element_idx: u8) {
+        if self.active_element_index > 0 {
+            self.active_element_index -= 1;
+        } else {
+            self.active_element_index = max_element_idx;
+        }
+        self.enable_field();
+    }
 }
 
 impl DialogWidget for TaskEditWidget {
@@ -94,7 +144,7 @@ impl DialogWidget for TaskEditWidget {
         WidgetType::Input
     }
 
-    fn get_help_text(&self) -> String {
+    fn render_input_map_help(&self) -> String {
         "<Esc>: Cancel | <Enter>: Confirm | <Tab>: Next".to_string()
     }
 
@@ -105,27 +155,17 @@ impl DialogWidget for TaskEditWidget {
             2
         };
 
-        match key.code {
-            KeyCode::Tab => {
-                self.active_element_index += 1;
-                if self.active_element_index >= max_element_idx {
-                    self.active_element_index = 0;
-                }
-                self.enable_field();
-            }
-            KeyCode::BackTab => {
-                if self.active_element_index > 0 {
-                    self.active_element_index -= 1;
-                } else {
-                    self.active_element_index = max_element_idx;
-                }
-                self.enable_field();
-            }
-            _ => match self.active_element_index {
+        let action = self.input_map.find_action(key);
+        match action {
+            None => match self.active_element_index {
                 0 => self.name_input.handle_key(key),
                 1 => self.time_limit_checkbox.handle_key(key),
                 2 => self.time_limit_input.handle_key(key),
                 _ => {}
+            },
+            Some(a) => match a {
+                TaskEditActions::Next => self.select_next_field(max_element_idx),
+                TaskEditActions::Previous => self.select_prev_field(max_element_idx),
             },
         }
     }

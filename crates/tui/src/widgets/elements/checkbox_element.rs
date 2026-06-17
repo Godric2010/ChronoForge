@@ -1,18 +1,34 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::widgets::elements::ElementSize;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
 
+#[derive(Clone, Copy)]
+enum CheckboxAction {
+    Toggle,
+}
 pub struct CheckboxElement {
     label: String,
     checked: bool,
     active: bool,
     size: ElementSize,
+    input_map: InputMap<CheckboxAction>,
 }
 
 impl CheckboxElement {
     pub fn new(label: String, label_width: u16, checked: bool) -> Self {
+        let key_bindings = vec![KeyBinding {
+            key_code: KeyCode::Char(' '),
+            key_modifier: KeyModifiers::empty(),
+            key_name: "Space".to_string(),
+            key_description: "Toggle".to_string(),
+            action: CheckboxAction::Toggle,
+            display_in_footer: false,
+        }];
+        let input_map = InputMap::new("Checkbox Actions", key_bindings);
         Self {
             size: ElementSize {
                 width: label_width + 4,
@@ -21,6 +37,7 @@ impl CheckboxElement {
             label,
             checked,
             active: false,
+            input_map,
         }
     }
 
@@ -53,7 +70,8 @@ impl CheckboxElement {
     }
 
     pub fn handle_key(&mut self, key: KeyEvent) {
-        if key.code == KeyCode::Char(' ') {
+        let action = self.input_map.find_action(key);
+        if let Some(_action) = action {
             self.checked = !self.checked;
         }
     }

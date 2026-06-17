@@ -5,6 +5,7 @@ use uuid::Uuid;
 mod app;
 mod app_action;
 mod event;
+pub mod input;
 pub mod screens;
 mod terminal;
 mod ui_error_message;

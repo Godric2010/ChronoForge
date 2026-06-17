@@ -23,7 +23,7 @@ impl DialogWidget for PathWidget {
         WidgetType::Input
     }
 
-    fn get_help_text(&self) -> String {
+    fn render_input_map_help(&self) -> String {
         "<Esc>: Cancel | <Enter>: Confirm".to_string()
     }
 

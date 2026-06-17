@@ -26,7 +26,7 @@ pub trait DialogWidget {
 
     fn get_type(&self) -> WidgetType;
 
-    fn get_help_text(&self) -> String;
+    fn render_input_map_help(&self) -> String;
 
     fn handle_key(&mut self, key: KeyEvent);
     fn output(&self) -> Self::Output;

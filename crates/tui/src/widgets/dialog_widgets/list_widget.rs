@@ -1,10 +1,18 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::prelude::{Modifier, Style};
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
 use uuid::Uuid;
+
+#[derive(Clone, Copy)]
+enum ListWidgetActions {
+    Next,
+    Previous,
+}
 
 pub struct ListItem {
     pub(crate) name: String,
@@ -15,15 +23,36 @@ pub struct ListWidget {
     selected_index: usize,
     scroll_offset: usize,
     visible_count: usize,
+    input_map: InputMap<ListWidgetActions>,
 }
 
 impl ListWidget {
     pub fn new(items: Vec<ListItem>) -> Self {
+        let key_bindings = vec![
+            KeyBinding {
+                key_code: KeyCode::Down,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "↓".to_string(),
+                key_description: "Select the next item in the list".to_string(),
+                action: ListWidgetActions::Next,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Up,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "↑".to_string(),
+                key_description: "Select the previous item in the list".to_string(),
+                action: ListWidgetActions::Previous,
+                display_in_footer: false,
+            },
+        ];
+        let input_map = InputMap::new("List Actions", key_bindings);
         Self {
             items,
             selected_index: 0,
             scroll_offset: 0,
             visible_count: 8,
+            input_map,
         }
     }
 
@@ -72,6 +101,26 @@ impl ListWidget {
             Paragraph::new(more_text_bottom).style(Style::default().add_modifier(Modifier::BOLD));
         frame.render_widget(bottom_paragraph, area);
     }
+
+    fn select_next_item(&mut self) {
+        if self.items.is_empty() {
+            return;
+        }
+
+        self.selected_index = (self.selected_index + 1).min(self.items.len() - 1);
+        if self.selected_index >= self.visible_count + self.scroll_offset {
+            self.scroll_offset += 1;
+        }
+    }
+    fn select_previous_item(&mut self) {
+        if self.selected_index == 0 {
+            return;
+        }
+        self.selected_index -= 1;
+        if self.selected_index < self.scroll_offset {
+            self.scroll_offset -= 1;
+        }
+    }
 }
 
 impl DialogWidget for ListWidget {
@@ -81,32 +130,18 @@ impl DialogWidget for ListWidget {
         WidgetType::Input
     }
 
-    fn get_help_text(&self) -> String {
+    fn render_input_map_help(&self) -> String {
         "<Enter>: Confirm | <Esc>: Cancel | <Up/Down>".to_string()
     }
 
     fn handle_key(&mut self, key: KeyEvent) {
-        match key.code {
-            KeyCode::Down => {
-                if self.items.is_empty() {
-                    return;
-                }
-
-                self.selected_index = (self.selected_index + 1).min(self.items.len() - 1);
-                if self.selected_index >= self.visible_count + self.scroll_offset {
-                    self.scroll_offset += 1;
-                }
-            }
-            KeyCode::Up => {
-                if self.selected_index == 0 {
-                    return;
-                }
-                self.selected_index -= 1;
-                if self.selected_index < self.scroll_offset {
-                    self.scroll_offset -= 1;
-                }
-            }
-            _ => (),
+        let action = self.input_map.find_action(key);
+        match action {
+            None => {}
+            Some(a) => match a {
+                ListWidgetActions::Next => self.select_next_item(),
+                ListWidgetActions::Previous => self.select_previous_item(),
+            },
         }
     }
 

@@ -1,5 +1,7 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::widgets::elements::ElementSize;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
@@ -10,16 +12,52 @@ pub enum InputMode {
     Naming,
 }
 
+#[derive(Copy, Clone)]
+enum TextEditActions {
+    RemoveCharacter,
+    MoveCursorLeft,
+    MoveCursorRight,
+}
+
 pub struct TextEditElement {
     content: String,
     mode: InputMode,
     cursor_pos: usize,
     size: ElementSize,
     active: bool,
+    key_map: InputMap<TextEditActions>,
 }
 
 impl TextEditElement {
     pub fn new(content: Option<String>, mode: InputMode) -> Self {
+        let key_bindings = vec![
+            KeyBinding {
+                key_code: KeyCode::Backspace,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Backspace".to_string(),
+                key_description: "Remove the character underneath the cursor".to_string(),
+                action: TextEditActions::RemoveCharacter,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Left,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Left".to_string(),
+                key_description: "Move the cursor to the left".to_string(),
+                action: TextEditActions::MoveCursorLeft,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Right,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Right".to_string(),
+                key_description: "Move the cursor to the right".to_string(),
+                action: TextEditActions::MoveCursorRight,
+                display_in_footer: false,
+            },
+        ];
+        let key_map = InputMap::new("Text Input Actions", key_bindings);
+
         let content = content.unwrap_or_default();
         Self {
             mode,
@@ -30,6 +68,7 @@ impl TextEditElement {
                 height: 1,
             },
             active: false,
+            key_map,
         }
     }
 
@@ -65,24 +104,44 @@ impl TextEditElement {
             return;
         }
 
-        match key.code {
-            KeyCode::Backspace if self.cursor_pos > 0 => {
-                self.content.remove(self.cursor_pos - 1);
-                self.cursor_pos -= 1;
+        let action = self.key_map.find_action(key);
+        if let Some(action) = action {
+            match action {
+                TextEditActions::RemoveCharacter => self.remove_character(),
+                TextEditActions::MoveCursorLeft => self.move_cursor_left(),
+                TextEditActions::MoveCursorRight => self.move_cursor_right(),
             }
-            KeyCode::Char(c) if self.is_char_valid(c) && self.is_content_in_bounds() => {
-                self.content.insert(self.cursor_pos, c);
-                self.cursor_pos += 1;
-            }
-            KeyCode::Left if self.cursor_pos > 0 => {
-                self.cursor_pos -= 1;
-            }
-            KeyCode::Right
-                if self.cursor_pos < self.content.len() && self.is_content_in_bounds() =>
-            {
-                self.cursor_pos += 1;
-            }
-            _ => (),
+            return;
+        }
+
+        if let KeyCode::Char(c) = key.code {
+            self.insert_char(c);
+        }
+    }
+
+    fn remove_character(&mut self) {
+        if self.cursor_pos > 0 {
+            self.content.remove(self.cursor_pos - 1);
+            self.cursor_pos -= 1;
+        }
+    }
+
+    fn move_cursor_left(&mut self) {
+        if self.cursor_pos > 0 {
+            self.cursor_pos -= 1;
+        }
+    }
+
+    fn move_cursor_right(&mut self) {
+        if self.cursor_pos < self.content.len() && self.is_content_in_bounds() {
+            self.cursor_pos += 1;
+        }
+    }
+
+    fn insert_char(&mut self, c: char) {
+        if self.is_char_valid(c) && self.is_content_in_bounds() {
+            self.content.insert(self.cursor_pos, c);
+            self.cursor_pos += 1;
         }
     }
 

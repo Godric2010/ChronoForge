@@ -1,9 +1,20 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::widgets::elements::ElementSize;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
 
+#[derive(Copy, Clone)]
+enum TimeEditActions {
+    IncreaseMinute,
+    DecreaseMinute,
+    IncreaseHour,
+    DecreaseHour,
+    MoveCursorForward,
+    MoveCursorBackward,
+}
 pub struct TimeEditElement {
     hour: u32,
     minute: u32,
@@ -13,10 +24,63 @@ pub struct TimeEditElement {
     hour_digit_chars: Vec<char>,
     minute_digit_chars: Vec<char>,
     cursor_pos: usize,
+    input_map: InputMap<TimeEditActions>,
 }
 
 impl TimeEditElement {
     pub fn new(hour: u32, minute: u32, max_hour: Option<u32>) -> Self {
+        let key_bindings = vec![
+            KeyBinding {
+                key_code: KeyCode::Left,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Left".to_string(),
+                key_description: "Move cursor backwards".to_string(),
+                action: TimeEditActions::MoveCursorBackward,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Right,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Right".to_string(),
+                key_description: "Move cursor forward".to_string(),
+                action: TimeEditActions::MoveCursorForward,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Up,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Up".to_string(),
+                key_description: "Increase Minute".to_string(),
+                action: TimeEditActions::IncreaseMinute,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Down,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Down".to_string(),
+                key_description: "Decrease Minute".to_string(),
+                action: TimeEditActions::DecreaseMinute,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Up,
+                key_modifier: KeyModifiers::SHIFT,
+                key_name: "Shift + Up".to_string(),
+                key_description: "Increase Hour".to_string(),
+                action: TimeEditActions::IncreaseHour,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Down,
+                key_modifier: KeyModifiers::SHIFT,
+                key_name: "Shift + Down".to_string(),
+                key_description: "Decrease Hour".to_string(),
+                action: TimeEditActions::DecreaseHour,
+                display_in_footer: false,
+            },
+        ];
+        let input_map = InputMap::new("Time Edit Actions", key_bindings);
+
         Self {
             hour,
             minute,
@@ -29,6 +93,7 @@ impl TimeEditElement {
             hour_digit_chars: format!("{:0width$}", hour, width = 2).chars().collect(),
             minute_digit_chars: format!("{:0width$}", minute, width = 2).chars().collect(),
             cursor_pos: 0,
+            input_map,
         }
     }
 
@@ -68,52 +133,47 @@ impl TimeEditElement {
         if !self.active {
             return;
         }
-        if key.modifiers.contains(KeyModifiers::SHIFT) {
-            match key.code {
-                KeyCode::Up => {
-                    self.increase_hour();
-                    return;
+        let action = self.input_map.find_action(key);
+        match action {
+            None => {
+                if let KeyCode::Char(c) = key.code {
+                    self.set_char_at_cursor(c);
                 }
-                KeyCode::Down => {
-                    self.decrease_hour();
-                    return;
-                }
-                _ => {}
             }
-        }
-
-        match key.code {
-            KeyCode::Up => self.increase_minute(),
-            KeyCode::Down => self.decrease_minute(),
-            KeyCode::Left => {
-                if self.cursor_pos == 0 {
-                    return;
-                }
-                self.cursor_pos -= 1;
-            }
-            KeyCode::Right => {
-                if self.cursor_pos
-                    == self.hour_digit_chars.len() + self.minute_digit_chars.len() - 1
-                {
-                    return;
-                }
-                self.cursor_pos += 1;
-            }
-            KeyCode::Char(char) => {
-                if !char.is_numeric() {
-                    return;
-                }
-                if self.cursor_pos >= self.hour_digit_chars.len() {
-                    self.edit_minute_chars(char);
-                } else {
-                    self.edit_hour_chars(char);
-                }
-                self.validate_char_input();
-            }
-            _ => {}
+            Some(a) => match a {
+                TimeEditActions::IncreaseMinute => self.increase_minute(),
+                TimeEditActions::DecreaseMinute => self.decrease_minute(),
+                TimeEditActions::IncreaseHour => self.increase_hour(),
+                TimeEditActions::DecreaseHour => self.decrease_hour(),
+                TimeEditActions::MoveCursorForward => self.move_cursor_forward(),
+                TimeEditActions::MoveCursorBackward => self.move_cursor_backward(),
+            },
         }
     }
+    fn set_char_at_cursor(&mut self, char: char) {
+        if !char.is_numeric() {
+            return;
+        }
+        if self.cursor_pos >= self.hour_digit_chars.len() {
+            self.edit_minute_chars(char);
+        } else {
+            self.edit_hour_chars(char);
+        }
+        self.validate_char_input();
+    }
+    fn move_cursor_forward(&mut self) {
+        if self.cursor_pos == self.hour_digit_chars.len() + self.minute_digit_chars.len() - 1 {
+            return;
+        }
+        self.cursor_pos += 1;
+    }
 
+    fn move_cursor_backward(&mut self) {
+        if self.cursor_pos == 0 {
+            return;
+        }
+        self.cursor_pos -= 1;
+    }
     fn increase_minute(&mut self) {
         self.minute += 1;
         if self.minute > 59 {

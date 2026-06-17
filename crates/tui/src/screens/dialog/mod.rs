@@ -1,6 +1,8 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
-use crossterm::event::{KeyCode, KeyEvent};
-use ratatui::layout::{Alignment, Constraint, HorizontalAlignment, Layout, Rect};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use ratatui::layout::{Constraint, HorizontalAlignment, Layout, Rect};
 use ratatui::prelude::Line;
 use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
@@ -11,18 +13,56 @@ pub enum DialogResult<T> {
     Cancelled,
     Confirmed(T),
 }
+
+#[derive(Copy, Clone)]
+enum DialogActions {
+    Confirm,
+    Cancel,
+    Help,
+}
+
 pub struct Dialog<Widget: DialogWidget> {
     title: String,
     widget: Widget,
     height: u16,
+    key_map: InputMap<DialogActions>,
 }
 
 impl<Widget: DialogWidget> Dialog<Widget> {
     pub fn new(title: &str, widget: Widget) -> Self {
+        let key_bindings = vec![
+            KeyBinding {
+                key_code: KeyCode::Enter,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Enter".to_string(),
+                key_description: "Confirm".to_string(),
+                action: DialogActions::Confirm,
+                display_in_footer: true,
+            },
+            KeyBinding {
+                key_code: KeyCode::Esc,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Esc".to_string(),
+                key_description: "Cancel".to_string(),
+                action: DialogActions::Cancel,
+                display_in_footer: true,
+            },
+            KeyBinding {
+                key_code: KeyCode::Char('?'),
+                key_modifier: KeyModifiers::empty(),
+                key_name: "?".to_string(),
+                key_description: "Help".to_string(),
+                action: DialogActions::Help,
+                display_in_footer: true,
+            },
+        ];
+        let key_map = InputMap::new("Dialog Actions", key_bindings);
+
         Self {
             title: String::from(title),
             height: 6 + &widget.height(),
             widget,
+            key_map,
         }
     }
 
@@ -64,13 +104,17 @@ impl<Widget: DialogWidget> Dialog<Widget> {
     }
 
     pub fn handle_input(&mut self, key_event: KeyEvent) -> DialogResult<Widget::Output> {
-        match key_event.code {
-            KeyCode::Enter => DialogResult::Confirmed(self.widget.output()),
-            KeyCode::Esc => DialogResult::Cancelled,
-            _ => {
+        let action = self.key_map.find_action(key_event);
+        match action {
+            None => {
                 self.widget.handle_key(key_event);
                 DialogResult::None
             }
+            Some(action) => match action {
+                DialogActions::Confirm => DialogResult::Confirmed(self.widget.output()),
+                DialogActions::Cancel => DialogResult::Cancelled,
+                DialogActions::Help => DialogResult::None,
+            },
         }
     }
 
@@ -103,7 +147,9 @@ impl<Widget: DialogWidget> Dialog<Widget> {
     }
 
     fn render_help_text(&self, frame: &mut Frame, area: Rect) {
-        let help_box = Paragraph::new(self.widget.get_help_text()).alignment(Alignment::Center);
-        frame.render_widget(help_box, area);
+        let target_area = Rect::new(area.x + 1, area.y, area.width - 1, 1);
+        let help_text = self.key_map.build_footer_help_text();
+        let paragraph = Paragraph::new(help_text).centered();
+        frame.render_widget(paragraph, target_area);
     }
 }

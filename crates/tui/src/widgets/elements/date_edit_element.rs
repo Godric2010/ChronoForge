@@ -1,8 +1,20 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::widgets::elements::ElementSize;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
+
+#[derive(Copy, Clone)]
+enum DateEditActions {
+    IncreaseDay,
+    DecreaseDay,
+    IncreaseMonth,
+    DecreaseMonth,
+    MoveCursorForward,
+    MoveCursorBackward,
+}
 
 pub struct Date {
     pub day: u32,
@@ -20,10 +32,63 @@ pub struct DateEditElement {
     month_digit_chars: [char; 2],
     year_digit_chars: [char; 4],
     cursor_pos: usize,
+    input_map: InputMap<DateEditActions>,
 }
 
 impl DateEditElement {
     pub fn new(day: u32, month: u32, year: u32) -> Self {
+        let key_bindings = vec![
+            KeyBinding {
+                key_code: KeyCode::Left,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Left".to_string(),
+                key_description: "Move cursor backwards".to_string(),
+                action: DateEditActions::MoveCursorBackward,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Right,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Right".to_string(),
+                key_description: "Move cursor forward".to_string(),
+                action: DateEditActions::MoveCursorForward,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Up,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Up".to_string(),
+                key_description: "Increase day".to_string(),
+                action: DateEditActions::IncreaseDay,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Down,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Down".to_string(),
+                key_description: "Decrease day".to_string(),
+                action: DateEditActions::DecreaseDay,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Up,
+                key_modifier: KeyModifiers::SHIFT,
+                key_name: "Shift + Up".to_string(),
+                key_description: "Increase month".to_string(),
+                action: DateEditActions::IncreaseMonth,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Down,
+                key_modifier: KeyModifiers::SHIFT,
+                key_name: "Shift + Down".to_string(),
+                key_description: "Decrease month".to_string(),
+                action: DateEditActions::DecreaseMonth,
+                display_in_footer: false,
+            },
+        ];
+        let input_map = InputMap::new("Date Edit Actions", key_bindings);
+
         Self {
             day,
             month,
@@ -37,6 +102,7 @@ impl DateEditElement {
             month_digit_chars: Self::u32_to_two_chars(month),
             year_digit_chars: Self::u32_to_four_chars(year),
             cursor_pos: 0,
+            input_map,
         }
     }
 
@@ -79,51 +145,50 @@ impl DateEditElement {
         if !self.active {
             return;
         }
-
-        if key.modifiers == KeyModifiers::SHIFT {
-            match key.code {
-                KeyCode::Up => {
-                    self.increase_month();
-                    return;
+        let action = self.input_map.find_action(key);
+        match action {
+            None => {
+                if let KeyCode::Char(c) = key.code {
+                    self.set_char_at_cursor(c);
                 }
-                KeyCode::Down => {
-                    self.decrease_month();
-                    return;
-                }
-                _ => {}
             }
+            Some(a) => match a {
+                DateEditActions::IncreaseDay => self.increase_day(),
+                DateEditActions::DecreaseDay => self.decrease_day(),
+                DateEditActions::IncreaseMonth => self.increase_month(),
+                DateEditActions::DecreaseMonth => self.decrease_month(),
+                DateEditActions::MoveCursorForward => self.move_cursor_forward(),
+                DateEditActions::MoveCursorBackward => self.move_cursor_backward(),
+            },
         }
+    }
 
-        match key.code {
-            KeyCode::Up => self.increase_day(),
-            KeyCode::Down => self.decrease_day(),
-            KeyCode::Left => {
-                if self.cursor_pos == 0 {
-                    return;
-                }
-                self.cursor_pos -= 1;
-            }
-            KeyCode::Right => {
-                if self.cursor_pos == 7 {
-                    return;
-                }
-                self.cursor_pos += 1;
-            }
-            KeyCode::Char(char) => {
-                if !char.is_numeric() {
-                    return;
-                }
-                if self.cursor_pos >= 4 {
-                    self.edit_year_chars(char);
-                } else if self.cursor_pos >= 2 {
-                    self.edit_month_chars(char);
-                } else {
-                    self.edit_day_chars(char);
-                }
-                self.validate_char_input();
-            }
-            _ => {}
+    fn move_cursor_forward(&mut self) {
+        if self.cursor_pos == 7 {
+            return;
         }
+        self.cursor_pos += 1;
+    }
+
+    fn move_cursor_backward(&mut self) {
+        if self.cursor_pos == 0 {
+            return;
+        }
+        self.cursor_pos -= 1;
+    }
+
+    fn set_char_at_cursor(&mut self, char: char) {
+        if !char.is_numeric() {
+            return;
+        }
+        if self.cursor_pos >= 4 {
+            self.edit_year_chars(char);
+        } else if self.cursor_pos >= 2 {
+            self.edit_month_chars(char);
+        } else {
+            self.edit_day_chars(char);
+        }
+        self.validate_char_input();
     }
 
     fn increase_day(&mut self) {

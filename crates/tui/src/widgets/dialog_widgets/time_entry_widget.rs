@@ -1,11 +1,19 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crate::widgets::elements::{DateEditElement, TimeEditElement};
 use chrono::{DateTime, Datelike, Local, NaiveDate, TimeZone, Timelike, Utc};
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::prelude::{Color, Modifier, Style};
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
+
+#[derive(Clone, Copy)]
+enum TimeEntryActions {
+    Next,
+    Previous,
+}
 
 pub struct TimeEntryWidget {
     start_time: Option<DateTime<Utc>>,
@@ -20,6 +28,8 @@ pub struct TimeEntryWidget {
     end_time_edit_element: TimeEditElement,
     start_date_edit_element: DateEditElement,
     end_date_edit_element: DateEditElement,
+
+    input_map: InputMap<TimeEntryActions>,
 }
 
 impl TimeEntryWidget {
@@ -45,6 +55,26 @@ impl TimeEntryWidget {
         let start_date_error_msg = String::default();
         let end_date_error_msg = String::default();
 
+        let key_bindings = vec![
+            KeyBinding {
+                key_code: KeyCode::Tab,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Tab".to_string(),
+                key_description: "Next input field".to_string(),
+                action: TimeEntryActions::Next,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::BackTab,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "BackTab".to_string(),
+                key_description: "Prev input field".to_string(),
+                action: TimeEntryActions::Previous,
+                display_in_footer: false,
+            },
+        ];
+        let input_map = InputMap::new("Time Entry Actions", key_bindings);
+
         Self {
             start_time: Some(start_time),
             end_time: Some(end_time),
@@ -55,6 +85,7 @@ impl TimeEntryWidget {
             start_date_edit_element,
             end_time_edit_element,
             end_date_edit_element,
+            input_map,
         }
     }
     fn draw_heading(&self, text: &str, frame: &mut Frame, area: Rect) {
@@ -193,6 +224,24 @@ impl TimeEntryWidget {
             _ => {}
         }
     }
+
+    fn select_next_field(&mut self) {
+        self.toggle_selected_field(false);
+        self.selected_field = (self.selected_field + 1) % 4;
+        self.toggle_selected_field(true);
+    }
+
+    fn select_previous_field(&mut self) {
+        self.toggle_selected_field(false);
+        self.selected_field = (self.selected_field + 4 - 1) % 4;
+        self.toggle_selected_field(true);
+    }
+
+    fn handle_input_field_input(&mut self, key: KeyEvent) {
+        self.handle_input_for_active_element(key);
+        self.validate_start_date_time();
+        self.validate_end_date_time();
+    }
 }
 
 impl DialogWidget for TimeEntryWidget {
@@ -202,27 +251,18 @@ impl DialogWidget for TimeEntryWidget {
         WidgetType::Input
     }
 
-    fn get_help_text(&self) -> String {
+    fn render_input_map_help(&self) -> String {
         "<Enter>: Confirm | <Esc>: Cancel | <Tab>: Next field | <Up>: Increase value | <Down>: Decrease value".to_string()
     }
 
     fn handle_key(&mut self, key: KeyEvent) {
-        match key.code {
-            KeyCode::Tab => {
-                self.toggle_selected_field(false);
-                self.selected_field = (self.selected_field + 1) % 4;
-                self.toggle_selected_field(true);
-            }
-            KeyCode::BackTab => {
-                self.toggle_selected_field(false);
-                self.selected_field = (self.selected_field + 4 - 1) % 4;
-                self.toggle_selected_field(true);
-            }
-            _ => {
-                self.handle_input_for_active_element(key);
-                self.validate_start_date_time();
-                self.validate_end_date_time();
-            }
+        let action = self.input_map.find_action(key);
+        match action {
+            None => self.handle_input_field_input(key),
+            Some(a) => match a {
+                TimeEntryActions::Next => self.select_next_field(),
+                TimeEntryActions::Previous => self.select_previous_field(),
+            },
         }
     }
 

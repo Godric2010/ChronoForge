@@ -1,23 +1,87 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
 
+#[derive(Copy, Clone)]
+enum YesNoActions {
+    SetYes,
+    SetNo,
+    Toggle,
+}
+
+#[derive(Copy, Clone)]
 enum YesNo {
     Yes,
     No,
 }
 pub struct YesNoWidget {
     decision: YesNo,
+    input_map: InputMap<YesNoActions>,
 }
 
 impl YesNoWidget {
     pub fn new() -> Self {
+        let key_bindings = vec![
+            KeyBinding {
+                key_code: KeyCode::Left,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Left".to_string(),
+                key_description: "Toggle decision".to_string(),
+                action: YesNoActions::Toggle,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Right,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "Right".to_string(),
+                key_description: "Toggle decision".to_string(),
+                action: YesNoActions::Toggle,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Char('y'),
+                key_modifier: KeyModifiers::empty(),
+                key_name: "y".to_string(),
+                key_description: "Select yes".to_string(),
+                action: YesNoActions::SetYes,
+                display_in_footer: false,
+            },
+            KeyBinding {
+                key_code: KeyCode::Char('n'),
+                key_modifier: KeyModifiers::empty(),
+                key_name: "n".to_string(),
+                key_description: "Select no".to_string(),
+                action: YesNoActions::SetNo,
+                display_in_footer: false,
+            },
+        ];
+
+        let input_map = InputMap::new("Yes No Actions", key_bindings);
+
         Self {
             decision: YesNo::No,
+            input_map,
         }
+    }
+
+    fn toggle_yes_no(&mut self) {
+        self.decision = match self.decision {
+            YesNo::Yes => YesNo::No,
+            YesNo::No => YesNo::Yes,
+        }
+    }
+
+    fn set_no(&mut self) {
+        self.decision = YesNo::No;
+    }
+
+    fn set_yes(&mut self) {
+        self.decision = YesNo::Yes;
     }
 }
 
@@ -28,32 +92,19 @@ impl DialogWidget for YesNoWidget {
         WidgetType::Input
     }
 
-    fn get_help_text(&self) -> String {
+    fn render_input_map_help(&self) -> String {
         "<Enter>: Confirm | <Esc>: Cancel | <Left/Right> | [Y]es | [N]o".to_string()
     }
 
     fn handle_key(&mut self, key: KeyEvent) {
-        match key.code {
-            KeyCode::Left => {
-                self.decision = match self.decision {
-                    YesNo::Yes => YesNo::No,
-                    YesNo::No => YesNo::Yes,
-                }
-            }
-            KeyCode::Right => {
-                self.decision = match self.decision {
-                    YesNo::Yes => YesNo::No,
-                    YesNo::No => YesNo::Yes,
-                }
-            }
-            KeyCode::Char(c) => {
-                if c == 'y' {
-                    self.decision = YesNo::Yes;
-                } else if c == 'n' {
-                    self.decision = YesNo::No;
-                }
-            }
-            _ => (),
+        let action = self.input_map.find_action(key);
+        match action {
+            None => {}
+            Some(a) => match a {
+                YesNoActions::SetYes => self.set_yes(),
+                YesNoActions::SetNo => self.set_no(),
+                YesNoActions::Toggle => self.toggle_yes_no(),
+            },
         }
     }
 

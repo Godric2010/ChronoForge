@@ -1,21 +1,38 @@
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
 use crate::ui_error_message::UiErrorMessage;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
 
+#[derive(Clone, Copy)]
+enum ErrorWidgetActions {
+    Confirm,
+}
 pub struct ErrorWidget {
     error_message: UiErrorMessage,
     should_close: bool,
+    input_map: InputMap<ErrorWidgetActions>,
 }
 
 impl ErrorWidget {
     pub fn new(error_message: UiErrorMessage) -> Self {
+        let key_bindings = vec![KeyBinding {
+            key_code: KeyCode::Enter,
+            key_modifier: KeyModifiers::empty(),
+            key_name: "Enter".to_string(),
+            key_description: "Confirm the error and close the dialog".to_string(),
+            action: ErrorWidgetActions::Confirm,
+            display_in_footer: true,
+        }];
+        let input_map = InputMap::new("Error Dialog Actions", key_bindings);
         Self {
             error_message,
             should_close: false,
+            input_map,
         }
     }
 }
@@ -27,16 +44,15 @@ impl DialogWidget for ErrorWidget {
         WidgetType::Error
     }
 
-    fn get_help_text(&self) -> String {
+    fn render_input_map_help(&self) -> String {
         "<Enter>: Confirm".to_string()
     }
 
     fn handle_key(&mut self, key: KeyEvent) {
-        match key.code {
-            KeyCode::Enter | KeyCode::Esc => {
-                self.should_close = true;
-            }
-            _ => {}
+        let action = self.input_map.find_action(key);
+        match action {
+            Some(ErrorWidgetActions::Confirm) => self.should_close = true,
+            None => {}
         }
     }
 
