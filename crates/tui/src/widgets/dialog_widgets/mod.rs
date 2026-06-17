@@ -26,6 +26,7 @@ pub trait DialogWidget {
 
     fn get_type(&self) -> WidgetType;
 
+    #[allow(dead_code)]
     fn render_input_map_help(&self) -> String;
 
     fn handle_key(&mut self, key: KeyEvent);
