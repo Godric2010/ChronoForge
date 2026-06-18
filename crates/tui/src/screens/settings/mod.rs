@@ -1,3 +1,4 @@
+mod input_actions;
 mod settings_action;
 mod settings_dialog;
 mod settings_item;

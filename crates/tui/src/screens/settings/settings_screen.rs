@@ -1,4 +1,6 @@
 use crate::app_action::AppAction;
+use crate::input::input_map::InputMap;
+use crate::screens::settings::input_actions::*;
 use crate::screens::settings::settings_action::SettingsActionPurpose;
 use crate::screens::settings::settings_dialog::{SettingsDialog, SettingsDialogResult};
 use crate::screens::settings::settings_item::{SettingsItem, SettingsItemKind};
@@ -17,6 +19,7 @@ pub struct SettingsScreen {
     sections: Vec<SettingsSection>,
     selection_ref: SelectionRef,
     settings_dialog: Option<SettingsDialog>,
+    input_map: InputMap<SettingsActions>,
 }
 impl Default for SettingsScreen {
     fn default() -> Self {
@@ -27,6 +30,7 @@ impl SettingsScreen {
     pub fn new() -> Self {
         let item_name_width: u16 = 15;
         let item_value_width: u16 = 9;
+        let input_map = create_settings_input_map();
 
         let sections = vec![SettingsSection::new(
             "Import/Export",
@@ -56,6 +60,7 @@ impl SettingsScreen {
                 item_index: 0,
             },
             settings_dialog: None,
+            input_map
         }
     }
 
@@ -92,67 +97,89 @@ impl SettingsScreen {
             return self.interpret_dialog_result(dialog_result);
         }
 
-        match key_event.code {
-            KeyCode::Esc => Some(AppAction::Quit),
-            KeyCode::Char(char) => {
-                if char == 'q' {
-                    return Some(AppAction::Quit);
+        let action = self.input_map.find_action(key_event);
+        if let Some(action) = action {
+            match action {
+                SettingsActions::Quit => Some(AppAction::Quit),
+                SettingsActions::NextItem => {
+                    self.select_next_item();
+                    None
                 }
-                None
-            }
-            KeyCode::Down => {
-                let item_index = self.selection_ref.item_index;
-                let section_index = self.selection_ref.section_index;
-
-                if item_index < self.sections[section_index].get_items_count() - 1 {
-                    self.selection_ref.item_index += 1;
-                } else if section_index < self.sections.len() - 1 {
-                    self.selection_ref.section_index += 1;
-                    self.selection_ref.item_index = 0;
+                SettingsActions::PrevItem => {
+                    self.select_prev_item();
+                    None
                 }
-                None
-            }
-            KeyCode::Up => {
-                let item_index = self.selection_ref.item_index;
-                let section_index = self.selection_ref.section_index;
-
-                if item_index > 0 {
-                    self.selection_ref.item_index -= 1;
-                } else if section_index > 0 {
-                    self.selection_ref.section_index -= 1;
-                    self.selection_ref.item_index =
-                        self.sections[section_index].get_items_count() - 1;
+                SettingsActions::NextSection => {
+                    self.select_next_section();
+                    None
                 }
-                None
-            }
-            KeyCode::Tab => {
-                let section_index = self.selection_ref.section_index;
-                if section_index < self.sections.len() - 1 {
-                    self.selection_ref.item_index = 0;
-                    self.selection_ref.section_index += 1;
+                SettingsActions::PrevSection => {
+                    self.select_prev_section();
+                    None
                 }
-                None
-            }
-            KeyCode::BackTab => {
-                let section_index = self.selection_ref.section_index;
-                if section_index > 0 {
-                    self.selection_ref.section_index -= 1;
-                    self.selection_ref.item_index = 0;
+                SettingsActions::Select => {
+                    self.select_item();
+                    None
                 }
-                None
             }
-            KeyCode::Enter => {
-                let active_item_kind = self.sections[self.selection_ref.section_index]
-                    .get_item_kind(self.selection_ref.item_index)?;
-                self.settings_dialog = match active_item_kind {
-                    SettingsItemKind::Action(purpose) => Some(purpose.build()),
-                    SettingsItemKind::Value(_, _) => return None,
-                    SettingsItemKind::Toggle(_, _) => return None,
-                };
-                None
-            }
-            _ => None,
+        } else {
+            None
         }
+    }
+
+    fn select_item(&mut self) -> Option<AppAction> {
+        let active_item_kind = self.sections[self.selection_ref.section_index]
+            .get_item_kind(self.selection_ref.item_index)?;
+        self.settings_dialog = match active_item_kind {
+            SettingsItemKind::Action(purpose) => Some(purpose.build()),
+            SettingsItemKind::Value(_, _) => return None,
+            SettingsItemKind::Toggle(_, _) => return None,
+        };
+        None
+    }
+
+    fn select_prev_section(&mut self) -> Option<AppAction> {
+        let section_index = self.selection_ref.section_index;
+        if section_index > 0 {
+            self.selection_ref.section_index -= 1;
+            self.selection_ref.item_index = 0;
+        }
+        None
+    }
+
+    fn select_next_section(&mut self) -> Option<AppAction> {
+        let section_index = self.selection_ref.section_index;
+        if section_index < self.sections.len() - 1 {
+            self.selection_ref.item_index = 0;
+            self.selection_ref.section_index += 1;
+        }
+        None
+    }
+
+    fn select_prev_item(&mut self) -> Option<AppAction> {
+        let item_index = self.selection_ref.item_index;
+        let section_index = self.selection_ref.section_index;
+
+        if item_index > 0 {
+            self.selection_ref.item_index -= 1;
+        } else if section_index > 0 {
+            self.selection_ref.section_index -= 1;
+            self.selection_ref.item_index = self.sections[section_index].get_items_count() - 1;
+        }
+        None
+    }
+
+    fn select_next_item(&mut self) -> Option<AppAction> {
+        let item_index = self.selection_ref.item_index;
+        let section_index = self.selection_ref.section_index;
+
+        if item_index < self.sections[section_index].get_items_count() - 1 {
+            self.selection_ref.item_index += 1;
+        } else if section_index < self.sections.len() - 1 {
+            self.selection_ref.section_index += 1;
+            self.selection_ref.item_index = 0;
+        }
+        None
     }
 
     fn interpret_dialog_result(
