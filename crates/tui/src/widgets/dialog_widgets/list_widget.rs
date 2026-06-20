@@ -14,6 +14,7 @@ enum ListWidgetActions {
     Previous,
 }
 
+#[derive(Clone)]
 pub struct ListItem {
     pub(crate) name: String,
     pub(crate) id: Uuid,

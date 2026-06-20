@@ -5,7 +5,7 @@ use crate::screens::settings::settings_action::SettingsActionPurpose;
 use crate::screens::settings::settings_dialog::{SettingsDialog, SettingsDialogResult};
 use crate::screens::settings::settings_item::{SettingsItem, SettingsItemKind};
 use crate::screens::settings::settings_section::SettingsSection;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
 use ratatui::Frame;
 
