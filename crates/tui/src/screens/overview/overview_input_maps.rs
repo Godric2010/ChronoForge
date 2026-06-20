@@ -50,7 +50,7 @@ pub fn create_project_mode_input_map() -> InputMap<ProjectsModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "n".to_string(),
             key_description: "Create new project".to_string(),
-            action: ProjectsModeActions::NewProject,
+            action: ProjectsModeActions::New,
             display_in_footer: false,
         },
         KeyBinding {
@@ -58,7 +58,7 @@ pub fn create_project_mode_input_map() -> InputMap<ProjectsModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "e".to_string(),
             key_description: "Edit project".to_string(),
-            action: ProjectsModeActions::EditProject,
+            action: ProjectsModeActions::Edit,
             display_in_footer: false,
         },
         KeyBinding {
@@ -66,7 +66,7 @@ pub fn create_project_mode_input_map() -> InputMap<ProjectsModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "d".to_string(),
             key_description: "Delete project".to_string(),
-            action: ProjectsModeActions::DeleteProject,
+            action: ProjectsModeActions::Delete,
             display_in_footer: false,
         },
     ];
@@ -79,7 +79,7 @@ pub fn create_task_mode_input_map() -> InputMap<TasksModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "n".to_string(),
             key_description: "Create new task".to_string(),
-            action: TasksModeActions::NewTask,
+            action: TasksModeActions::New,
             display_in_footer: false,
         },
         KeyBinding {
@@ -87,7 +87,7 @@ pub fn create_task_mode_input_map() -> InputMap<TasksModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "e".to_string(),
             key_description: "Edit task".to_string(),
-            action: TasksModeActions::EditTask,
+            action: TasksModeActions::Edit,
             display_in_footer: false,
         },
         KeyBinding {
@@ -95,7 +95,7 @@ pub fn create_task_mode_input_map() -> InputMap<TasksModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "d".to_string(),
             key_description: "Delete task".to_string(),
-            action: TasksModeActions::DeleteTask,
+            action: TasksModeActions::Delete,
             display_in_footer: false,
         },
         KeyBinding {
@@ -103,7 +103,7 @@ pub fn create_task_mode_input_map() -> InputMap<TasksModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "a".to_string(),
             key_description: "Assign task to project".to_string(),
-            action: TasksModeActions::AssignTask,
+            action: TasksModeActions::AssignToProject,
             display_in_footer: false,
         },
     ];
@@ -116,7 +116,7 @@ pub fn create_time_entry_mode_input_map() -> InputMap<TimeEntriesModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "n".to_string(),
             key_description: "Create new time entry".to_string(),
-            action: TimeEntriesModeActions::NewTimeEntry,
+            action: TimeEntriesModeActions::New,
             display_in_footer: false,
         },
         KeyBinding {
@@ -124,7 +124,7 @@ pub fn create_time_entry_mode_input_map() -> InputMap<TimeEntriesModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "e".to_string(),
             key_description: "Edit time entry".to_string(),
-            action: TimeEntriesModeActions::EditTimeEntry,
+            action: TimeEntriesModeActions::Edit,
             display_in_footer: false,
         },
         KeyBinding {
@@ -132,7 +132,7 @@ pub fn create_time_entry_mode_input_map() -> InputMap<TimeEntriesModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "d".to_string(),
             key_description: "Delete time entry".to_string(),
-            action: TimeEntriesModeActions::DeleteTimeEntry,
+            action: TimeEntriesModeActions::Delete,
             display_in_footer: false,
         },
         KeyBinding {
@@ -140,7 +140,7 @@ pub fn create_time_entry_mode_input_map() -> InputMap<TimeEntriesModeActions> {
             key_modifier: KeyModifiers::empty(),
             key_name: "a".to_string(),
             key_description: "Assign time entry to task".to_string(),
-            action: TimeEntriesModeActions::AssignTimeEntry,
+            action: TimeEntriesModeActions::AssignToTask,
             display_in_footer: false,
         },
     ];

@@ -97,17 +97,15 @@ impl TasksView {
     }
 
     pub fn handle_input(&mut self, key: KeyEvent) -> Option<OverviewDialog> {
-        if self.selected_project.is_none() {
-            return None;
-        }
+        self.selected_project?;
         let selected_project = self.selected_project.unwrap();
         let action = self.input_map.find_action(key);
         if let Some(action) = action {
             return match action {
-                TasksModeActions::NewTask => Some(self.open_new_task_dialog(selected_project)),
-                TasksModeActions::EditTask => self.open_edit_project_dialog(),
-                TasksModeActions::DeleteTask => self.open_delete_task_dialog(),
-                TasksModeActions::AssignTask => self.open_assign_to_project_dialog(),
+                TasksModeActions::New => Some(self.open_new_task_dialog(selected_project)),
+                TasksModeActions::Edit => self.open_edit_project_dialog(),
+                TasksModeActions::Delete => self.open_delete_task_dialog(),
+                TasksModeActions::AssignToProject => self.open_assign_to_project_dialog(),
             };
         }
         self.task_list_widget.handle_event(&key);

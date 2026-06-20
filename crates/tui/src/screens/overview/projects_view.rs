@@ -71,9 +71,9 @@ impl ProjectsView {
         let action = self.input_map.find_action(key);
         if let Some(action) = action {
             return match action {
-                ProjectsModeActions::NewProject => Some(self.open_new_project_dialog()),
-                ProjectsModeActions::EditProject => self.open_edit_project_dialog(),
-                ProjectsModeActions::DeleteProject => self.open_delete_project_dialog(),
+                ProjectsModeActions::New => Some(self.open_new_project_dialog()),
+                ProjectsModeActions::Edit => self.open_edit_project_dialog(),
+                ProjectsModeActions::Delete => self.open_delete_project_dialog(),
             };
         }
         self.projects_list_widget.handle_event(&key);

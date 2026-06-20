@@ -15,23 +15,23 @@ pub(crate) enum OverviewGeneralActions {
 
 #[derive(Clone, Copy)]
 pub(crate) enum ProjectsModeActions {
-    NewProject,
-    EditProject,
-    DeleteProject,
+    New,
+    Edit,
+    Delete,
 }
 
 #[derive(Clone, Copy)]
 pub(crate) enum TasksModeActions {
-    NewTask,
-    EditTask,
-    AssignTask,
-    DeleteTask,
+    New,
+    Edit,
+    AssignToProject,
+    Delete,
 }
 
 #[derive(Clone, Copy)]
 pub(crate) enum TimeEntriesModeActions {
-    NewTimeEntry,
-    EditTimeEntry,
-    AssignTimeEntry,
-    DeleteTimeEntry,
+    New,
+    Edit,
+    AssignToTask,
+    Delete,
 }

@@ -99,19 +99,15 @@ impl TimeEntryView {
     }
 
     pub fn handle_input(&mut self, key: KeyEvent) -> Option<OverviewDialog> {
-        if self.selected_task.is_none() {
-            return None;
-        }
+        self.selected_task?;
         let selected_task = self.selected_task.unwrap();
         let action = self.input_map.find_action(key);
         if let Some(action) = action {
             return match action {
-                TimeEntriesModeActions::NewTimeEntry => {
-                    Some(self.open_new_time_entry_dialog(selected_task))
-                }
-                TimeEntriesModeActions::EditTimeEntry => self.open_edit_time_entry_dialog(),
-                TimeEntriesModeActions::AssignTimeEntry => self.open_assign_to_task_dialog(),
-                TimeEntriesModeActions::DeleteTimeEntry => self.open_delete_time_entry_dialog(),
+                TimeEntriesModeActions::New => Some(self.open_new_time_entry_dialog(selected_task)),
+                TimeEntriesModeActions::Edit => self.open_edit_time_entry_dialog(),
+                TimeEntriesModeActions::AssignToTask => self.open_assign_to_task_dialog(),
+                TimeEntriesModeActions::Delete => self.open_delete_time_entry_dialog(),
             };
         }
         self.time_entry_list_widget.handle_event(&key);
