@@ -25,7 +25,7 @@ impl CheckboxElement {
         let key_bindings = vec![KeyBinding {
             key_code: KeyCode::Char(' '),
             key_modifier: KeyModifiers::empty(),
-            key_name: "Space".to_string(),
+            key_name: "␣".to_string(),
             key_description: "Toggle".to_string(),
             action: CheckboxAction::Toggle,
             display_in_footer: true,

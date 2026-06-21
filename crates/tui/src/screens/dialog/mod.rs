@@ -37,7 +37,7 @@ impl<Widget: DialogWidget> Dialog<Widget> {
             KeyBinding {
                 key_code: KeyCode::Enter,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Enter".to_string(),
+                key_name: "↲".to_string(),
                 key_description: "Confirm".to_string(),
                 action: DialogActions::Confirm,
                 display_in_footer: true,
@@ -60,7 +60,8 @@ impl<Widget: DialogWidget> Dialog<Widget> {
             },
         ];
         let input_map = InputMap::new("Dialog Actions", key_bindings);
-        let footer = input_map.footer_help();
+        let mut footer = input_map.footer_help();
+        widget.append_footer_help(&mut footer);
         let footer_text = KeyBindingHelpContext::build_single_line(footer);
 
         Self {
@@ -114,7 +115,9 @@ impl<Widget: DialogWidget> Dialog<Widget> {
         match action {
             None => {
                 self.widget.handle_key(key_event);
-                KeyBindingHelpContext::build_single_line(self.input_map.footer_help());
+                let mut footer = self.input_map.footer_help();
+                self.widget.append_footer_help(&mut footer);
+                KeyBindingHelpContext::build_single_line(footer);
                 DialogResult::None
             }
             Some(action) => match action {

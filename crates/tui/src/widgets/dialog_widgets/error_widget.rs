@@ -25,7 +25,7 @@ impl ErrorWidget {
         let key_bindings = vec![KeyBinding {
             key_code: KeyCode::Enter,
             key_modifier: KeyModifiers::empty(),
-            key_name: "Enter".to_string(),
+            key_name: "↲".to_string(),
             key_description: "Confirm the error and close the dialog".to_string(),
             action: ErrorWidgetActions::Confirm,
             display_in_footer: true,

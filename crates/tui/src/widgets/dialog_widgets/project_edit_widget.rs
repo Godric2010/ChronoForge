@@ -39,7 +39,7 @@ impl ProjectEditWidget {
             KeyBinding {
                 key_code: KeyCode::Tab,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Tab".to_string(),
+                key_name: "⇄".to_string(),
                 key_description: "Next input field".to_string(),
                 action: ProjectEditActions::Next,
                 display_in_footer: true,
@@ -144,9 +144,12 @@ impl ProjectEditWidget {
 impl HelpProvider for ProjectEditWidget {
     fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
         self.input_map.append_footer_help(output);
-        self.name_input.append_footer_help(output);
-        self.time_limit_checkbox.append_footer_help(output);
-        self.time_limit_input.append_footer_help(output);
+        match self.active_element_index {
+            0 => self.name_input.append_footer_help(output),
+            1 => self.time_limit_checkbox.append_footer_help(output),
+            2 => self.time_limit_input.append_footer_help(output),
+            _ => {}
+        }
     }
 }
 impl DialogWidget for ProjectEditWidget {

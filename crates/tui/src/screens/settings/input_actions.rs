@@ -33,7 +33,7 @@ pub fn create_settings_input_map() -> InputMap<SettingsActions> {
         KeyBinding {
             key_code: KeyCode::Tab,
             key_modifier: KeyModifiers::empty(),
-            key_name: "Tab".to_string(),
+            key_name: "⇄".to_string(),
             key_description: "Next section".to_string(),
             action: SettingsActions::NextSection,
             display_in_footer: false,
@@ -49,7 +49,7 @@ pub fn create_settings_input_map() -> InputMap<SettingsActions> {
         KeyBinding {
             key_code: KeyCode::Enter,
             key_modifier: KeyModifiers::empty(),
-            key_name: "Enter".to_string(),
+            key_name: "↲".to_string(),
             key_description: "Select".to_string(),
             action: SettingsActions::Select,
             display_in_footer: true,

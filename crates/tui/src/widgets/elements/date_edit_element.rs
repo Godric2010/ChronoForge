@@ -75,7 +75,7 @@ impl DateEditElement {
             KeyBinding {
                 key_code: KeyCode::Up,
                 key_modifier: KeyModifiers::SHIFT,
-                key_name: "Shift + Up".to_string(),
+                key_name: "Shift + ↑".to_string(),
                 key_description: "Increase month".to_string(),
                 action: DateEditActions::IncreaseMonth,
                 display_in_footer: false,
@@ -83,7 +83,7 @@ impl DateEditElement {
             KeyBinding {
                 key_code: KeyCode::Down,
                 key_modifier: KeyModifiers::SHIFT,
-                key_name: "Shift + Down".to_string(),
+                key_name: "Shift + ↓".to_string(),
                 key_description: "Decrease month".to_string(),
                 action: DateEditActions::DecreaseMonth,
                 display_in_footer: false,

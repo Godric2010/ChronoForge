@@ -72,7 +72,7 @@ impl TimeEditElement {
             KeyBinding {
                 key_code: KeyCode::Up,
                 key_modifier: KeyModifiers::SHIFT,
-                key_name: "Shift + Up".to_string(),
+                key_name: "Shift + ↑".to_string(),
                 key_description: "Increase Hour".to_string(),
                 action: TimeEditActions::IncreaseHour,
                 display_in_footer: false,
@@ -80,7 +80,7 @@ impl TimeEditElement {
             KeyBinding {
                 key_code: KeyCode::Down,
                 key_modifier: KeyModifiers::SHIFT,
-                key_name: "Shift + Down".to_string(),
+                key_name: "Shift + ↓".to_string(),
                 key_description: "Decrease Hour".to_string(),
                 action: TimeEditActions::DecreaseHour,
                 display_in_footer: false,

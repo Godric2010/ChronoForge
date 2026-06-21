@@ -61,7 +61,7 @@ impl TimeEntryWidget {
             KeyBinding {
                 key_code: KeyCode::Tab,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Tab".to_string(),
+                key_name: "⇄".to_string(),
                 key_description: "Next input field".to_string(),
                 action: TimeEntryActions::Next,
                 display_in_footer: true,
@@ -247,10 +247,13 @@ impl TimeEntryWidget {
 impl HelpProvider for TimeEntryWidget {
     fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
         self.input_map.append_footer_help(output);
-        self.start_time_edit_element.append_footer_help(output);
-        self.end_time_edit_element.append_footer_help(output);
-        self.start_date_edit_element.append_footer_help(output);
-        self.end_date_edit_element.append_footer_help(output);
+        match self.selected_field {
+            0 => self.start_time_edit_element.append_footer_help(output),
+            1 => self.start_date_edit_element.append_footer_help(output),
+            2 => self.end_time_edit_element.append_footer_help(output),
+            3 => self.end_date_edit_element.append_footer_help(output),
+            _ => {}
+        }
     }
 }
 impl DialogWidget for TimeEntryWidget {
