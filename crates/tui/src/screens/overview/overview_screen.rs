@@ -49,12 +49,12 @@ impl OverviewScreen {
     }
 
     pub fn get_footer_help_text(&self) -> String {
-        let mut footer = self.input_map.footer_help();
-        match self.mode {
-            Mode::Projects => self.projects_view.append_footer_help(&mut footer),
-            Mode::Tasks => self.tasks_view.append_footer_help(&mut footer),
-            Mode::TimeEntries => self.time_entry_view.append_footer_help(&mut footer),
+        let mut footer = match self.mode {
+            Mode::Projects => self.projects_view.footer_help(),
+            Mode::Tasks => self.tasks_view.footer_help(),
+            Mode::TimeEntries => self.time_entry_view.footer_help(),
         };
+        self.input_map.append_footer_help(&mut footer);
         KeyBindingHelpContext::build_single_line(footer)
     }
 

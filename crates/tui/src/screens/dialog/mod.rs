@@ -60,8 +60,8 @@ impl<Widget: DialogWidget> Dialog<Widget> {
             },
         ];
         let input_map = InputMap::new("Dialog Actions", key_bindings);
-        let mut footer = input_map.footer_help();
-        widget.append_footer_help(&mut footer);
+        let mut footer = widget.footer_help();
+        input_map.append_footer_help(&mut footer);
         let footer_text = KeyBindingHelpContext::build_single_line(footer);
 
         Self {

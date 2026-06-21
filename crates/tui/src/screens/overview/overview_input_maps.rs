@@ -11,7 +11,7 @@ pub fn create_general_input_map() -> InputMap<OverviewGeneralActions> {
             key_code: KeyCode::Char('c'),
             key_modifier: KeyModifiers::CONTROL,
             key_name: "CTRL + C".to_string(),
-            key_description: "Quit the application".to_string(),
+            key_description: "Quit".to_string(),
             action: OverviewGeneralActions::Quit,
             display_in_footer: true,
         },
