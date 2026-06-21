@@ -18,7 +18,7 @@ pub fn create_general_input_map() -> InputMap<OverviewGeneralActions> {
         KeyBinding {
             key_code: KeyCode::Right,
             key_modifier: KeyModifiers::empty(),
-            key_name: "Right".to_string(),
+            key_name: "→".to_string(),
             key_description: "Next mode".to_string(),
             action: OverviewGeneralActions::NextMode,
             display_in_footer: true,
@@ -26,7 +26,7 @@ pub fn create_general_input_map() -> InputMap<OverviewGeneralActions> {
         KeyBinding {
             key_code: KeyCode::Left,
             key_modifier: KeyModifiers::empty(),
-            key_name: "Left".to_string(),
+            key_name: "←".to_string(),
             key_description: "Prev mode".to_string(),
             action: OverviewGeneralActions::PrevMode,
             display_in_footer: true,

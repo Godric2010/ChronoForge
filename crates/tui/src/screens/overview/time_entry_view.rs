@@ -1,4 +1,6 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
+use crate::input::HelpProvider;
 use crate::screens::dialog::Dialog;
 use crate::screens::overview::mode::TimeEntriesModeActions;
 use crate::screens::overview::overview_dialog::OverviewDialog;
@@ -30,8 +32,7 @@ pub struct TimeEntryView {
 
 impl TimeEntryView {
     pub fn new() -> Self {
-        let mut time_entry_list_widget = SelectableCardList::default();
-        time_entry_list_widget.title = "Time Entries".to_string();
+        let time_entry_list_widget = SelectableCardList::new("Time Entries");
 
         Self {
             time_entry_list_widget,
@@ -110,7 +111,7 @@ impl TimeEntryView {
                 TimeEntriesModeActions::Delete => self.open_delete_time_entry_dialog(),
             };
         }
-        self.time_entry_list_widget.handle_event(&key);
+        self.time_entry_list_widget.handle_event(key);
         None
     }
 
@@ -154,5 +155,11 @@ impl TimeEntryView {
             return Some(OverviewDialog::AssignTimeEntry(dialog, time_entry.id));
         }
         None
+    }
+}
+impl HelpProvider for TimeEntryView {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+        self.time_entry_list_widget.append_footer_help(output);
     }
 }

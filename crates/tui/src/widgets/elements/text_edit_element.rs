@@ -1,6 +1,8 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
-use crate::widgets::elements::ElementSize;
+use crate::input::HelpProvider;
+use crate::widgets::elements::{ElementSize, WidgetElement};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
@@ -25,7 +27,7 @@ pub struct TextEditElement {
     cursor_pos: usize,
     size: ElementSize,
     active: bool,
-    key_map: InputMap<TextEditActions>,
+    input_map: InputMap<TextEditActions>,
 }
 
 impl TextEditElement {
@@ -42,7 +44,7 @@ impl TextEditElement {
             KeyBinding {
                 key_code: KeyCode::Left,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Left".to_string(),
+                key_name: "←".to_string(),
                 key_description: "Move the cursor to the left".to_string(),
                 action: TextEditActions::MoveCursorLeft,
                 display_in_footer: false,
@@ -50,7 +52,7 @@ impl TextEditElement {
             KeyBinding {
                 key_code: KeyCode::Right,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Right".to_string(),
+                key_name: "→".to_string(),
                 key_description: "Move the cursor to the right".to_string(),
                 action: TextEditActions::MoveCursorRight,
                 display_in_footer: false,
@@ -68,54 +70,7 @@ impl TextEditElement {
                 height: 1,
             },
             active: false,
-            key_map,
-        }
-    }
-
-    pub fn set_active(&mut self, active: bool) {
-        self.active = active;
-    }
-    pub fn get_content(&self) -> &str {
-        &self.content
-    }
-
-    pub fn get_size(&self) -> &ElementSize {
-        &self.size
-    }
-
-    pub fn render(&mut self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
-        let rect = Rect {
-            x: pos_x,
-            y: pos_y,
-            width: self.size.width,
-            height: self.size.height,
-        };
-
-        let paragraph = Paragraph::new(self.content.clone());
-        frame.render_widget(paragraph, rect);
-
-        if self.active {
-            frame.set_cursor_position((pos_x + self.cursor_pos as u16, pos_y));
-        }
-    }
-
-    pub fn handle_key(&mut self, key: KeyEvent) {
-        if !self.active {
-            return;
-        }
-
-        let action = self.key_map.find_action(key);
-        if let Some(action) = action {
-            match action {
-                TextEditActions::RemoveCharacter => self.remove_character(),
-                TextEditActions::MoveCursorLeft => self.move_cursor_left(),
-                TextEditActions::MoveCursorRight => self.move_cursor_right(),
-            }
-            return;
-        }
-
-        if let KeyCode::Char(c) = key.code {
-            self.insert_char(c);
+            input_map: key_map,
         }
     }
 
@@ -156,6 +111,65 @@ impl TextEditElement {
         }
     }
 }
+
+impl HelpProvider for TextEditElement {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+    }
+}
+
+impl WidgetElement for TextEditElement {
+    type Output = String;
+
+    fn set_active(&mut self, active: bool) {
+        self.active = active;
+    }
+
+    fn get_size(&self) -> &ElementSize {
+        &self.size
+    }
+
+    fn render(&self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
+        let rect = Rect {
+            x: pos_x,
+            y: pos_y,
+            width: self.size.width,
+            height: self.size.height,
+        };
+
+        let paragraph = Paragraph::new(self.content.clone());
+        frame.render_widget(paragraph, rect);
+
+        if self.active {
+            frame.set_cursor_position((pos_x + self.cursor_pos as u16, pos_y));
+        }
+    }
+
+    fn handle_key(&mut self, key: KeyEvent) {
+        if !self.active {
+            return;
+        }
+
+        let action = self.input_map.find_action(key);
+        if let Some(action) = action {
+            match action {
+                TextEditActions::RemoveCharacter => self.remove_character(),
+                TextEditActions::MoveCursorLeft => self.move_cursor_left(),
+                TextEditActions::MoveCursorRight => self.move_cursor_right(),
+            }
+            return;
+        }
+
+        if let KeyCode::Char(c) = key.code {
+            self.insert_char(c);
+        }
+    }
+
+    fn get_output(&self) -> Self::Output {
+        self.content.clone()
+    }
+}
+
 #[cfg(test)]
 mod text_input_widget_tests {
     use super::*;
@@ -170,7 +184,7 @@ mod text_input_widget_tests {
         widget.handle_key(char_key('_'));
         widget.handle_key(char_key(' '));
         widget.handle_key(char_key('1'));
-        assert_eq!(widget.get_content(), "Ab-_ 1");
+        assert_eq!(widget.get_output(), "Ab-_ 1");
     }
 
     #[test]
@@ -183,14 +197,14 @@ mod text_input_widget_tests {
         widget.handle_key(char_key(':'));
         widget.handle_key(char_key('*'));
         widget.handle_key(char_key('%'));
-        assert_eq!(widget.get_content(), "A");
+        assert_eq!(widget.get_output(), "A");
     }
 
     #[test]
     fn text_input_backspace_on_empty_string_does_not_crash() {
         let mut widget = TextEditElement::new(None, InputMode::Naming);
         widget.handle_key(key(KeyCode::Backspace));
-        assert_eq!(widget.get_content(), "");
+        assert_eq!(widget.get_output(), "");
     }
 
     #[test]
@@ -199,7 +213,7 @@ mod text_input_widget_tests {
         widget.set_active(true);
         widget.handle_key(key(KeyCode::Left));
         widget.handle_key(char_key('b'));
-        assert_eq!(widget.get_content(), "abc");
+        assert_eq!(widget.get_output(), "abc");
     }
 
     #[test]
@@ -234,7 +248,7 @@ mod text_input_widget_tests {
         widget.set_active(true);
         widget.handle_key(char_key('a'));
 
-        let result = widget.get_content();
+        let result = widget.get_output();
         assert_eq!(result.len(), widget.size.width as usize);
     }
 
@@ -243,7 +257,7 @@ mod text_input_widget_tests {
         let mut widget = TextEditElement::new(None, InputMode::Naming);
         widget.set_active(false);
         widget.handle_key(char_key('a'));
-        let result = widget.get_content();
+        let result = widget.get_output();
         assert_eq!(result.len(), 0);
     }
 }

@@ -1,5 +1,7 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
+use crate::input::HelpProvider;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, HorizontalAlignment, Layout, Rect};
@@ -25,7 +27,8 @@ pub struct Dialog<Widget: DialogWidget> {
     title: String,
     widget: Widget,
     height: u16,
-    key_map: InputMap<DialogActions>,
+    input_map: InputMap<DialogActions>,
+    footer_text: String,
 }
 
 impl<Widget: DialogWidget> Dialog<Widget> {
@@ -56,13 +59,16 @@ impl<Widget: DialogWidget> Dialog<Widget> {
                 display_in_footer: true,
             },
         ];
-        let key_map = InputMap::new("Dialog Actions", key_bindings);
+        let input_map = InputMap::new("Dialog Actions", key_bindings);
+        let footer = input_map.footer_help();
+        let footer_text = KeyBindingHelpContext::build_single_line(footer);
 
         Self {
             title: String::from(title),
             height: 6 + &widget.height(),
             widget,
-            key_map,
+            input_map,
+            footer_text,
         }
     }
 
@@ -104,10 +110,11 @@ impl<Widget: DialogWidget> Dialog<Widget> {
     }
 
     pub fn handle_input(&mut self, key_event: KeyEvent) -> DialogResult<Widget::Output> {
-        let action = self.key_map.find_action(key_event);
+        let action = self.input_map.find_action(key_event);
         match action {
             None => {
                 self.widget.handle_key(key_event);
+                KeyBindingHelpContext::build_single_line(self.input_map.footer_help());
                 DialogResult::None
             }
             Some(action) => match action {
@@ -148,7 +155,8 @@ impl<Widget: DialogWidget> Dialog<Widget> {
 
     fn render_help_text(&self, frame: &mut Frame, area: Rect) {
         let target_area = Rect::new(area.x + 1, area.y, area.width - 1, 1);
-        let help_text = self.key_map.build_footer_help_text();
+
+        let help_text = self.footer_text.as_str();
         let paragraph = Paragraph::new(help_text).centered();
         frame.render_widget(paragraph, target_area);
     }

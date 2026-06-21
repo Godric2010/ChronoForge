@@ -1,5 +1,7 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
+use crate::input::HelpProvider;
 use crate::ui_error_message::UiErrorMessage;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -36,16 +38,16 @@ impl ErrorWidget {
         }
     }
 }
-
+impl HelpProvider for ErrorWidget {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+    }
+}
 impl DialogWidget for ErrorWidget {
     type Output = ();
 
     fn get_type(&self) -> WidgetType {
         WidgetType::Error
-    }
-
-    fn render_input_map_help(&self) -> String {
-        "<Enter>: Confirm".to_string()
     }
 
     fn handle_key(&mut self, key: KeyEvent) {

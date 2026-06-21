@@ -1,6 +1,8 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
-use crate::widgets::elements::ElementSize;
+use crate::input::HelpProvider;
+use crate::widgets::elements::{ElementSize, WidgetElement};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
@@ -41,23 +43,23 @@ impl DateEditElement {
             KeyBinding {
                 key_code: KeyCode::Left,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Left".to_string(),
+                key_name: "←".to_string(),
                 key_description: "Move cursor backwards".to_string(),
                 action: DateEditActions::MoveCursorBackward,
-                display_in_footer: false,
+                display_in_footer: true,
             },
             KeyBinding {
                 key_code: KeyCode::Right,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Right".to_string(),
+                key_name: "→".to_string(),
                 key_description: "Move cursor forward".to_string(),
                 action: DateEditActions::MoveCursorForward,
-                display_in_footer: false,
+                display_in_footer: true,
             },
             KeyBinding {
                 key_code: KeyCode::Up,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Up".to_string(),
+                key_name: "↑".to_string(),
                 key_description: "Increase day".to_string(),
                 action: DateEditActions::IncreaseDay,
                 display_in_footer: false,
@@ -65,7 +67,7 @@ impl DateEditElement {
             KeyBinding {
                 key_code: KeyCode::Down,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Down".to_string(),
+                key_name: "↓".to_string(),
                 key_description: "Decrease day".to_string(),
                 action: DateEditActions::DecreaseDay,
                 display_in_footer: false,
@@ -103,63 +105,6 @@ impl DateEditElement {
             year_digit_chars: Self::u32_to_four_chars(year),
             cursor_pos: 0,
             input_map,
-        }
-    }
-
-    pub fn set_active(&mut self, active: bool) {
-        self.active = active;
-    }
-
-    pub fn get_date(&self) -> Date {
-        Date {
-            day: self.day,
-            month: self.month,
-            year: self.year,
-        }
-    }
-
-    pub fn get_size(&self) -> &ElementSize {
-        &self.size
-    }
-
-    pub fn render(&self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
-        let rect = Rect::new(pos_x, pos_y, self.size.width, self.size.height);
-        let date_string = format!("{:02}/{:02}/{:04}", self.day, self.month, self.year);
-        let date_paragraph = Paragraph::new(date_string);
-        frame.render_widget(date_paragraph, rect);
-
-        if self.active {
-            let offset = if self.cursor_pos > 3 {
-                2
-            } else if self.cursor_pos > 1 {
-                1
-            } else {
-                0
-            };
-
-            frame.set_cursor_position((pos_x + self.cursor_pos as u16 + offset, pos_y));
-        }
-    }
-
-    pub fn handle_key(&mut self, key: KeyEvent) {
-        if !self.active {
-            return;
-        }
-        let action = self.input_map.find_action(key);
-        match action {
-            None => {
-                if let KeyCode::Char(c) = key.code {
-                    self.set_char_at_cursor(c);
-                }
-            }
-            Some(a) => match a {
-                DateEditActions::IncreaseDay => self.increase_day(),
-                DateEditActions::DecreaseDay => self.decrease_day(),
-                DateEditActions::IncreaseMonth => self.increase_month(),
-                DateEditActions::DecreaseMonth => self.decrease_month(),
-                DateEditActions::MoveCursorForward => self.move_cursor_forward(),
-                DateEditActions::MoveCursorBackward => self.move_cursor_backward(),
-            },
         }
     }
 
@@ -316,5 +261,72 @@ impl DateEditElement {
             chars[index] = ch;
         }
         chars
+    }
+}
+
+impl HelpProvider for DateEditElement {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+    }
+}
+
+impl WidgetElement for DateEditElement {
+    type Output = Date;
+
+    fn set_active(&mut self, active: bool) {
+        self.active = active;
+    }
+
+    fn get_size(&self) -> &ElementSize {
+        &self.size
+    }
+
+    fn render(&self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
+        let rect = Rect::new(pos_x, pos_y, self.size.width, self.size.height);
+        let date_string = format!("{:02}/{:02}/{:04}", self.day, self.month, self.year);
+        let date_paragraph = Paragraph::new(date_string);
+        frame.render_widget(date_paragraph, rect);
+
+        if self.active {
+            let offset = if self.cursor_pos > 3 {
+                2
+            } else if self.cursor_pos > 1 {
+                1
+            } else {
+                0
+            };
+
+            frame.set_cursor_position((pos_x + self.cursor_pos as u16 + offset, pos_y));
+        }
+    }
+
+    fn handle_key(&mut self, key: KeyEvent) {
+        if !self.active {
+            return;
+        }
+        let action = self.input_map.find_action(key);
+        match action {
+            None => {
+                if let KeyCode::Char(c) = key.code {
+                    self.set_char_at_cursor(c);
+                }
+            }
+            Some(a) => match a {
+                DateEditActions::IncreaseDay => self.increase_day(),
+                DateEditActions::DecreaseDay => self.decrease_day(),
+                DateEditActions::IncreaseMonth => self.increase_month(),
+                DateEditActions::DecreaseMonth => self.decrease_month(),
+                DateEditActions::MoveCursorForward => self.move_cursor_forward(),
+                DateEditActions::MoveCursorBackward => self.move_cursor_backward(),
+            },
+        }
+    }
+
+    fn get_output(&self) -> Self::Output {
+        Date {
+            day: self.day,
+            month: self.month,
+            year: self.year,
+        }
     }
 }

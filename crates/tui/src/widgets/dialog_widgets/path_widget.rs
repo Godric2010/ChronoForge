@@ -1,5 +1,7 @@
+use crate::input::help_context::KeyBindingHelpContext;
+use crate::input::HelpProvider;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
-use crate::widgets::elements::{InputMode, TextEditElement};
+use crate::widgets::elements::{InputMode, TextEditElement, WidgetElement};
 use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
 use ratatui::Frame;
@@ -16,6 +18,12 @@ impl PathWidget {
     }
 }
 
+impl HelpProvider for PathWidget {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.path_input.append_footer_help(output);
+    }
+}
+
 impl DialogWidget for PathWidget {
     type Output = String;
 
@@ -23,16 +31,12 @@ impl DialogWidget for PathWidget {
         WidgetType::Input
     }
 
-    fn render_input_map_help(&self) -> String {
-        "<Esc>: Cancel | <Enter>: Confirm".to_string()
-    }
-
     fn handle_key(&mut self, key: KeyEvent) {
         self.path_input.handle_key(key);
     }
 
     fn output(&self) -> Self::Output {
-        self.path_input.get_content().to_string()
+        self.path_input.get_output().to_string()
     }
 
     fn height(&self) -> u16 {

@@ -17,7 +17,7 @@ pub fn create_settings_input_map() -> InputMap<SettingsActions> {
         KeyBinding {
             key_code: KeyCode::Down,
             key_modifier: KeyModifiers::empty(),
-            key_name: "Down".to_string(),
+            key_name: "↓".to_string(),
             key_description: "Next".to_string(),
             action: SettingsActions::NextItem,
             display_in_footer: true,
@@ -25,7 +25,7 @@ pub fn create_settings_input_map() -> InputMap<SettingsActions> {
         KeyBinding {
             key_code: KeyCode::Up,
             key_modifier: KeyModifiers::empty(),
-            key_name: "Up".to_string(),
+            key_name: "↑".to_string(),
             key_description: "Prev".to_string(),
             action: SettingsActions::PrevItem,
             display_in_footer: true,

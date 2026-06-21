@@ -176,14 +176,14 @@ impl App {
             ScreenType::Overview => {
                 let screen = &mut self.screens.overview;
                 screen.render(frame, screen_area);
-                help_text = screen.get_help_text();
+                help_text = screen.get_footer_help_text();
                 self.enforce_vm_update_on_next_tick =
                     screen.enforce_view_model_update_on_next_tick();
             }
             ScreenType::Settings => {
                 let screen = &mut self.screens.settings;
                 screen.render(frame, screen_area);
-                help_text = screen.get_help_text();
+                help_text = screen.get_footer_help_text();
             }
         }
 

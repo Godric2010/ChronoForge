@@ -1,5 +1,7 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
+use crate::input::HelpProvider;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -30,7 +32,7 @@ impl YesNoWidget {
             KeyBinding {
                 key_code: KeyCode::Left,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Left".to_string(),
+                key_name: "←".to_string(),
                 key_description: "Toggle decision".to_string(),
                 action: YesNoActions::Toggle,
                 display_in_footer: false,
@@ -38,7 +40,7 @@ impl YesNoWidget {
             KeyBinding {
                 key_code: KeyCode::Right,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Right".to_string(),
+                key_name: "→".to_string(),
                 key_description: "Toggle decision".to_string(),
                 action: YesNoActions::Toggle,
                 display_in_footer: false,
@@ -49,7 +51,7 @@ impl YesNoWidget {
                 key_name: "y".to_string(),
                 key_description: "Select yes".to_string(),
                 action: YesNoActions::SetYes,
-                display_in_footer: false,
+                display_in_footer: true,
             },
             KeyBinding {
                 key_code: KeyCode::Char('n'),
@@ -57,7 +59,7 @@ impl YesNoWidget {
                 key_name: "n".to_string(),
                 key_description: "Select no".to_string(),
                 action: YesNoActions::SetNo,
-                display_in_footer: false,
+                display_in_footer: true,
             },
         ];
 
@@ -85,15 +87,17 @@ impl YesNoWidget {
     }
 }
 
+impl HelpProvider for YesNoWidget {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+    }
+}
+
 impl DialogWidget for YesNoWidget {
     type Output = bool;
 
     fn get_type(&self) -> WidgetType {
         WidgetType::Input
-    }
-
-    fn render_input_map_help(&self) -> String {
-        "<Enter>: Confirm | <Esc>: Cancel | <Left/Right> | [Y]es | [N]o".to_string()
     }
 
     fn handle_key(&mut self, key: KeyEvent) {

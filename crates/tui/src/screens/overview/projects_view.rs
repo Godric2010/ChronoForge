@@ -1,4 +1,6 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
+use crate::input::HelpProvider;
 use crate::screens::dialog::Dialog;
 use crate::screens::overview::mode::ProjectsModeActions;
 use crate::screens::overview::overview_dialog::OverviewDialog;
@@ -20,8 +22,7 @@ pub struct ProjectsView {
 
 impl ProjectsView {
     pub fn new() -> ProjectsView {
-        let mut projects_list_widget = SelectableCardList::default();
-        projects_list_widget.title = "Projects".to_string();
+        let projects_list_widget = SelectableCardList::new("Projects");
 
         ProjectsView {
             projects_list_widget,
@@ -76,7 +77,7 @@ impl ProjectsView {
                 ProjectsModeActions::Delete => self.open_delete_project_dialog(),
             };
         }
-        self.projects_list_widget.handle_event(&key);
+        self.projects_list_widget.handle_event(key);
         None
     }
 
@@ -106,5 +107,12 @@ impl ProjectsView {
             return Some(OverviewDialog::DeleteProject(dialog, project.id));
         }
         None
+    }
+}
+
+impl HelpProvider for ProjectsView {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+        self.projects_list_widget.append_footer_help(output);
     }
 }

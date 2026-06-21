@@ -1,4 +1,6 @@
+use crate::input::help_context::{InputMapHelpContext, KeyBindingHelpContext};
 use crate::input::key_binding::KeyBinding;
+use crate::input::HelpProvider;
 use crossterm::event::KeyEvent;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Modifier, Style};
@@ -25,20 +27,13 @@ impl<A: Copy> InputMap<A> {
             .map(|binding| binding.action)
     }
 
-    pub fn build_footer_help_text(&self) -> String {
-        let mut help_text = String::new();
-
-        for binding_idx in 0..self.key_bindings.len() {
-            let binding = &self.key_bindings[binding_idx];
-            if !binding.display_in_footer {
-                continue;
-            }
-
-            let key_string = format!("[{}]: {}  ", binding.key_name, binding.key_description);
-            help_text.push_str(&key_string);
-        }
-
-        help_text
+    fn get_input_map_helper(&self) -> InputMapHelpContext {
+        let key_bindings_helper = self
+            .key_bindings
+            .iter()
+            .map(|kb| kb.get_help_context())
+            .collect::<Vec<_>>();
+        InputMapHelpContext::new(self.name.clone(), key_bindings_helper)
     }
 
     pub fn render_help_texts(&self, frame: &mut Frame, rect: Rect) {
@@ -80,5 +75,11 @@ impl<A: Copy> InputMap<A> {
             frame.render_widget(key_name_paragraph, name_rect);
             frame.render_widget(key_description_paragraph, desc_rect);
         }
+    }
+}
+
+impl<A: Copy> HelpProvider for InputMap<A> {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        output.extend(self.get_input_map_helper().get_footer_helper())
     }
 }

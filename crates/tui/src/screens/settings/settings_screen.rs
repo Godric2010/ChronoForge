@@ -1,5 +1,7 @@
 use crate::app_action::AppAction;
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
+use crate::input::HelpProvider;
 use crate::screens::settings::input_actions::*;
 use crate::screens::settings::settings_action::SettingsActionPurpose;
 use crate::screens::settings::settings_dialog::{SettingsDialog, SettingsDialogResult};
@@ -15,7 +17,6 @@ struct SelectionRef {
 }
 
 pub struct SettingsScreen {
-    help_text: String,
     sections: Vec<SettingsSection>,
     selection_ref: SelectionRef,
     settings_dialog: Option<SettingsDialog>,
@@ -53,19 +54,19 @@ impl SettingsScreen {
         )];
 
         Self {
-            help_text: "<Down>: Next | <Up>: Prev | <Tab>: Next section | <Shift + Tab>: Prev section | <Enter>: Confirm | <Esc/q>: Quit".to_string(),
             sections,
             selection_ref: SelectionRef {
                 section_index: 0,
                 item_index: 0,
             },
             settings_dialog: None,
-            input_map
+            input_map,
         }
     }
 
-    pub fn get_help_text(&self) -> String {
-        self.help_text.clone()
+    pub fn get_footer_help_text(&self) -> String {
+        let footer_helper = self.input_map.footer_help();
+        KeyBindingHelpContext::build_single_line(footer_helper)
     }
 
     pub fn render(&mut self, frame: &mut Frame, rect: Rect) {

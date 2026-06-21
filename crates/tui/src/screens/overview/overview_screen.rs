@@ -1,5 +1,7 @@
 use crate::app_action::AppAction;
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
+use crate::input::HelpProvider;
 use crate::screens::overview::mode::{Mode, OverviewGeneralActions};
 use crate::screens::overview::overview_dialog::{OverviewDialog, OverviewDialogResult};
 use crate::screens::overview::overview_input_maps::create_general_input_map;
@@ -46,8 +48,14 @@ impl OverviewScreen {
         this
     }
 
-    pub fn get_help_text(&self) -> String {
-        self.help_text.clone()
+    pub fn get_footer_help_text(&self) -> String {
+        let mut footer = self.input_map.footer_help();
+        match self.mode {
+            Mode::Projects => self.projects_view.append_footer_help(&mut footer),
+            Mode::Tasks => self.tasks_view.append_footer_help(&mut footer),
+            Mode::TimeEntries => self.time_entry_view.append_footer_help(&mut footer),
+        };
+        KeyBindingHelpContext::build_single_line(footer)
     }
 
     pub fn enforce_view_model_update_on_next_tick(&mut self) -> bool {

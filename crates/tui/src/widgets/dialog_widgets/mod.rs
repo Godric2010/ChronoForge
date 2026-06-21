@@ -6,6 +6,7 @@ mod task_edit_widget;
 mod time_entry_widget;
 mod yes_no_widget;
 
+use crate::input::HelpProvider;
 use crossterm::event::KeyEvent;
 pub use list_widget::{ListItem, ListWidget};
 pub use path_widget::*;
@@ -21,13 +22,10 @@ pub enum WidgetType {
     Error,
 }
 
-pub trait DialogWidget {
+pub trait DialogWidget: HelpProvider {
     type Output;
 
     fn get_type(&self) -> WidgetType;
-
-    #[allow(dead_code)]
-    fn render_input_map_help(&self) -> String;
 
     fn handle_key(&mut self, key: KeyEvent);
     fn output(&self) -> Self::Output;

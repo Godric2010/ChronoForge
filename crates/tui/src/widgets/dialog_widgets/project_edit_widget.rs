@@ -1,7 +1,11 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
+use crate::input::HelpProvider;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
-use crate::widgets::elements::{CheckboxElement, InputMode, TextEditElement, TimeEditElement};
+use crate::widgets::elements::{
+    CheckboxElement, InputMode, TextEditElement, TimeEditElement, WidgetElement,
+};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use domain::types::Project;
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -38,7 +42,7 @@ impl ProjectEditWidget {
                 key_name: "Tab".to_string(),
                 key_description: "Next input field".to_string(),
                 action: ProjectEditActions::Next,
-                display_in_footer: false,
+                display_in_footer: true,
             },
             KeyBinding {
                 key_code: KeyCode::BackTab,
@@ -137,7 +141,14 @@ impl ProjectEditWidget {
         self.enable_field();
     }
 }
-
+impl HelpProvider for ProjectEditWidget {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+        self.name_input.append_footer_help(output);
+        self.time_limit_checkbox.append_footer_help(output);
+        self.time_limit_input.append_footer_help(output);
+    }
+}
 impl DialogWidget for ProjectEditWidget {
     type Output = ProjectEditOutput;
 
@@ -145,12 +156,8 @@ impl DialogWidget for ProjectEditWidget {
         WidgetType::Input
     }
 
-    fn render_input_map_help(&self) -> String {
-        "<Esc>: Cancel | <Enter>: Confirm | <Tab>: Next".to_string()
-    }
-
     fn handle_key(&mut self, key: KeyEvent) {
-        let max_element_idx: u8 = if self.time_limit_checkbox.is_checked() {
+        let max_element_idx: u8 = if self.time_limit_checkbox.get_output() {
             3
         } else {
             2
@@ -172,17 +179,15 @@ impl DialogWidget for ProjectEditWidget {
     }
 
     fn output(&self) -> Self::Output {
-        let time_limit = if self.time_limit_checkbox.is_checked() {
-            Some(
-                self.time_limit_input.get_hour_value() * 60
-                    + self.time_limit_input.get_minute_value(),
-            )
+        let time_limit = if self.time_limit_checkbox.get_output() {
+            let time = self.time_limit_input.get_output();
+            Some(time.hour * 60 + time.minute)
         } else {
             None
         };
 
         ProjectEditOutput {
-            project_name: self.name_input.get_content().to_string(),
+            project_name: self.name_input.get_output(),
             time_limit,
         }
     }
@@ -226,7 +231,7 @@ impl DialogWidget for ProjectEditWidget {
         self.time_limit_checkbox
             .render(frame, inner_checkbox.x, inner_checkbox.y);
 
-        if self.time_limit_checkbox.is_checked() {
+        if self.time_limit_checkbox.get_output() {
             let time_edit_block = Block::default()
                 .title("Time Limit")
                 .title_style(Style::default().add_modifier(Modifier::UNDERLINED))

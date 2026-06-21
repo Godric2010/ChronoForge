@@ -1,5 +1,7 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
+use crate::input::HelpProvider;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -124,15 +126,17 @@ impl ListWidget {
     }
 }
 
+impl HelpProvider for ListWidget {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+    }
+}
+
 impl DialogWidget for ListWidget {
     type Output = Option<Uuid>;
 
     fn get_type(&self) -> WidgetType {
         WidgetType::Input
-    }
-
-    fn render_input_map_help(&self) -> String {
-        "<Enter>: Confirm | <Esc>: Cancel | <Up/Down>".to_string()
     }
 
     fn handle_key(&mut self, key: KeyEvent) {

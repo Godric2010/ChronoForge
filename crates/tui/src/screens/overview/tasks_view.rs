@@ -1,4 +1,6 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
+use crate::input::HelpProvider;
 use crate::screens::dialog::Dialog;
 use crate::screens::overview::mode::TasksModeActions;
 use crate::screens::overview::overview_dialog::OverviewDialog;
@@ -29,8 +31,7 @@ pub struct TasksView {
 
 impl TasksView {
     pub fn new() -> Self {
-        let mut task_list_widget = SelectableCardList::default();
-        task_list_widget.title = "Tasks".to_string();
+        let task_list_widget = SelectableCardList::new("Tasks");
 
         Self {
             task_list_widget,
@@ -108,7 +109,7 @@ impl TasksView {
                 TasksModeActions::AssignToProject => self.open_assign_to_project_dialog(),
             };
         }
-        self.task_list_widget.handle_event(&key);
+        self.task_list_widget.handle_event(key);
         None
     }
 
@@ -157,5 +158,12 @@ impl TasksView {
             return Some(OverviewDialog::AssignTask(dialog, task.id));
         }
         None
+    }
+}
+
+impl HelpProvider for TasksView {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+        self.task_list_widget.append_footer_help(output);
     }
 }

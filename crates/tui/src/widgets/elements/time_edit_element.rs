@@ -1,10 +1,17 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
-use crate::widgets::elements::ElementSize;
+use crate::input::HelpProvider;
+use crate::widgets::elements::{ElementSize, WidgetElement};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
 use ratatui::Frame;
+
+pub struct Time {
+    pub hour: u32,
+    pub minute: u32,
+}
 
 #[derive(Copy, Clone)]
 enum TimeEditActions {
@@ -33,23 +40,23 @@ impl TimeEditElement {
             KeyBinding {
                 key_code: KeyCode::Left,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Left".to_string(),
+                key_name: "←".to_string(),
                 key_description: "Move cursor backwards".to_string(),
                 action: TimeEditActions::MoveCursorBackward,
-                display_in_footer: false,
+                display_in_footer: true,
             },
             KeyBinding {
                 key_code: KeyCode::Right,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Right".to_string(),
+                key_name: "→".to_string(),
                 key_description: "Move cursor forward".to_string(),
                 action: TimeEditActions::MoveCursorForward,
-                display_in_footer: false,
+                display_in_footer: true,
             },
             KeyBinding {
                 key_code: KeyCode::Up,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Up".to_string(),
+                key_name: "↑".to_string(),
                 key_description: "Increase Minute".to_string(),
                 action: TimeEditActions::IncreaseMinute,
                 display_in_footer: false,
@@ -57,7 +64,7 @@ impl TimeEditElement {
             KeyBinding {
                 key_code: KeyCode::Down,
                 key_modifier: KeyModifiers::empty(),
-                key_name: "Down".to_string(),
+                key_name: "↓".to_string(),
                 key_description: "Decrease Minute".to_string(),
                 action: TimeEditActions::DecreaseMinute,
                 display_in_footer: false,
@@ -94,60 +101,6 @@ impl TimeEditElement {
             minute_digit_chars: format!("{:0width$}", minute, width = 2).chars().collect(),
             cursor_pos: 0,
             input_map,
-        }
-    }
-
-    pub fn set_active(&mut self, active: bool) {
-        self.active = active;
-    }
-
-    pub fn get_hour_value(&self) -> u32 {
-        self.hour
-    }
-    pub fn get_minute_value(&self) -> u32 {
-        self.minute
-    }
-
-    pub fn get_size(&self) -> &ElementSize {
-        &self.size
-    }
-
-    pub fn render(&self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
-        let rect = Rect::new(pos_x, pos_y, self.size.width, self.size.height);
-
-        let time_string = format!("{:02}:{:02}", self.hour, self.minute);
-        let paragraph = Paragraph::new(time_string);
-        frame.render_widget(paragraph, rect);
-
-        if self.active {
-            let offset = if self.cursor_pos > self.hour_digit_chars.len() - 1 {
-                1
-            } else {
-                0
-            };
-            frame.set_cursor_position((pos_x + self.cursor_pos as u16 + offset, pos_y));
-        }
-    }
-
-    pub fn handle_key(&mut self, key: KeyEvent) {
-        if !self.active {
-            return;
-        }
-        let action = self.input_map.find_action(key);
-        match action {
-            None => {
-                if let KeyCode::Char(c) = key.code {
-                    self.set_char_at_cursor(c);
-                }
-            }
-            Some(a) => match a {
-                TimeEditActions::IncreaseMinute => self.increase_minute(),
-                TimeEditActions::DecreaseMinute => self.decrease_minute(),
-                TimeEditActions::IncreaseHour => self.increase_hour(),
-                TimeEditActions::DecreaseHour => self.decrease_hour(),
-                TimeEditActions::MoveCursorForward => self.move_cursor_forward(),
-                TimeEditActions::MoveCursorBackward => self.move_cursor_backward(),
-            },
         }
     }
     fn set_char_at_cursor(&mut self, char: char) {
@@ -252,5 +205,69 @@ impl TimeEditElement {
         self.minute_digit_chars = format!("{:0width$}", minute_value, width = 2)
             .chars()
             .collect();
+    }
+}
+
+impl HelpProvider for TimeEditElement {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+    }
+}
+
+impl WidgetElement for TimeEditElement {
+    type Output = Time;
+
+    fn set_active(&mut self, active: bool) {
+        self.active = active;
+    }
+
+    fn get_size(&self) -> &ElementSize {
+        &self.size
+    }
+
+    fn render(&self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
+        let rect = Rect::new(pos_x, pos_y, self.size.width, self.size.height);
+
+        let time_string = format!("{:02}:{:02}", self.hour, self.minute);
+        let paragraph = Paragraph::new(time_string);
+        frame.render_widget(paragraph, rect);
+
+        if self.active {
+            let offset = if self.cursor_pos > self.hour_digit_chars.len() - 1 {
+                1
+            } else {
+                0
+            };
+            frame.set_cursor_position((pos_x + self.cursor_pos as u16 + offset, pos_y));
+        }
+    }
+
+    fn handle_key(&mut self, key: KeyEvent) {
+        if !self.active {
+            return;
+        }
+        let action = self.input_map.find_action(key);
+        match action {
+            None => {
+                if let KeyCode::Char(c) = key.code {
+                    self.set_char_at_cursor(c);
+                }
+            }
+            Some(a) => match a {
+                TimeEditActions::IncreaseMinute => self.increase_minute(),
+                TimeEditActions::DecreaseMinute => self.decrease_minute(),
+                TimeEditActions::IncreaseHour => self.increase_hour(),
+                TimeEditActions::DecreaseHour => self.decrease_hour(),
+                TimeEditActions::MoveCursorForward => self.move_cursor_forward(),
+                TimeEditActions::MoveCursorBackward => self.move_cursor_backward(),
+            },
+        }
+    }
+
+    fn get_output(&self) -> Self::Output {
+        Time {
+            hour: self.hour,
+            minute: self.minute,
+        }
     }
 }

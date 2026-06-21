@@ -1,7 +1,9 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
+use crate::input::HelpProvider;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
-use crate::widgets::elements::{DateEditElement, TimeEditElement};
+use crate::widgets::elements::{DateEditElement, TimeEditElement, WidgetElement};
 use chrono::{DateTime, Datelike, Local, NaiveDate, TimeZone, Timelike, Utc};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -62,7 +64,7 @@ impl TimeEntryWidget {
                 key_name: "Tab".to_string(),
                 key_description: "Next input field".to_string(),
                 action: TimeEntryActions::Next,
-                display_in_footer: false,
+                display_in_footer: true,
             },
             KeyBinding {
                 key_code: KeyCode::BackTab,
@@ -186,15 +188,14 @@ impl TimeEntryWidget {
         date: &DateEditElement,
         time: &TimeEditElement,
     ) -> anyhow::Result<DateTime<Utc>> {
-        let date_value = date.get_date();
-        let hour = time.get_hour_value();
-        let minute = time.get_minute_value();
+        let date_value = date.get_output();
+        let time_value = time.get_output();
 
         let date =
             NaiveDate::from_ymd_opt(date_value.year as i32, date_value.month, date_value.day)
                 .ok_or_else(|| anyhow::anyhow!("Invalid date"))?;
         let naive = date
-            .and_hms_opt(hour, minute, 0)
+            .and_hms_opt(time_value.hour, time_value.minute, 0)
             .ok_or_else(|| anyhow::anyhow!("Invalid time"))?;
 
         let local_time = Local
@@ -243,16 +244,20 @@ impl TimeEntryWidget {
         self.validate_end_date_time();
     }
 }
-
+impl HelpProvider for TimeEntryWidget {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+        self.start_time_edit_element.append_footer_help(output);
+        self.end_time_edit_element.append_footer_help(output);
+        self.start_date_edit_element.append_footer_help(output);
+        self.end_date_edit_element.append_footer_help(output);
+    }
+}
 impl DialogWidget for TimeEntryWidget {
     type Output = Option<(DateTime<Utc>, DateTime<Utc>)>;
 
     fn get_type(&self) -> WidgetType {
         WidgetType::Input
-    }
-
-    fn render_input_map_help(&self) -> String {
-        "<Enter>: Confirm | <Esc>: Cancel | <Tab>: Next field | <Up>: Increase value | <Down>: Decrease value".to_string()
     }
 
     fn handle_key(&mut self, key: KeyEvent) {

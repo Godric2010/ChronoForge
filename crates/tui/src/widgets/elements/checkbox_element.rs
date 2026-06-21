@@ -1,6 +1,8 @@
+use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
-use crate::widgets::elements::ElementSize;
+use crate::input::HelpProvider;
+use crate::widgets::elements::{ElementSize, WidgetElement};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::widgets::Paragraph;
@@ -26,7 +28,7 @@ impl CheckboxElement {
             key_name: "Space".to_string(),
             key_description: "Toggle".to_string(),
             action: CheckboxAction::Toggle,
-            display_in_footer: false,
+            display_in_footer: true,
         }];
         let input_map = InputMap::new("Checkbox Actions", key_bindings);
         Self {
@@ -40,20 +42,26 @@ impl CheckboxElement {
             input_map,
         }
     }
+}
 
-    pub fn set_active(&mut self, active: bool) {
+impl HelpProvider for CheckboxElement {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
+    }
+}
+
+impl WidgetElement for CheckboxElement {
+    type Output = bool;
+
+    fn set_active(&mut self, active: bool) {
         self.active = active;
     }
 
-    pub fn is_checked(&self) -> bool {
-        self.checked
-    }
-
-    pub fn get_size(&self) -> &ElementSize {
+    fn get_size(&self) -> &ElementSize {
         &self.size
     }
 
-    pub fn render(&mut self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
+    fn render(&self, frame: &mut Frame, pos_x: u16, pos_y: u16) {
         let rect = Rect::new(pos_x, pos_y, self.size.width, self.size.height);
         let horizontal = Layout::horizontal([
             Constraint::Length(self.size.width - 4),
@@ -69,10 +77,14 @@ impl CheckboxElement {
         frame.render_widget(checkbox_paragraph, horizontal[1]);
     }
 
-    pub fn handle_key(&mut self, key: KeyEvent) {
+    fn handle_key(&mut self, key: KeyEvent) {
         let action = self.input_map.find_action(key);
         if let Some(_action) = action {
             self.checked = !self.checked;
         }
+    }
+
+    fn get_output(&self) -> Self::Output {
+        self.checked
     }
 }

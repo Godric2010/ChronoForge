@@ -1,5 +1,9 @@
+use crate::input::help_context::KeyBindingHelpContext;
+use crate::input::input_map::InputMap;
+use crate::input::key_binding::KeyBinding;
+use crate::input::HelpProvider;
 use crate::widgets::selectable_card_list::card_trait::SelectableCard;
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::widgets::{Block, Borders, Paragraph};
@@ -11,15 +15,78 @@ pub mod project_card;
 pub mod task_card;
 pub mod time_entry_card;
 
-#[derive(Default)]
+#[derive(Copy, Clone)]
+enum SelectableCardListActions {
+    Next,
+    Prev,
+}
 pub struct SelectableCardList<Card: SelectableCard> {
     pub title: String,
     cards: Vec<Card>,
+    input_map: InputMap<SelectableCardListActions>,
     is_active: bool,
     selected_index: Option<usize>,
     scroll_offset: usize,
     visible_items_count: usize,
     item_height: u16,
+}
+
+impl<Card: SelectableCard> SelectableCardList<Card> {
+    pub fn new(title: &str) -> Self {
+        let key_bindings = vec![
+            KeyBinding {
+                key_code: KeyCode::Down,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "↓".to_string(),
+                key_description: "Next item".to_string(),
+                action: SelectableCardListActions::Next,
+                display_in_footer: true,
+            },
+            KeyBinding {
+                key_code: KeyCode::Up,
+                key_modifier: KeyModifiers::empty(),
+                key_name: "↑".to_string(),
+                key_description: "Prev item".to_string(),
+                action: SelectableCardListActions::Prev,
+                display_in_footer: true,
+            },
+        ];
+        let input_map = InputMap::new("List Actions", key_bindings);
+        Self {
+            title: title.to_string(),
+            cards: vec![],
+            input_map,
+            is_active: false,
+            selected_index: None,
+            scroll_offset: 0,
+            visible_items_count: 0,
+            item_height: 1,
+        }
+    }
+
+    fn select_next_card(&mut self, selected_index: usize) {
+        if selected_index >= self.cards.len() - 1 {
+            return;
+        }
+        let new_index = selected_index + 1;
+        if new_index >= self.scroll_offset + self.visible_items_count {
+            self.scroll_offset += 1;
+        }
+        self.selected_index = Some(new_index);
+    }
+
+    fn select_prev_card(&mut self, selected_index: usize) {
+        if selected_index == 0 {
+            return;
+        }
+
+        let new_index = selected_index - 1;
+        if new_index < self.scroll_offset {
+            self.scroll_offset -= 1;
+        }
+
+        self.selected_index = Some(new_index);
+    }
 }
 
 impl<Card: SelectableCard> SelectableCardList<Card> {
@@ -144,38 +211,22 @@ impl<Card: SelectableCard> SelectableCardList<Card> {
         }
     }
 
-    pub fn handle_event(&mut self, event: &crossterm::event::KeyEvent) {
-        if self.selected_index.is_none() {
-            return;
-        }
-
-        let mut selected_index = self.selected_index.unwrap();
-
-        match event.code {
-            KeyCode::Down => {
-                if selected_index >= self.cards.len() - 1 {
-                    return;
+    pub fn handle_event(&mut self, event: KeyEvent) {
+        if let Some(selected_index) = self.selected_index {
+            let action = self.input_map.find_action(event);
+            if let Some(action) = action {
+                match action {
+                    SelectableCardListActions::Next => self.select_next_card(selected_index),
+                    SelectableCardListActions::Prev => self.select_prev_card(selected_index),
                 }
-                selected_index += 1;
-                if selected_index >= self.scroll_offset + self.visible_items_count {
-                    self.scroll_offset += 1;
-                }
-                self.selected_index = Some(selected_index);
             }
-            KeyCode::Up => {
-                if selected_index == 0 {
-                    return;
-                }
-
-                selected_index -= 1;
-                if selected_index < self.scroll_offset {
-                    self.scroll_offset -= 1;
-                }
-
-                self.selected_index = Some(selected_index);
-            }
-            _ => (),
         }
+    }
+}
+
+impl<Card: SelectableCard> HelpProvider for SelectableCardList<Card> {
+    fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
+        self.input_map.append_footer_help(output);
     }
 }
 
@@ -209,15 +260,8 @@ mod selectable_card_list_tests {
             cards.push(FakeCard { is_active: false })
         }
 
-        let mut list = SelectableCardList {
-            title: "Fake List".to_string(),
-            cards,
-            is_active: true,
-            selected_index: None,
-            scroll_offset: 0,
-            visible_items_count: item_count,
-            item_height: 1,
-        };
+        let mut list = SelectableCardList::new("Fake List");
+        list.update_list_items(cards, 1);
         list.set_active(true, true);
         list
     }
@@ -225,19 +269,19 @@ mod selectable_card_list_tests {
     #[test]
     fn selectable_card_list_up_and_down_change_list_item() {
         let mut list = build_selectable_card_list(2);
-        list.handle_event(&key(KeyCode::Down));
+        list.handle_event(key(KeyCode::Down));
         assert_eq!(list.selected_index, Some(1));
 
-        list.handle_event(&key(KeyCode::Up));
+        list.handle_event(key(KeyCode::Up));
         assert_eq!(list.selected_index, Some(0));
     }
 
     #[test]
     fn selectable_card_list_down_on_last_index_keep_last_index() {
         let mut list = build_selectable_card_list(2);
-        list.handle_event(&key(KeyCode::Down));
-        list.handle_event(&key(KeyCode::Down));
-        list.handle_event(&key(KeyCode::Down));
+        list.handle_event(key(KeyCode::Down));
+        list.handle_event(key(KeyCode::Down));
+        list.handle_event(key(KeyCode::Down));
 
         assert_eq!(list.selected_index, Some(1));
     }
@@ -245,10 +289,10 @@ mod selectable_card_list_tests {
     #[test]
     fn selectable_card_list_up_on_first_item_keep_first_index() {
         let mut list = build_selectable_card_list(2);
-        list.handle_event(&key(KeyCode::Down));
-        list.handle_event(&key(KeyCode::Up));
-        list.handle_event(&key(KeyCode::Up));
-        list.handle_event(&key(KeyCode::Up));
+        list.handle_event(key(KeyCode::Down));
+        list.handle_event(key(KeyCode::Up));
+        list.handle_event(key(KeyCode::Up));
+        list.handle_event(key(KeyCode::Up));
 
         assert_eq!(list.selected_index, Some(0));
     }
@@ -256,10 +300,10 @@ mod selectable_card_list_tests {
     #[test]
     fn selectable_card_list_up_and_down_on_empty_list_does_not_crash() {
         let mut list = build_selectable_card_list(0);
-        list.handle_event(&key(KeyCode::Down));
+        list.handle_event(key(KeyCode::Down));
         assert!(list.selected_index.is_none());
 
-        list.handle_event(&key(KeyCode::Up));
+        list.handle_event(key(KeyCode::Up));
         assert!(list.selected_index.is_none());
     }
 
@@ -267,10 +311,10 @@ mod selectable_card_list_tests {
     fn selectable_card_list_up_and_down_with_no_item_active_does_nothing() {
         let mut list = build_selectable_card_list(2);
         list.set_active(false, false);
-        list.handle_event(&key(KeyCode::Down));
+        list.handle_event(key(KeyCode::Down));
         assert!(list.selected_index.is_none());
 
-        list.handle_event(&key(KeyCode::Up));
+        list.handle_event(key(KeyCode::Up));
         assert!(list.selected_index.is_none());
     }
 }
