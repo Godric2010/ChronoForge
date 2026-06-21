@@ -11,6 +11,7 @@ pub(crate) enum OverviewGeneralActions {
     NextMode,
     PrevMode,
     ToggleTimer,
+    Help,
 }
 
 #[derive(Clone, Copy)]

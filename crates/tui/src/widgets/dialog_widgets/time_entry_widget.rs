@@ -1,4 +1,4 @@
-use crate::input::help_context::KeyBindingHelpContext;
+use crate::input::help_context::{InputMapHelpContext, KeyBindingHelpContext};
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
 use crate::input::HelpProvider;
@@ -252,6 +252,17 @@ impl HelpProvider for TimeEntryWidget {
             1 => self.start_date_edit_element.append_footer_help(output),
             2 => self.end_time_edit_element.append_footer_help(output),
             3 => self.end_date_edit_element.append_footer_help(output),
+            _ => {}
+        }
+    }
+
+    fn append_general_help(&self, output: &mut Vec<InputMapHelpContext>) {
+        self.input_map.append_general_help(output);
+        match self.selected_field {
+            0 => self.start_time_edit_element.append_general_help(output),
+            1 => self.start_date_edit_element.append_general_help(output),
+            2 => self.end_time_edit_element.append_general_help(output),
+            3 => self.end_date_edit_element.append_general_help(output),
             _ => {}
         }
     }

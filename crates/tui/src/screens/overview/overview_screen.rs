@@ -2,6 +2,7 @@ use crate::app_action::AppAction;
 use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::HelpProvider;
+use crate::screens::dialog::help_dialog::HelpDialog;
 use crate::screens::overview::mode::{Mode, OverviewGeneralActions};
 use crate::screens::overview::overview_dialog::{OverviewDialog, OverviewDialogResult};
 use crate::screens::overview::overview_input_maps::create_general_input_map;
@@ -21,6 +22,7 @@ pub struct OverviewScreen {
     tasks_view: TasksView,
     time_entry_view: TimeEntryView,
     overview_dialog: Option<OverviewDialog>,
+    help_dialog: Option<HelpDialog>,
     help_text: String,
     enforce_view_model_update_on_next_tick: bool,
     timer_active: bool,
@@ -40,6 +42,7 @@ impl OverviewScreen {
             tasks_view: TasksView::new(),
             time_entry_view: TimeEntryView::new(),
             overview_dialog: None,
+            help_dialog: None,
             help_text: String::new(),
             enforce_view_model_update_on_next_tick: false,
             timer_active: false,
@@ -56,6 +59,17 @@ impl OverviewScreen {
         };
         self.input_map.append_footer_help(&mut footer);
         KeyBindingHelpContext::build_single_line(footer)
+    }
+
+    fn enable_help_dialog(&mut self) {
+        let mut help_contexts = match self.mode {
+            Mode::Projects => self.projects_view.general_help(),
+            Mode::Tasks => self.tasks_view.general_help(),
+            Mode::TimeEntries => self.time_entry_view.general_help(),
+        };
+        self.input_map.append_general_help(&mut help_contexts);
+
+        self.help_dialog = Some(HelpDialog::new(help_contexts, Rect::new(1, 1, 1, 1)));
     }
 
     pub fn enforce_view_model_update_on_next_tick(&mut self) -> bool {
@@ -100,14 +114,25 @@ impl OverviewScreen {
             }
         }
 
-        // dialog boxes
-
         if let Some(overview_dialog) = &mut self.overview_dialog {
             overview_dialog.render(frame, area);
+        }
+
+        if let Some(help_dialog) = &self.help_dialog {
+            help_dialog.render(frame, area);
         }
     }
 
     pub fn handle_event(&mut self, key_event: KeyEvent) -> Option<AppAction> {
+        if let Some(help_dialog) = self.help_dialog.as_mut() {
+            let help_shall_close = help_dialog.handle_key(key_event);
+            if help_shall_close {
+                self.help_dialog = None;
+            }
+
+            return None;
+        }
+
         if let Some(overview_dialog) = self.overview_dialog.as_mut() {
             let overview_dialog_result = overview_dialog.handle_input(key_event);
             return match overview_dialog_result {
@@ -137,6 +162,10 @@ impl OverviewScreen {
                     None
                 }
                 OverviewGeneralActions::ToggleTimer => self.toggle_timer(),
+                OverviewGeneralActions::Help => {
+                    self.enable_help_dialog();
+                    None
+                }
             };
         }
 

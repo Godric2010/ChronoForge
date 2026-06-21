@@ -39,6 +39,14 @@ pub fn create_general_input_map() -> InputMap<OverviewGeneralActions> {
             action: OverviewGeneralActions::ToggleTimer,
             display_in_footer: false,
         },
+        KeyBinding {
+            key_code: KeyCode::Char('h'),
+            key_modifier: KeyModifiers::empty(),
+            key_name: "?".to_string(),
+            key_description: "Help".to_string(),
+            action: OverviewGeneralActions::Help,
+            display_in_footer: true,
+        },
     ];
     InputMap::new("Overview General Actions", key_bindings)
 }

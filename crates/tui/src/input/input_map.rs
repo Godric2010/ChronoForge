@@ -82,4 +82,8 @@ impl<A: Copy> HelpProvider for InputMap<A> {
     fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
         output.extend(self.get_input_map_helper().get_footer_helper())
     }
+
+    fn append_general_help(&self, output: &mut Vec<InputMapHelpContext>) {
+        output.push(self.get_input_map_helper().clone())
+    }
 }

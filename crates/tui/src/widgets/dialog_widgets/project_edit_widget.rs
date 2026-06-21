@@ -1,4 +1,4 @@
-use crate::input::help_context::KeyBindingHelpContext;
+use crate::input::help_context::{InputMapHelpContext, KeyBindingHelpContext};
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
 use crate::input::HelpProvider;
@@ -148,6 +148,16 @@ impl HelpProvider for ProjectEditWidget {
             0 => self.name_input.append_footer_help(output),
             1 => self.time_limit_checkbox.append_footer_help(output),
             2 => self.time_limit_input.append_footer_help(output),
+            _ => {}
+        }
+    }
+
+    fn append_general_help(&self, output: &mut Vec<InputMapHelpContext>) {
+        self.input_map.append_general_help(output);
+        match self.active_element_index {
+            0 => self.name_input.append_general_help(output),
+            1 => self.time_limit_checkbox.append_general_help(output),
+            2 => self.time_limit_input.append_general_help(output),
             _ => {}
         }
     }

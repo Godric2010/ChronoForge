@@ -1,4 +1,4 @@
-use crate::input::help_context::KeyBindingHelpContext;
+use crate::input::help_context::{InputMapHelpContext, KeyBindingHelpContext};
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
 use crate::input::HelpProvider;
@@ -267,6 +267,10 @@ impl DateEditElement {
 impl HelpProvider for DateEditElement {
     fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
         self.input_map.append_footer_help(output);
+    }
+
+    fn append_general_help(&self, output: &mut Vec<InputMapHelpContext>) {
+        self.input_map.append_general_help(output);
     }
 }
 

@@ -1,3 +1,5 @@
+pub mod help_dialog;
+
 use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;

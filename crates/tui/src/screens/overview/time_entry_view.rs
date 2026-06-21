@@ -1,4 +1,4 @@
-use crate::input::help_context::KeyBindingHelpContext;
+use crate::input::help_context::{InputMapHelpContext, KeyBindingHelpContext};
 use crate::input::input_map::InputMap;
 use crate::input::HelpProvider;
 use crate::screens::dialog::Dialog;
@@ -161,5 +161,10 @@ impl HelpProvider for TimeEntryView {
     fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
         self.input_map.append_footer_help(output);
         self.time_entry_list_widget.append_footer_help(output);
+    }
+
+    fn append_general_help(&self, output: &mut Vec<InputMapHelpContext>) {
+        self.input_map.append_general_help(output);
+        self.time_entry_list_widget.append_general_help(output);
     }
 }

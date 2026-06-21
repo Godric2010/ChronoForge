@@ -1,4 +1,4 @@
-use crate::input::help_context::KeyBindingHelpContext;
+use crate::input::help_context::{InputMapHelpContext, KeyBindingHelpContext};
 use crate::input::HelpProvider;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crate::widgets::elements::{InputMode, TextEditElement, WidgetElement};
@@ -21,6 +21,10 @@ impl PathWidget {
 impl HelpProvider for PathWidget {
     fn append_footer_help(&self, output: &mut Vec<KeyBindingHelpContext>) {
         self.path_input.append_footer_help(output);
+    }
+
+    fn append_general_help(&self, output: &mut Vec<InputMapHelpContext>) {
+        self.path_input.append_general_help(output);
     }
 }
 
