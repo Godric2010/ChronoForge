@@ -146,6 +146,10 @@ impl OverviewScreen {
                     self.enforce_view_model_update_on_next_tick = true;
                     Some(app_action)
                 }
+                OverviewDialogResult::Help(help_context) => {
+                    self.help_dialog = Some(HelpDialog::new(help_context, Rect::new(1, 1, 1, 1)));
+                    None
+                }
             };
         }
 

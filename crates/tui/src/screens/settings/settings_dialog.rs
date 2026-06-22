@@ -1,4 +1,5 @@
 use crate::app_action::AppAction;
+use crate::input::help_context::InputMapHelpContext;
 use crate::screens::dialog::{Dialog, DialogResult};
 use crate::widgets::dialog_widgets::PathWidget;
 use crossterm::event::KeyEvent;
@@ -9,6 +10,7 @@ pub enum SettingsDialogResult {
     None,
     Cancelled,
     Confirmed(AppAction),
+    Help(Vec<InputMapHelpContext>),
 }
 
 pub enum SettingsDialog {
@@ -38,6 +40,7 @@ impl SettingsDialog {
                     DialogResult::Confirmed(result) => {
                         SettingsDialogResult::Confirmed(AppAction::ImportCsv(result))
                     }
+                    DialogResult::Help(help_context) => SettingsDialogResult::Help(help_context),
                 }
             }
             SettingsDialog::ExportCSV(dialog) => {
@@ -48,6 +51,7 @@ impl SettingsDialog {
                     DialogResult::Confirmed(result) => {
                         SettingsDialogResult::Confirmed(AppAction::ExportCsv(result))
                     }
+                    DialogResult::Help(help_context) => SettingsDialogResult::Help(help_context),
                 }
             }
         }

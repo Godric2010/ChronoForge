@@ -1,6 +1,6 @@
 pub mod help_dialog;
 
-use crate::input::help_context::KeyBindingHelpContext;
+use crate::input::help_context::{InputMapHelpContext, KeyBindingHelpContext};
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
 use crate::input::HelpProvider;
@@ -16,6 +16,7 @@ pub enum DialogResult<T> {
     None,
     Cancelled,
     Confirmed(T),
+    Help(Vec<InputMapHelpContext>),
 }
 
 #[derive(Copy, Clone)]
@@ -125,7 +126,11 @@ impl<Widget: DialogWidget> Dialog<Widget> {
             Some(action) => match action {
                 DialogActions::Confirm => DialogResult::Confirmed(self.widget.output()),
                 DialogActions::Cancel => DialogResult::Cancelled,
-                DialogActions::Help => DialogResult::None,
+                DialogActions::Help => {
+                    let mut help_contexts = self.widget.general_help();
+                    self.input_map.append_general_help(&mut help_contexts);
+                    DialogResult::Help(help_contexts)
+                }
             },
         }
     }

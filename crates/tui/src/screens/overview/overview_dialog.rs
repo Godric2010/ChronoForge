@@ -1,4 +1,5 @@
 use crate::app_action::AppAction;
+use crate::input::help_context::InputMapHelpContext;
 use crate::screens::dialog::{Dialog, DialogResult};
 use crate::widgets::dialog_widgets::{
     ListWidget, ProjectEditWidget, TaskEditWidget, TimeEntryWidget, YesNoWidget,
@@ -12,6 +13,7 @@ pub enum OverviewDialogResult {
     None,
     Cancelled,
     Confirmed(AppAction),
+    Help(Vec<InputMapHelpContext>),
 }
 
 pub enum OverviewDialog {
@@ -79,6 +81,7 @@ impl OverviewDialog {
                     DialogResult::Confirmed(output) => OverviewDialogResult::Confirmed(
                         AppAction::CreateProject(output.project_name, output.time_limit),
                     ),
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::EditProjectName(dialog, project_id) => {
@@ -89,6 +92,7 @@ impl OverviewDialog {
                     DialogResult::Confirmed(output) => OverviewDialogResult::Confirmed(
                         AppAction::EditProject(*project_id, output.project_name, output.time_limit),
                     ),
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::CreateTask(dialog, project_id) => {
@@ -99,6 +103,7 @@ impl OverviewDialog {
                     DialogResult::Confirmed(output) => OverviewDialogResult::Confirmed(
                         AppAction::CreateTask(output.task_name, output.time_limit, *project_id),
                     ),
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::EditTask(dialog, task_id) => {
@@ -109,6 +114,7 @@ impl OverviewDialog {
                     DialogResult::Confirmed(output) => OverviewDialogResult::Confirmed(
                         AppAction::RenameTask(*task_id, output.task_name, output.time_limit),
                     ),
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::DeleteProject(dialog, project_id) => {
@@ -123,6 +129,7 @@ impl OverviewDialog {
                             OverviewDialogResult::Cancelled
                         }
                     }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::DeleteTask(dialog, task_id) => {
@@ -137,6 +144,7 @@ impl OverviewDialog {
                             OverviewDialogResult::Cancelled
                         }
                     }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::DeleteTimeEntry(dialog, entry_id) => {
@@ -151,6 +159,7 @@ impl OverviewDialog {
                             OverviewDialogResult::Cancelled
                         }
                     }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::AssignTask(dialog, task_id) => {
@@ -167,6 +176,7 @@ impl OverviewDialog {
                             OverviewDialogResult::Cancelled
                         }
                     }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::AssignTimeEntry(dialog, entry_id) => {
@@ -183,6 +193,7 @@ impl OverviewDialog {
                             OverviewDialogResult::Cancelled
                         }
                     }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::CreateTimeEntry(dialog, task_id) => {
@@ -199,6 +210,7 @@ impl OverviewDialog {
                             OverviewDialogResult::Cancelled
                         }
                     }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
             OverviewDialog::EditTimeEntry(dialog, entry_id) => {
@@ -215,6 +227,7 @@ impl OverviewDialog {
                             OverviewDialogResult::Cancelled
                         }
                     }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
         }

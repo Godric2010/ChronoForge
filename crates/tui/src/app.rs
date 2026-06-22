@@ -106,6 +106,7 @@ impl App {
                 DialogResult::Confirmed(_) => {
                     self.error_dialog = None;
                 }
+                DialogResult::Help(_) => {}
             }
             return true;
         }

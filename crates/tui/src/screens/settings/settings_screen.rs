@@ -216,6 +216,10 @@ impl SettingsScreen {
                 self.settings_dialog = None;
                 Some(app_action)
             }
+            SettingsDialogResult::Help(help_context) => {
+                self.help_dialog = Some(HelpDialog::new(help_context, Rect::new(1, 1, 1, 1)));
+                None
+            }
         }
     }
 }
