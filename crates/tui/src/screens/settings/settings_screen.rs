@@ -2,6 +2,7 @@ use crate::app_action::AppAction;
 use crate::input::help_context::KeyBindingHelpContext;
 use crate::input::input_map::InputMap;
 use crate::input::HelpProvider;
+use crate::screens::dialog::help_dialog::HelpDialog;
 use crate::screens::settings::input_actions::*;
 use crate::screens::settings::settings_action::SettingsActionPurpose;
 use crate::screens::settings::settings_dialog::{SettingsDialog, SettingsDialogResult};
@@ -20,6 +21,7 @@ pub struct SettingsScreen {
     sections: Vec<SettingsSection>,
     selection_ref: SelectionRef,
     settings_dialog: Option<SettingsDialog>,
+    help_dialog: Option<HelpDialog>,
     input_map: InputMap<SettingsActions>,
 }
 impl Default for SettingsScreen {
@@ -60,6 +62,7 @@ impl SettingsScreen {
                 item_index: 0,
             },
             settings_dialog: None,
+            help_dialog: None,
             input_map,
         }
     }
@@ -90,9 +93,20 @@ impl SettingsScreen {
         if let Some(dialog) = &mut self.settings_dialog {
             dialog.render(frame, rect);
         }
+        if let Some(help_dialog) = &mut self.help_dialog {
+            help_dialog.render(frame, rect);
+        }
     }
 
     pub fn handle_input(&mut self, key_event: KeyEvent) -> Option<AppAction> {
+        if let Some(help_dialog) = self.help_dialog.as_mut() {
+            let help_shall_close = help_dialog.handle_key(key_event);
+            if help_shall_close {
+                self.help_dialog = None;
+            }
+            return None;
+        }
+
         if let Some(dialog) = &mut self.settings_dialog {
             let dialog_result = dialog.handle_input(key_event);
             return self.interpret_dialog_result(dialog_result);
@@ -120,6 +134,11 @@ impl SettingsScreen {
                 }
                 SettingsActions::Select => {
                     self.select_item();
+                    None
+                }
+                SettingsActions::Help => {
+                    let help_context = self.input_map.general_help();
+                    self.help_dialog = Some(HelpDialog::new(help_context, Rect::new(1, 1, 1, 1)));
                     None
                 }
             }

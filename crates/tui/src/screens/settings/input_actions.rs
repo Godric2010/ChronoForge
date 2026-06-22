@@ -5,6 +5,7 @@ use crossterm::event::{KeyCode, KeyModifiers};
 #[derive(Clone, Copy)]
 pub enum SettingsActions {
     Quit,
+    Help,
     NextItem,
     PrevItem,
     NextSection,
@@ -60,6 +61,14 @@ pub fn create_settings_input_map() -> InputMap<SettingsActions> {
             key_name: "CTRL + c".to_string(),
             key_description: "Quit".to_string(),
             action: SettingsActions::Quit,
+            display_in_footer: true,
+        },
+        KeyBinding {
+            key_code: KeyCode::Char('?'),
+            key_modifier: KeyModifiers::empty(),
+            key_name: "?".to_string(),
+            key_description: "Help".to_string(),
+            action: SettingsActions::Help,
             display_in_footer: true,
         },
     ];

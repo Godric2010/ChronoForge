@@ -40,7 +40,7 @@ pub fn create_general_input_map() -> InputMap<OverviewGeneralActions> {
             display_in_footer: false,
         },
         KeyBinding {
-            key_code: KeyCode::Char('h'),
+            key_code: KeyCode::Char('?'),
             key_modifier: KeyModifiers::empty(),
             key_name: "?".to_string(),
             key_description: "Help".to_string(),
