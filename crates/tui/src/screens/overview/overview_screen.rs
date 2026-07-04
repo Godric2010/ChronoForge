@@ -69,7 +69,7 @@ impl OverviewScreen {
         };
         self.input_map.append_general_help(&mut help_contexts);
 
-        self.help_dialog = Some(HelpDialog::new(help_contexts, Rect::new(1, 1, 1, 1)));
+        self.help_dialog = Some(HelpDialog::new(help_contexts));
     }
 
     pub fn enforce_view_model_update_on_next_tick(&mut self) -> bool {
@@ -147,7 +147,7 @@ impl OverviewScreen {
                     Some(app_action)
                 }
                 OverviewDialogResult::Help(help_context) => {
-                    self.help_dialog = Some(HelpDialog::new(help_context, Rect::new(1, 1, 1, 1)));
+                    self.help_dialog = Some(HelpDialog::new(help_context));
                     None
                 }
             };

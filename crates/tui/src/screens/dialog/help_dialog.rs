@@ -4,9 +4,10 @@ use crate::input::key_binding::KeyBinding;
 use crate::input::HelpProvider;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
-use ratatui::style::{Modifier, Style};
-use ratatui::widgets::{Block, Borders, Clear, Paragraph};
-use ratatui::Frame;
+use ratatui::prelude::Line;
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
+use ratatui::{symbols, Frame};
 
 #[derive(Copy, Clone)]
 enum HelpDialogActions {
@@ -17,16 +18,16 @@ enum HelpDialogActions {
 
 pub struct HelpDialog {
     title: String,
-    input_help_rows: Vec<HelpTextRow>,
+    input_help_rows: Vec<HelpRow>,
     input_map: InputMap<HelpDialogActions>,
     scroll_offset: u16,
     visible_count: u16,
-    draw_rect: Rect,
     footer_text: String,
+    more_indicator_style: Style,
 }
 
 impl HelpDialog {
-    pub fn new(input_helper: Vec<InputMapHelpContext>, draw_rect: Rect) -> Self {
+    pub fn new(input_helper: Vec<InputMapHelpContext>) -> Self {
         let key_bindings = vec![
             KeyBinding {
                 key_code: KeyCode::Esc,
@@ -58,29 +59,27 @@ impl HelpDialog {
 
         let mut input_help_rows = Vec::new();
         input_helper.iter().for_each(|item| {
-            input_help_rows.push(HelpTextRow::new(
-                item.get_input_map_name().to_string(),
-                "".to_string(),
-                true,
-            ));
+            input_help_rows.push(HelpRow::Heading(item.get_input_map_name().to_string()));
 
             item.get_all_helper().iter().for_each(|item| {
-                input_help_rows.push(HelpTextRow::new(
+                input_help_rows.push(HelpRow::Description(
                     item.key_name.clone(),
                     item.description.clone(),
-                    false,
                 ))
-            })
+            });
+            input_help_rows.push(HelpRow::Spacer);
         });
 
         Self {
             title: "Input Help".to_string(),
             input_help_rows,
             input_map,
-            draw_rect,
             scroll_offset: 0,
-            visible_count: 30, //(draw_rect.height - 2).min(input_helper.len() as u16),
+            visible_count: 30,
             footer_text: footer_text.to_string(),
+            more_indicator_style: Style::default()
+                .fg(Color::Rgb(255, 125, 0))
+                .add_modifier(Modifier::ITALIC),
         }
     }
 
@@ -88,42 +87,70 @@ impl HelpDialog {
         let dialog_draw_rect = self.calculate_draw_rect(area);
         frame.render_widget(Clear, dialog_draw_rect);
 
-        let block = Block::new().title(self.title.clone()).borders(Borders::ALL);
+        let block = Block::new()
+            .title(self.title.clone())
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .border_style(Style::default().fg(Color::White));
         let inner = block.inner(dialog_draw_rect);
         frame.render_widget(block, dialog_draw_rect);
 
-        let height = inner.height - 2;
-        let displayable_items = self.input_help_rows.len().min(height as usize);
+        let inner_chunks = Layout::vertical([
+            Constraint::Length(1),                  // spacer
+            Constraint::Length(self.visible_count), // help texts
+            Constraint::Length(1),                  // spacer
+            Constraint::Length(1),                  // separator
+            Constraint::Length(1),                  // footer
+        ])
+        .split(inner);
 
         if self.scroll_offset > 0 {
-            let more_prev_paragraph = Paragraph::new("↑ more");
-            frame.render_widget(
-                more_prev_paragraph,
-                Rect::new(inner.x, inner.y, inner.width, 1),
-            );
+            let more_prev_paragraph = Paragraph::new("↑ more").style(self.more_indicator_style);
+            frame.render_widget(more_prev_paragraph, inner_chunks[0]);
         }
 
-        let mut y_offset = 0;
-        for display_row in &self.input_help_rows {
-            display_row.render(frame, inner.x, inner.y + y_offset, inner.width);
-            y_offset += display_row.height;
-        }
+        self.draw_help_text_rows(frame, inner_chunks[1]);
 
-        // for row_idx in 0..displayable_items {
-        //     let idx = row_idx + self.scroll_offset as usize;
-        //     if idx >= self.input_help_rows.len() {
-        //         break;
-        //     }
-        //     self.input_help_rows[idx].render(frame, inner.x, inner.y + row_idx as u16, inner.width);
-        // }
-
-        if self.scroll_offset as usize + displayable_items < self.input_help_rows.len() {
-            let more_next_paragraph = Paragraph::new("↓ more");
-            frame.render_widget(
-                more_next_paragraph,
-                Rect::new(inner.x, inner.y + inner.height, inner.width, 1),
-            );
+        let top_row_idx = self.scroll_offset as usize + self.visible_count as usize;
+        if top_row_idx < self.input_help_rows.len() {
+            let more_next_paragraph = Paragraph::new("↓ more").style(self.more_indicator_style);
+            frame.render_widget(more_next_paragraph, inner_chunks[2]);
         }
+        self.render_separator(frame, inner_chunks[3]);
+        self.render_help_text(frame, inner_chunks[4]);
+    }
+
+    fn draw_help_text_rows(&self, frame: &mut Frame, area: Rect) {
+        let max_entries = area.height;
+        let mut row_idx = 0;
+        let mut y_pos = area.y;
+        while y_pos < max_entries + area.y {
+            if row_idx >= self.input_help_rows.len() {
+                break;
+            }
+
+            let help_row_idx = row_idx + self.scroll_offset as usize;
+
+            let row_content = &self.input_help_rows[help_row_idx];
+            row_content.render(frame, area.x, y_pos, area.width);
+            y_pos += 1;
+            row_idx += 1;
+        }
+    }
+    fn render_separator(&self, frame: &mut Frame, area: Rect) {
+        let separator = symbols::line::HORIZONTAL.repeat(area.width.saturating_sub(2) as usize);
+        let separator_widget = Paragraph::new(Line::from(separator));
+        let mut rect = area;
+        rect.x += 1;
+        frame.render_widget(separator_widget, rect);
+    }
+
+    fn render_help_text(&self, frame: &mut Frame, area: Rect) {
+        let target_area = Rect::new(area.x + 1, area.y, area.width - 1, 1);
+
+        let help_text = self.footer_text.as_str();
+        let paragraph = Paragraph::new(help_text).centered();
+        frame.render_widget(paragraph, target_area);
     }
     fn calculate_draw_rect(&self, area: Rect) -> Rect {
         let vertical_chunks = Layout::vertical([
@@ -158,7 +185,8 @@ impl HelpDialog {
                     false
                 }
                 HelpDialogActions::ScrollDown => {
-                    if self.scroll_offset + self.visible_count < self.input_help_rows.len() as u16 {
+                    if self.scroll_offset + self.visible_count >= self.input_help_rows.len() as u16
+                    {
                         false
                     } else {
                         self.scroll_offset += 1;
@@ -172,44 +200,36 @@ impl HelpDialog {
     }
 }
 
-struct HelpTextRow {
-    name: String,
-    description: String,
-    is_headline: bool,
-    height: u16,
+enum HelpRow {
+    Heading(String),
+    Description(String, String),
+    Spacer,
 }
 
-impl HelpTextRow {
-    pub fn new(name: String, description: String, is_headline: bool) -> Self {
-        Self {
-            name,
-            description,
-            is_headline,
-            height: if is_headline { 2 } else { 1 },
+impl HelpRow {
+    pub fn render(&self, frame: &mut Frame, x_pos: u16, y_pos: u16, width: u16) {
+        let rect = Rect::new(x_pos, y_pos, width, 1);
+        match self {
+            HelpRow::Heading(heading) => self.render_headline(frame, rect, heading),
+            HelpRow::Description(key_name, description) => {
+                self.render_help_text(frame, rect, key_name, description);
+            }
+            HelpRow::Spacer => {}
         }
     }
 
-    pub fn render(&self, frame: &mut Frame, x_position: u16, y_position: u16, width: u16) {
-        let rect = Rect::new(x_position + 1, y_position, width - 2, self.height);
-        if self.is_headline {
-            self.render_headline(frame, rect)
-        } else {
-            self.render_key_help(frame, rect)
-        }
-    }
-
-    fn render_headline(&self, frame: &mut Frame, rect: Rect) {
-        let paragraph = Paragraph::new(self.name.clone())
+    fn render_headline(&self, frame: &mut Frame, rect: Rect, heading: &str) {
+        let paragraph = Paragraph::new(heading)
             .style(Style::new().add_modifier(Modifier::BOLD | Modifier::UNDERLINED));
-        frame.render_widget(paragraph, Rect::new(rect.x, rect.y + 1, rect.width, 1));
+        frame.render_widget(paragraph, Rect::new(rect.x, rect.y, rect.width, 1));
     }
 
-    fn render_key_help(&self, frame: &mut Frame, rect: Rect) {
+    fn render_help_text(&self, frame: &mut Frame, rect: Rect, key_name: &str, description: &str) {
         let horizontal =
             Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)])
                 .split(rect);
-        let key_paragraph = Paragraph::new(self.name.clone());
-        let desc_paragraph = Paragraph::new(self.description.clone());
+        let key_paragraph = Paragraph::new(key_name);
+        let desc_paragraph = Paragraph::new(description);
 
         frame.render_widget(key_paragraph, horizontal[0]);
         frame.render_widget(desc_paragraph, horizontal[1]);
