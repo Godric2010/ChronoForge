@@ -1,4 +1,5 @@
 use crate::app_context::AppContext;
+use clap::ArgAction;
 use sqlx::types::Uuid;
 
 #[derive(clap::Subcommand)]
@@ -11,7 +12,20 @@ pub enum TaskCommands {
         project_id: String,
     },
     #[command(about = "List all tasks")]
-    List,
+    List {
+        #[arg(long, help = "Include archived tasks", action = ArgAction::SetTrue)]
+        include_archived: bool,
+    },
+    #[command(about = "Archive a task")]
+    Archive {
+        #[arg(help = "The name of the task to archive")]
+        name: String,
+    },
+    #[command(about = "Unarchive a task")]
+    Unarchive {
+        #[arg(help = "The name of the task to unarchive")]
+        name: String,
+    },
     #[command(about = "Delete a task")]
     Delete {
         #[arg(help = "The id of the task to delete")]
@@ -48,12 +62,38 @@ impl TaskCommands {
                 let task = app.task_service.create(name, &project_uuid, None).await?;
                 println!("Created task {} ({})", task.name, task.id);
             }
-            TaskCommands::List => {
-                let tasks = app.task_service.find_all(false).await?;
+            TaskCommands::List { include_archived } => {
+                let tasks = app.task_service.find_all(*include_archived).await?;
                 for task in tasks {
+                    if task.is_archived {
+                        println!("[ARCHIVED] {} - {}", task.name, task.id);
+                    }
                     println!("{} - {}", task.name, task.id);
                 }
             }
+            TaskCommands::Archive { name } => {
+                const DO_NOT_INCLUDE_ARCHIVED: bool = false;
+                let tasks = app.task_service.find_all(DO_NOT_INCLUDE_ARCHIVED).await?;
+                let task = tasks.iter().find(|task| task.name == *name);
+                if let Some(task) = task {
+                    app.task_service.archive_task(task.id).await?;
+                    println!("Archived task {} ({})", task.name, task.id);
+                } else {
+                    println!("Could not find task {}", name);
+                }
+            }
+            TaskCommands::Unarchive { name } => {
+                const INCLUDE_ARCHIVED: bool = true;
+                let tasks = app.task_service.find_all(INCLUDE_ARCHIVED).await?;
+                let task = tasks.iter().find(|task| task.name == *name);
+                if let Some(task) = task {
+                    app.task_service.unarchive_task(task.id).await?;
+                    println!("Unarchived task {} ({})", task.name, task.id);
+                } else {
+                    println!("Could not find task {}", name);
+                }
+            }
+
             TaskCommands::Delete { id } => {
                 let uuid = Uuid::parse_str(id)?;
                 app.task_service.delete(uuid).await?;
