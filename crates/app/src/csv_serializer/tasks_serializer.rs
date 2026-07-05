@@ -67,7 +67,7 @@ impl<'a> TasksSerializer<'a> {
             .delimiter(b';')
             .from_path(file_path)?;
 
-        let tasks = self.task_service.find_all().await?;
+        let tasks = self.task_service.find_all(true).await?;
         for task in tasks {
             let row = TaskCsvRow::from(task);
             writer.serialize(row)?;

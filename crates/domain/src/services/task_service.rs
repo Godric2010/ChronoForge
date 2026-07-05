@@ -31,7 +31,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
 
         self.check_if_project_exists(project).await?;
 
-        let tasks = self.find_all_tasks().await?;
+        let tasks = self.find_all_tasks(true).await?;
         let unique_name = self.create_unique_task_name(task_name, None, *project, &tasks);
 
         let task = Task {
@@ -56,13 +56,13 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         Ok(())
     }
 
-    pub async fn find_all(&self) -> AppResult<Vec<Task>> {
-        let all_tasks = self.find_all_tasks().await?;
+    pub async fn find_all(&self, include_archived: bool) -> AppResult<Vec<Task>> {
+        let all_tasks = self.find_all_tasks(include_archived).await?;
         Ok(all_tasks)
     }
 
     pub async fn find_by_id(&self, task_id: Uuid) -> AppResult<Task> {
-        let tasks = self.find_all_tasks().await?;
+        let tasks = self.find_all_tasks(true).await?;
         let task = tasks.into_iter().find(|task| task.id == task_id);
         if let Some(task) = task {
             return Ok(task);
@@ -70,8 +70,12 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         Err(AppError::TaskNotFound)
     }
 
-    pub async fn find_by_project_id(&self, project_id: Uuid) -> AppResult<Vec<Task>> {
-        let tasks = self.find_all_tasks().await?;
+    pub async fn find_by_project_id(
+        &self,
+        project_id: Uuid,
+        include_archived: bool,
+    ) -> AppResult<Vec<Task>> {
+        let tasks = self.find_all_tasks(include_archived).await?;
         let mut matching_tasks = Vec::new();
         for task in tasks {
             if task.project_id == project_id {
@@ -81,8 +85,61 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         Ok(matching_tasks)
     }
 
+    pub async fn archive_task(&self, task_id: Uuid) -> AppResult<()> {
+        let task = self.task_repository.find_by_id(&task_id).await;
+        if task.is_err() {
+            return Err(AppError::Storage(format!(
+                "Task with id {} not found",
+                task_id
+            )));
+        }
+        let task = task.unwrap();
+
+        if task.is_none() {
+            return Err(AppError::TaskNotFound);
+        }
+        let mut task = task.unwrap();
+        task.is_archived = true;
+
+        let result = self.task_repository.update(task).await;
+        if result.is_err() {
+            return Err(AppError::Storage(format!(
+                "Could not update task {} to be archived",
+                task_id
+            )));
+        }
+        Ok(())
+    }
+
+    pub async fn unarchive_task(&self, task_id: Uuid) -> AppResult<()> {
+        let task = self.task_repository.find_by_id(&task_id).await;
+        if task.is_err() {
+            return Err(AppError::Storage(format!(
+                "Task with id {} not found",
+                task_id
+            )));
+        }
+
+        let task = task.unwrap();
+        if task.is_none() {
+            return Err(AppError::TaskNotFound);
+        }
+
+        let mut task = task.unwrap();
+        task.is_archived = false;
+
+        let result = self.task_repository.update(task).await;
+        if result.is_err() {
+            return Err(AppError::Storage(format!(
+                "Could not update task {} to be archived",
+                task_id
+            )));
+        }
+        Ok(())
+    }
+
     pub async fn edit_task_name(&self, task_id: Uuid, new_name: &str) -> AppResult<Task> {
-        let tasks = self.find_all_tasks().await?;
+        let tasks = self.find_all_tasks(true).await?;
         let task = self.find_by_id(task_id).await?;
 
         let unique_name =
@@ -136,7 +193,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
     pub async fn assign_to_project(&self, task_id: Uuid, project: Uuid) -> AppResult<Task> {
         self.check_if_project_exists(&project).await?;
 
-        let tasks = self.find_all_tasks().await?;
+        let tasks = self.find_all_tasks(true).await?;
         let task = self.find_by_id(task_id).await?;
 
         let unique_name = self.create_unique_task_name(&task.name, Some(&task.id), project, &tasks);
@@ -206,8 +263,8 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
         }
         Ok(())
     }
-    async fn find_all_tasks(&self) -> AppResult<Vec<Task>> {
-        let tasks = self.task_repository.find_all().await;
+    async fn find_all_tasks(&self, include_archived: bool) -> AppResult<Vec<Task>> {
+        let tasks = self.task_repository.find_all(include_archived).await;
         if tasks.is_err() {
             return Err(AppError::Storage("Find all tasks failed!".to_string()));
         }
@@ -381,6 +438,94 @@ mod task_service_tests {
     }
 
     #[tokio::test]
+    async fn archive_and_unarchive_task() {
+        let context = Context::new();
+        let project_id_a = create_project_and_get_id(&context, "Project01")
+            .await
+            .unwrap();
+        context
+            .task_service
+            .create("Task", &project_id_a, None)
+            .await
+            .unwrap();
+        let task_02 = context
+            .task_service
+            .create("Task02", &project_id_a, None)
+            .await
+            .unwrap();
+
+        let result = context.task_service.archive_task(task_02.id).await;
+        assert!(result.is_ok());
+
+        let all_tasks_including_archived = context.task_service.find_all(true).await.unwrap();
+        let all_tasks_excluding_archived = context.task_service.find_all(false).await.unwrap();
+        assert_eq!(all_tasks_including_archived.len(), 2);
+        assert_eq!(all_tasks_excluding_archived.len(), 1);
+
+        let result = context.task_service.unarchive_task(task_02.id).await;
+        assert!(result.is_ok());
+
+        let all_tasks_including_archived = context.task_service.find_all(true).await.unwrap();
+        let all_tasks_excluding_archived = context.task_service.find_all(false).await.unwrap();
+        assert_eq!(
+            all_tasks_including_archived.len(),
+            all_tasks_excluding_archived.len()
+        );
+    }
+
+    #[tokio::test]
+    async fn archive_same_task_multiple_times() {
+        let context = Context::new();
+        let project_id_a = create_project_and_get_id(&context, "Project01")
+            .await
+            .unwrap();
+        context
+            .task_service
+            .create("Task", &project_id_a, None)
+            .await
+            .unwrap();
+        let task_02 = context
+            .task_service
+            .create("Task02", &project_id_a, None)
+            .await
+            .unwrap();
+
+        let result = context.task_service.archive_task(task_02.id).await;
+        assert!(result.is_ok());
+
+        let result = context.task_service.archive_task(task_02.id).await;
+        assert!(result.is_ok());
+
+        let all_tasks_including_archived = context.task_service.find_all(true).await.unwrap();
+        let all_tasks_excluding_archived = context.task_service.find_all(false).await.unwrap();
+        assert_eq!(all_tasks_including_archived.len(), 2);
+        assert_eq!(all_tasks_excluding_archived.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn unarchive_task_that_is_already_unarchived() {
+        let context = Context::new();
+        let project_id_a = create_project_and_get_id(&context, "Project01")
+            .await
+            .unwrap();
+        let task = context
+            .task_service
+            .create("Task", &project_id_a, None)
+            .await
+            .unwrap();
+
+        let result = context.task_service.unarchive_task(task.id).await;
+        assert!(result.is_ok());
+
+        let all_tasks_including_archived = context.task_service.find_all(true).await.unwrap();
+        let all_tasks_excluding_archived = context.task_service.find_all(false).await.unwrap();
+        assert_eq!(
+            all_tasks_including_archived.len(),
+            all_tasks_excluding_archived.len()
+        );
+    }
+
+    #[tokio::test]
     async fn find_all_tasks() {
         let context = Context::new();
         let project_id = create_project_and_get_id(&context, "Project01").await;
@@ -413,7 +558,7 @@ mod task_service_tests {
             .await
             .unwrap();
 
-        let all_tasks = context.task_service.find_all().await;
+        let all_tasks = context.task_service.find_all(true).await;
         assert!(all_tasks.is_ok());
         let all_tasks = all_tasks.unwrap();
         assert_eq!(all_tasks.len(), 5);
@@ -481,12 +626,18 @@ mod task_service_tests {
             .await
             .unwrap();
 
-        let tasks_of_project_a = context.task_service.find_by_project_id(project_id_a).await;
+        let tasks_of_project_a = context
+            .task_service
+            .find_by_project_id(project_id_a, true)
+            .await;
         assert!(tasks_of_project_a.is_ok());
         let tasks_of_project_a = tasks_of_project_a.unwrap();
         assert_eq!(tasks_of_project_a.len(), 2);
 
-        let tasks_of_project_b = context.task_service.find_by_project_id(project_id_b).await;
+        let tasks_of_project_b = context
+            .task_service
+            .find_by_project_id(project_id_b, true)
+            .await;
         assert!(tasks_of_project_b.is_ok());
         let tasks_of_project_b = tasks_of_project_b.unwrap();
         assert_eq!(tasks_of_project_b.len(), 1);

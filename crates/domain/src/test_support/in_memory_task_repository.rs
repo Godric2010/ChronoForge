@@ -60,18 +60,39 @@ impl TaskRepository for InMemoryTaskRepository {
         Ok(task.cloned())
     }
 
-    async fn find_by_project_id(&self, project_id: Uuid) -> anyhow::Result<Vec<Task>> {
+    async fn find_by_project_id(
+        &self,
+        project_id: Uuid,
+        include_archived: bool,
+    ) -> anyhow::Result<Vec<Task>> {
         let tasks = self.tasks.lock().unwrap();
+        if include_archived {
+            return Ok(tasks
+                .iter()
+                .filter(|t| t.project_id == project_id)
+                .cloned()
+                .collect());
+        }
+
         Ok(tasks
             .iter()
-            .filter(|t| t.project_id == project_id)
+            .filter(|t| t.project_id == project_id && !t.is_archived)
             .cloned()
             .collect())
     }
 
-    async fn find_all(&self) -> anyhow::Result<Vec<Task>> {
+    async fn find_all(&self, include_archived: bool) -> anyhow::Result<Vec<Task>> {
         let tasks = self.tasks.lock().unwrap();
-        Ok(tasks.clone())
+        if include_archived {
+            return Ok(tasks.clone());
+        }
+        let mut unarchived_tasks = Vec::new();
+        tasks.iter().for_each(|t| {
+            if !t.is_archived {
+                unarchived_tasks.push(t.clone());
+            }
+        });
+        Ok(unarchived_tasks)
     }
 
     async fn delete(&self, id: Uuid) -> anyhow::Result<()> {

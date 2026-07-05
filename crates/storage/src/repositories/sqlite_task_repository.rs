@@ -29,7 +29,7 @@ impl TaskRepository for SQLiteTaskRepository {
         .bind(task.project_id.to_string())
         .bind(&task.name)
         .bind(task.time_limit)
-        .bind(task.is_archived)
+        .bind(if task.is_archived {1} else {0})
         .bind(task.created_at.to_rfc3339())
         .bind(task.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -55,7 +55,7 @@ impl TaskRepository for SQLiteTaskRepository {
         .bind(task.project_id.to_string())
         .bind(&task.name)
         .bind(task.time_limit)
-        .bind(task.is_archived)
+        .bind(if task.is_archived {1} else {0})
         .bind(task.created_at.to_rfc3339())
         .bind(task.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -74,7 +74,7 @@ impl TaskRepository for SQLiteTaskRepository {
         .bind(&task.name)
         .bind(task.project_id.to_string())
         .bind(task.time_limit)
-        .bind(task.is_archived)
+        .bind(if task.is_archived {1} else {0})
         .bind(task.created_at.to_rfc3339())
         .bind(task.updated_at.to_rfc3339())
         .bind(task.id.to_string())
@@ -103,16 +103,21 @@ impl TaskRepository for SQLiteTaskRepository {
         Ok(Some(row.parse()?))
     }
 
-    async fn find_by_project_id(&self, project_id: Uuid) -> anyhow::Result<Vec<Task>> {
+    async fn find_by_project_id(
+        &self,
+        project_id: Uuid,
+        include_archived: bool,
+    ) -> anyhow::Result<Vec<Task>> {
         let rows = sqlx::query_as::<_, TaskRow>(
             r#"
                      SELECT id, project_id, name, time_limit, is_archived, created_at, updated_at
                      FROM tasks
-                     WHERE project_id = ?
+                     WHERE project_id = ?1 AND (?2 = 1 OR is_archived = 0)
                      ORDER BY name
                      "#,
         )
         .bind(project_id.to_string())
+        .bind(if include_archived { 1 } else { 0 })
         .fetch_all(&self.pool)
         .await?;
 
@@ -123,14 +128,16 @@ impl TaskRepository for SQLiteTaskRepository {
         Ok(tasks)
     }
 
-    async fn find_all(&self) -> anyhow::Result<Vec<Task>> {
+    async fn find_all(&self, include_archived: bool) -> anyhow::Result<Vec<Task>> {
         let rows = sqlx::query_as::<_, TaskRow>(
             r#"
                 SELECT id, project_id, name, time_limit, is_archived, created_at, updated_at
                 FROM tasks
+                WHERE (?1 = 1 OR is_archived = 0)
                 ORDER BY name
                 "#,
         )
+        .bind(if include_archived { 1 } else { 0 })
         .fetch_all(&self.pool)
         .await?;
 
@@ -161,7 +168,7 @@ struct TaskRow {
     project_id: String,
     name: String,
     time_limit: u32,
-    is_archived: bool,
+    is_archived: i32,
     created_at: String,
     updated_at: String,
 }
@@ -177,7 +184,7 @@ impl TaskRow {
             } else {
                 None
             },
-            is_archived: self.is_archived,
+            is_archived: self.is_archived != 0,
             created_at: DateTime::parse_from_rfc3339(&self.created_at)?.with_timezone(&Utc),
             updated_at: DateTime::parse_from_rfc3339(&self.updated_at)?.with_timezone(&Utc),
         })

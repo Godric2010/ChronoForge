@@ -202,7 +202,10 @@ mod task_repository_tests {
         };
         repository.create(task_c.clone()).await.unwrap();
 
-        let result = repository.find_by_project_id(project_one_id).await.unwrap();
+        let result = repository
+            .find_by_project_id(project_one_id, true)
+            .await
+            .unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].id, task_a.id);
         assert_eq!(result[0].project_id, project_one_id);
@@ -250,7 +253,7 @@ mod task_repository_tests {
         };
         repository.create(task_c.clone()).await.unwrap();
 
-        let result = repository.find_all().await.unwrap();
+        let result = repository.find_all(true).await.unwrap();
         assert_eq!(result.len(), 3);
     }
 

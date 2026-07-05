@@ -49,7 +49,7 @@ impl TaskCommands {
                 println!("Created task {} ({})", task.name, task.id);
             }
             TaskCommands::List => {
-                let tasks = app.task_service.find_all().await?;
+                let tasks = app.task_service.find_all(false).await?;
                 for task in tasks {
                     println!("{} - {}", task.name, task.id);
                 }

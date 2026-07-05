@@ -34,7 +34,11 @@ impl<'a> AppViewContext<'a> {
         &self,
         project: &Project,
     ) -> anyhow::Result<ProjectViewModel> {
-        let tasks = self.app.task_service.find_by_project_id(project.id).await?;
+        let tasks = self
+            .app
+            .task_service
+            .find_by_project_id(project.id, false)
+            .await?;
 
         let mut project_time_minutes = 0;
         let mut task_vms = Vec::<TaskViewModel>::new();
