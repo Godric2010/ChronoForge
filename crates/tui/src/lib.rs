@@ -74,4 +74,6 @@ pub trait TuiBackend {
 
     async fn export_csv(&self, path_str: String) -> anyhow::Result<()>;
     async fn import_csv(&self, path_str: String) -> anyhow::Result<()>;
+    async fn set_show_archived_projects(&self, show_archived_projects: bool) -> anyhow::Result<()>;
+    async fn set_show_archived_tasks(&self, show_archived_tasks: bool) -> anyhow::Result<()>;
 }

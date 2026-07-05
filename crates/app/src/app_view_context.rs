@@ -269,4 +269,20 @@ impl<'a> TuiBackend for AppViewContext<'a> {
             })?;
         Ok(())
     }
+
+    async fn set_show_archived_projects(&self, show_archived_projects: bool) -> anyhow::Result<()> {
+        self.app
+            .user_settings_service
+            .set_show_archived_projects(show_archived_projects)
+            .await?;
+        Ok(())
+    }
+
+    async fn set_show_archived_tasks(&self, show_archived_tasks: bool) -> anyhow::Result<()> {
+        self.app
+            .user_settings_service
+            .set_show_archived_tasks(show_archived_tasks)
+            .await?;
+        Ok(())
+    }
 }
