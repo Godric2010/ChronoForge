@@ -20,7 +20,7 @@ impl<'a> AppViewContext<'a> {
     }
 
     async fn create_overview_view_model(&self) -> anyhow::Result<OverviewViewModel> {
-        let all_projects = self.app.project_service.find_all().await?;
+        let all_projects = self.app.project_service.find_all(false).await?;
         let mut projects = Vec::<ProjectViewModel>::new();
         for project in all_projects {
             let project_vm = self.create_project_view_model(&project).await?;

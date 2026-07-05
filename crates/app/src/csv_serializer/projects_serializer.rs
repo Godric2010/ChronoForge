@@ -62,7 +62,7 @@ impl<'a> ProjectsSerializer<'a> {
             .delimiter(b';')
             .from_path(file_path)?;
 
-        let projects = self.project_service.find_all().await?;
+        let projects = self.project_service.find_all(true).await?;
         for project in projects {
             let row = ProjectCsvRow::from(project);
             writer.serialize(row)?;

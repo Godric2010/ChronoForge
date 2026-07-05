@@ -61,9 +61,20 @@ impl ProjectRepository for InMemoryProjectRepository {
         Ok(result.cloned())
     }
 
-    async fn find_all(&self) -> anyhow::Result<Vec<Project>> {
+    async fn find_all(&self, include_archived: bool) -> anyhow::Result<Vec<Project>> {
         let projects = self.projects.lock().unwrap();
-        Ok(projects.clone())
+        if include_archived {
+            return Ok(projects.clone());
+        }
+
+        let mut unarchived = Vec::new();
+        projects.iter().for_each(|p| {
+            if !p.is_archived {
+                unarchived.push(p.clone());
+            }
+        });
+
+        Ok(unarchived)
     }
 
     async fn delete(&self, id: Uuid) -> anyhow::Result<()> {

@@ -24,7 +24,7 @@ impl<P: ProjectRepository> ProjectService<P> {
             return Err(AppError::EmptyName);
         }
 
-        let projects = self.find_all().await?;
+        let projects = self.find_all(true).await?;
         let unique_project_name = self.create_unique_project_name(&project_name, None, &projects);
 
         let project = Project {
@@ -56,7 +56,7 @@ impl<P: ProjectRepository> ProjectService<P> {
             return Err(ProjectNotFound);
         }
 
-        let projects = self.find_all().await?;
+        let projects = self.find_all(true).await?;
         let project = projects.iter().find(|p| p.id == project_id);
         if let Some(project) = project {
             Ok(project.clone())
@@ -65,8 +65,8 @@ impl<P: ProjectRepository> ProjectService<P> {
         }
     }
 
-    pub async fn find_all(&self) -> AppResult<Vec<Project>> {
-        let projects = self.project_repository.find_all().await;
+    pub async fn find_all(&self, include_archived: bool) -> AppResult<Vec<Project>> {
+        let projects = self.project_repository.find_all(include_archived).await;
 
         if let Err(error) = projects {
             return Err(AppError::Storage(
@@ -75,6 +75,31 @@ impl<P: ProjectRepository> ProjectService<P> {
         }
         let all_projects = projects.unwrap();
         Ok(all_projects)
+    }
+
+    pub async fn archive_project(&self, project_id: Uuid) -> AppResult<()> {
+        let mut project = self.find_by_id(project_id).await?;
+        project.is_archived = true;
+
+        let result = self.project_repository.update(project).await;
+        if let Err(error) = result {
+            return Err(AppError::Storage(
+                "Unable to archive project: ".to_string() + &error.to_string(),
+            ));
+        }
+        Ok(())
+    }
+
+    pub async fn unarchive_project(&self, project_id: Uuid) -> AppResult<()> {
+        let mut project = self.find_by_id(project_id).await?;
+        project.is_archived = false;
+        let result = self.project_repository.update(project).await;
+        if let Err(error) = result {
+            return Err(AppError::Storage(
+                "Unable to unarchive project: ".to_string() + &error.to_string(),
+            ));
+        }
+        Ok(())
     }
 
     pub async fn edit_name(&self, project_id: Uuid, name: &str) -> AppResult<Project> {
@@ -87,7 +112,7 @@ impl<P: ProjectRepository> ProjectService<P> {
             return Err(AppError::EmptyName);
         }
 
-        let all_projects = self.find_all().await?;
+        let all_projects = self.find_all(true).await?;
         let unique_project_name =
             self.create_unique_project_name(name, Some(&project_id), &all_projects);
 
@@ -190,7 +215,7 @@ mod project_service_tests {
         let result = service.create("MyProject".to_string(), Some(60)).await;
         assert!(result.is_ok());
 
-        let all_projects_result = service.find_all().await;
+        let all_projects_result = service.find_all(false).await;
         assert!(all_projects_result.is_ok());
 
         let all_projects = all_projects_result.unwrap();
@@ -210,7 +235,7 @@ mod project_service_tests {
         let result = service.create("MyProject".to_string(), None).await;
         assert!(result.is_ok());
 
-        let all_projects_result = service.find_all().await;
+        let all_projects_result = service.find_all(false).await;
         assert!(all_projects_result.is_ok());
 
         let all_projects = all_projects_result.unwrap();
@@ -240,11 +265,77 @@ mod project_service_tests {
         service.create("Jane Doe".to_string(), None).await.unwrap();
         service.create("Jane Doe".to_string(), None).await.unwrap();
 
-        let projects = service.find_all().await.unwrap();
+        let projects = service.find_all(false).await.unwrap();
         assert_eq!(projects.len(), 3);
         assert_eq!(projects.first().unwrap().name, "Jane Doe");
         assert_eq!(projects.get(1).unwrap().name, "Jane Doe(1)");
         assert_eq!(projects.get(2).unwrap().name, "Jane Doe(2)");
+    }
+
+    #[tokio::test]
+    async fn archive_and_unarchive_project() {
+        let project_repo = InMemoryProjectRepository::new();
+        let service = ProjectService::new(project_repo);
+
+        service.create("Jane Doe".to_string(), None).await.unwrap();
+        let project_02 = service.create("John Doe".to_string(), None).await.unwrap();
+        let result = service.archive_project(project_02.id).await;
+        assert!(result.is_ok());
+
+        let all_projects_without_archived = service.find_all(false).await.unwrap();
+        let all_projects_including_archived = service.find_all(true).await.unwrap();
+        assert_eq!(all_projects_including_archived.len(), 2);
+        assert_eq!(all_projects_without_archived.len(), 1);
+
+        let result = service.unarchive_project(project_02.id).await;
+        assert!(result.is_ok());
+        let all_projects_without_archived = service.find_all(false).await.unwrap();
+        let all_projects_including_archived = service.find_all(true).await.unwrap();
+        assert_eq!(
+            all_projects_without_archived.len(),
+            all_projects_including_archived.len()
+        );
+    }
+
+    #[tokio::test]
+    async fn archive_project_that_already_has_been_archived() {
+        let project_repo = InMemoryProjectRepository::new();
+        let service = ProjectService::new(project_repo);
+
+        service.create("Jane Doe".to_string(), None).await.unwrap();
+        let project_02 = service.create("John Doe".to_string(), None).await.unwrap();
+        // Archive the project for real
+        let result = service.archive_project(project_02.id).await;
+        assert!(result.is_ok());
+
+        // Archive the project that already has been archived again
+        let result = service.archive_project(project_02.id).await;
+        assert!(result.is_ok());
+
+        let all_projects_without_archived = service.find_all(false).await.unwrap();
+        let all_projects_including_archived = service.find_all(true).await.unwrap();
+        assert_eq!(all_projects_including_archived.len(), 2);
+        assert_eq!(all_projects_without_archived.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn unarchive_project_that_is_already_unarchived() {
+        let project_repo = InMemoryProjectRepository::new();
+        let service = ProjectService::new(project_repo);
+
+        service.create("Jane Doe".to_string(), None).await.unwrap();
+        let project_02 = service.create("John Doe".to_string(), None).await.unwrap();
+
+        // Unarchive the project that never was archived in the first place
+        let result = service.unarchive_project(project_02.id).await;
+        assert!(result.is_ok());
+
+        let all_projects_without_archived = service.find_all(false).await.unwrap();
+        let all_projects_including_archived = service.find_all(true).await.unwrap();
+        assert_eq!(
+            all_projects_without_archived.len(),
+            all_projects_including_archived.len()
+        );
     }
 
     #[tokio::test]
@@ -254,7 +345,7 @@ mod project_service_tests {
         let result = service.create("Jane Doe".to_string(), None).await;
         assert!(result.is_ok());
 
-        let projects = service.find_all().await.unwrap();
+        let projects = service.find_all(false).await.unwrap();
         assert_eq!(projects.len(), 1);
         let project_id = projects.first().unwrap().id;
 
@@ -292,7 +383,7 @@ mod project_service_tests {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string(), None).await.unwrap();
-        let projects = service.find_all().await.unwrap();
+        let projects = service.find_all(false).await.unwrap();
         let project = projects.first().unwrap();
 
         let result = service.edit_name(project.id, "Batman").await;
@@ -318,7 +409,7 @@ mod project_service_tests {
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string(), None).await.unwrap();
         service.create("MyProject".to_string(), None).await.unwrap();
-        let projects = service.find_all().await.unwrap();
+        let projects = service.find_all(false).await.unwrap();
         let project = projects.first().unwrap();
 
         let result = service.edit_name(project.id, "MyProject").await;
@@ -332,7 +423,7 @@ mod project_service_tests {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string(), None).await.unwrap();
-        let projects = service.find_all().await.unwrap();
+        let projects = service.find_all(false).await.unwrap();
         let project = projects.first().unwrap();
         let result = service.edit_name(project.id, "").await;
         assert!(result.is_err());
@@ -347,7 +438,7 @@ mod project_service_tests {
             .create("Time Limit Project".to_string(), None)
             .await
             .unwrap();
-        let projects = service.find_all().await.unwrap();
+        let projects = service.find_all(false).await.unwrap();
         let project = projects.first().unwrap();
 
         let result = service.edit_time_limit(project.id, Some(60)).await;
@@ -364,7 +455,7 @@ mod project_service_tests {
             .create("Time Limit Project".to_string(), Some(60))
             .await
             .unwrap();
-        let projects = service.find_all().await.unwrap();
+        let projects = service.find_all(false).await.unwrap();
         let project = projects.first().unwrap();
 
         let result = service.edit_time_limit(project.id, None).await;
@@ -388,7 +479,7 @@ mod project_service_tests {
         let project_repo = InMemoryProjectRepository::new();
         let service = ProjectService::new(project_repo);
         service.create("Jane Doe".to_string(), None).await.unwrap();
-        let projects = service.find_all().await.unwrap();
+        let projects = service.find_all(false).await.unwrap();
         let project = projects.first().unwrap();
 
         let result = service.delete(project.id).await;

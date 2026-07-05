@@ -40,7 +40,7 @@ impl ProjectCommand {
                 println!("Created project {} ({})", project.name, project.id);
             }
             ProjectCommand::List => {
-                let projects = app.project_service.find_all().await?;
+                let projects = app.project_service.find_all(false).await?;
                 for project in projects {
                     println!("{} - {}", project.name, project.id);
                 }

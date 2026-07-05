@@ -143,7 +143,7 @@ async fn find_all_should_return_all_projects() {
     repository.create(project_b.clone()).await.unwrap();
     repository.create(project_c.clone()).await.unwrap();
 
-    let stored_project = repository.find_all().await.unwrap();
+    let stored_project = repository.find_all(false).await.unwrap();
     assert_eq!(stored_project.len(), 3);
     // The order here is by design. The database is supposed to sort the entries by name.
     // Therefore, projects need to be assigned manually to their respected original.
@@ -158,7 +158,7 @@ async fn find_all_should_return_all_projects() {
 #[tokio::test]
 async fn find_all_should_return_empty_list_when_no_projects_exist() {
     let repository = setup_tests().await;
-    let stored_project = repository.find_all().await.unwrap();
+    let stored_project = repository.find_all(false).await.unwrap();
     assert_eq!(stored_project.len(), 0);
 }
 

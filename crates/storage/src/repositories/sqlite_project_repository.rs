@@ -21,7 +21,7 @@ struct ProjectRow {
     id: String,
     name: String,
     time_limit: u32,
-    is_archived: bool,
+    is_archived: i32,
     created_at: String,
     updated_at: String,
 }
@@ -36,7 +36,7 @@ impl ProjectRow {
             } else {
                 None
             },
-            is_archived: self.is_archived,
+            is_archived: self.is_archived != 0,
             created_at: DateTime::parse_from_rfc3339(&self.created_at)?.with_timezone(&Utc),
             updated_at: DateTime::parse_from_rfc3339(&self.updated_at)?.with_timezone(&Utc),
         })
@@ -55,7 +55,7 @@ impl ProjectRepository for SQLiteProjectRepository {
         .bind(project.id.to_string())
         .bind(&project.name)
         .bind(project.time_limit)
-        .bind(project.is_archived)
+        .bind(if project.is_archived { 1 } else { 0 })
         .bind(project.created_at.to_rfc3339())
         .bind(project.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -79,7 +79,7 @@ impl ProjectRepository for SQLiteProjectRepository {
         .bind(project.id.to_string())
         .bind(&project.name)
         .bind(project.time_limit)
-        .bind(project.is_archived)
+        .bind(if project.is_archived { 1 } else { 0 })
         .bind(project.created_at.to_rfc3339())
         .bind(project.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -91,12 +91,13 @@ impl ProjectRepository for SQLiteProjectRepository {
         sqlx::query(
             r#"
                     UPDATE projects
-                    SET name = ?, time_limit = ?, updated_at = ?
+                    SET name = ?, time_limit = ?, is_archived = ?, updated_at = ?
                     WHERE id = ?
                   "#,
         )
         .bind(&project.name)
         .bind(project.time_limit)
+        .bind(if project.is_archived { 1 } else { 0 })
         .bind(project.updated_at.to_rfc3339())
         .bind(project.id.to_string())
         .execute(&self.pool)
@@ -123,14 +124,16 @@ impl ProjectRepository for SQLiteProjectRepository {
         Ok(Some(row.parse()?))
     }
 
-    async fn find_all(&self) -> anyhow::Result<Vec<Project>> {
+    async fn find_all(&self, include_archived: bool) -> anyhow::Result<Vec<Project>> {
         let rows = sqlx::query_as::<_, ProjectRow>(
             r#"
             SELECT id, name, time_limit, is_archived, created_at, updated_at
             FROM projects
+            WHERE (?1 = 1 OR is_archived = 0)
             ORDER BY name
             "#,
         )
+        .bind(if include_archived { 1 } else { 0 })
         .fetch_all(&self.pool)
         .await?;
 
