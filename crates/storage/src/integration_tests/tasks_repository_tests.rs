@@ -25,6 +25,7 @@ mod task_repository_tests {
             project_id,
             name: "TestTask01".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -47,6 +48,7 @@ mod task_repository_tests {
             project_id,
             name: "Task 01".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
             updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         };
@@ -79,6 +81,7 @@ mod task_repository_tests {
             project_id,
             name: "My new Task".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
             updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         };
@@ -112,6 +115,7 @@ mod task_repository_tests {
             project_id: project_one_id,
             name: "TestTask01".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -125,6 +129,7 @@ mod task_repository_tests {
             project_id: task.project_id,
             name: "TaskyMcTask".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -141,6 +146,7 @@ mod task_repository_tests {
             id: updated_name_task.id,
             project_id: project_two_id,
             name: updated_name_task.name,
+            is_archived: false,
             time_limit: updated_name_task.time_limit,
             created_at: updated_name_task.created_at,
             updated_at: Utc::now(),
@@ -168,6 +174,7 @@ mod task_repository_tests {
             project_id: project_one_id,
             name: "TestTask01".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -178,6 +185,7 @@ mod task_repository_tests {
             project_id: project_one_id,
             name: "TestTask02".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -188,6 +196,7 @@ mod task_repository_tests {
             project_id: project_two_id,
             name: "TestTask01".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -213,6 +222,7 @@ mod task_repository_tests {
             project_id: project_a,
             name: "TestTask01".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -223,6 +233,7 @@ mod task_repository_tests {
             project_id: project_a,
             name: "TestTask02".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -233,6 +244,7 @@ mod task_repository_tests {
             project_id: project_b,
             name: "TestTask01".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -253,6 +265,7 @@ mod task_repository_tests {
             project_id: project_a,
             name: "TestTask01".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -263,6 +276,7 @@ mod task_repository_tests {
             project_id: project_a,
             name: "TestTask02".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -273,6 +287,7 @@ mod task_repository_tests {
             project_id: project_b,
             name: "TestTask01".to_string(),
             time_limit: None,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };

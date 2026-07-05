@@ -39,6 +39,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             name: unique_name,
             project_id: *project,
             time_limit,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -92,6 +93,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             project_id: task.project_id,
             name: unique_name,
             time_limit: task.time_limit,
+            is_archived: task.is_archived,
             created_at: task.created_at,
             updated_at: Utc::now(),
         };
@@ -116,6 +118,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             project_id: task.project_id,
             name: task.name,
             time_limit,
+            is_archived: task.is_archived,
             created_at: task.created_at,
             updated_at: Utc::now(),
         };
@@ -143,6 +146,7 @@ impl<T: TaskRepository, P: ProjectRepository> TaskService<T, P> {
             project_id: project,
             name: unique_name,
             time_limit: task.time_limit,
+            is_archived: task.is_archived,
             created_at: task.created_at,
             updated_at: Utc::now(),
         };

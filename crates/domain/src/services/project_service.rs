@@ -31,6 +31,7 @@ impl<P: ProjectRepository> ProjectService<P> {
             id: Uuid::new_v4(),
             name: unique_project_name,
             time_limit,
+            is_archived: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -93,6 +94,7 @@ impl<P: ProjectRepository> ProjectService<P> {
         let edited_project = Project {
             id: project_id,
             name: unique_project_name,
+            is_archived: project.is_archived,
             time_limit: project.time_limit,
             created_at: project.created_at,
             updated_at: Utc::now(),
@@ -123,6 +125,7 @@ impl<P: ProjectRepository> ProjectService<P> {
             id: project_id,
             name: project.name,
             time_limit,
+            is_archived: project.is_archived,
             created_at: project.created_at,
             updated_at: Utc::now(),
         };

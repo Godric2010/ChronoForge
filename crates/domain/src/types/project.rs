@@ -6,6 +6,7 @@ pub struct Project {
     pub id: Uuid,
     pub name: String,
     pub time_limit: Option<u32>,
+    pub is_archived: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

@@ -14,6 +14,8 @@ pub struct TaskCsvRow {
     pub name: String,
     #[serde(default)]
     pub time_limit: Option<u32>,
+    #[serde(default)]
+    pub is_archived: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -25,6 +27,7 @@ impl From<Task> for TaskCsvRow {
             project_id: value.project_id.to_string(),
             name: value.name,
             time_limit: value.time_limit,
+            is_archived: value.is_archived,
             created_at: value.created_at.to_rfc3339(),
             updated_at: value.updated_at.to_rfc3339(),
         }
@@ -39,6 +42,7 @@ impl TryFrom<TaskCsvRow> for Task {
             project_id: Uuid::parse_str(&value.project_id)?,
             name: value.name,
             time_limit: value.time_limit,
+            is_archived: value.is_archived,
             created_at: DateTime::parse_from_rfc3339(&value.created_at)?.with_timezone(&Utc),
             updated_at: DateTime::parse_from_rfc3339(&value.updated_at)?.with_timezone(&Utc),
         })

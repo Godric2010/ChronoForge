@@ -18,6 +18,7 @@ async fn create_project_should_store_it() {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
         time_limit: None,
+        is_archived: false,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -38,6 +39,7 @@ async fn upsert_project_with_newer_version() {
         id: Uuid::new_v4(),
         name: "Chrono Forge".to_string(),
         time_limit: None,
+        is_archived: false,
         created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
     };
@@ -66,6 +68,7 @@ async fn upsert_project_with_older_version() {
         id: Uuid::new_v4(),
         name: "Maze_Game".to_string(),
         time_limit: None,
+        is_archived: false,
         created_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
         updated_at: Utc.with_ymd_and_hms(2026, 5, 27, 21, 5, 0).unwrap(),
     };
@@ -96,6 +99,7 @@ async fn find_by_id_should_return_none_when_project_doesnt_exist() {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
         time_limit: None,
+        is_archived: false,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -113,6 +117,7 @@ async fn find_all_should_return_all_projects() {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
         time_limit: None,
+        is_archived: false,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -121,6 +126,7 @@ async fn find_all_should_return_all_projects() {
         id: Uuid::new_v4(),
         name: "MazeGame".to_string(),
         time_limit: None,
+        is_archived: false,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -129,6 +135,7 @@ async fn find_all_should_return_all_projects() {
         id: Uuid::new_v4(),
         name: "JAREP".to_string(),
         time_limit: None,
+        is_archived: false,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -162,6 +169,7 @@ async fn update_should_update_existing_project() {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
         time_limit: None,
+        is_archived: false,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -171,6 +179,7 @@ async fn update_should_update_existing_project() {
     let updated_project = Project {
         id: project_original.id,
         name: "ZeitSchmiede".to_string(),
+        is_archived: false,
         time_limit: project_original.time_limit,
         created_at: project_original.created_at,
         updated_at: Utc::now(),
@@ -190,6 +199,7 @@ async fn delete_should_delete_existing_project() {
         id: Uuid::new_v4(),
         name: "ChronoForge".to_string(),
         time_limit: None,
+        is_archived: false,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
