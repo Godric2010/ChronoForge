@@ -2,10 +2,10 @@ use crate::screens::dialog::Dialog;
 use crate::screens::settings::settings_dialog::SettingsDialog;
 use crate::widgets::dialog_widgets::PathWidget;
 
-#[allow(dead_code)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SettingsActionTarget {
-    DemoToggle,
-    DemoValue,
+    ShowArchivedProjects,
+    ShowArchivedTasks,
 }
 
 pub enum SettingsActionPurpose {

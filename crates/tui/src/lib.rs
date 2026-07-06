@@ -1,5 +1,6 @@
 use crate::screens::overview::OverviewViewModel;
 use chrono::{DateTime, Utc};
+use domain::types::UserSettings;
 use uuid::Uuid;
 
 mod app;
@@ -24,6 +25,7 @@ pub async fn run<B: TuiBackend>(backend: &B) -> anyhow::Result<()> {
 #[async_trait::async_trait]
 pub trait TuiBackend {
     async fn load_projects(&self) -> anyhow::Result<OverviewViewModel>;
+    async fn load_settings(&self) -> anyhow::Result<UserSettings>;
     async fn create_project(
         &self,
         project_name: &str,

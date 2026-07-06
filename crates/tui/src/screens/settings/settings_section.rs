@@ -1,4 +1,5 @@
-use crate::screens::settings::settings_item::{SettingsItem, SettingsItemKind};
+use crate::screens::settings::settings_items::settings_item::SettingsItem;
+use domain::types::UserSettings;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::widgets::Paragraph;
@@ -28,9 +29,10 @@ impl SettingsSection {
         self.items.len()
     }
 
-    pub fn get_item_kind(&self, index: usize) -> Option<&SettingsItemKind> {
+    pub fn get_item(&self, index: usize) -> Option<&SettingsItem> {
         if index < self.items.len() {
-            return Some(self.items[index].get_kind());
+            let item = &self.items[index];
+            return Some(item);
         }
         None
     }
@@ -66,6 +68,12 @@ impl SettingsSection {
             };
 
             item.render(frame, item_rect, selected);
+        }
+    }
+
+    pub fn update(&mut self, settings: &UserSettings) {
+        for item in &mut self.items {
+            item.update(settings);
         }
     }
 }

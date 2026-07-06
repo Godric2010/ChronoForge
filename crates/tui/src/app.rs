@@ -123,7 +123,11 @@ impl App {
                     .set_view_model(view_model.clone(), timer_active);
                 Ok(())
             }
-            ScreenType::Settings => Ok(()),
+            ScreenType::Settings => {
+                let settings = backend.load_settings().await?;
+                self.screens.settings.update_view(settings);
+                Ok(())
+            }
         }
     }
 
@@ -185,6 +189,7 @@ impl App {
                 let screen = &mut self.screens.settings;
                 screen.render(frame, screen_area);
                 help_text = screen.get_footer_help_text();
+                self.enforce_vm_update_on_next_tick = screen.enforce_view_update_on_next_tick()
             }
         }
 
@@ -307,6 +312,12 @@ impl App {
             }
             AppAction::ExportCsv(path_str) => {
                 backend.export_csv(path_str).await?;
+            }
+            AppAction::ToggleShowArchivedProjects(show_archived) => {
+                backend.set_show_archived_projects(show_archived).await?;
+            }
+            AppAction::ToggleShowArchivedTasks(show_archived) => {
+                backend.set_show_archived_tasks(show_archived).await?;
             }
         }
         Ok(())

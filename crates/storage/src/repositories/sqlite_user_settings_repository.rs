@@ -1,5 +1,5 @@
+use crate::repositories::time_parse_helper::parse_db_datetime;
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use domain::repositories::user_settings_repository::UserSettingsRepository;
 use domain::types::UserSettings;
 use sqlx::SqlitePool;
@@ -87,9 +87,9 @@ struct UserSettingsRow {
     tuesday_target_minutes: i32,
     wednesday_target_minutes: i32,
     thursday_target_minutes: i32,
-    fridays_target_minutes: i32,
-    saturdays_target_minutes: i32,
-    sundays_target_minutes: i32,
+    friday_target_minutes: i32,
+    saturday_target_minutes: i32,
+    sunday_target_minutes: i32,
     show_archived_projects: i32,
     show_archived_tasks: i32,
     created_at: String,
@@ -103,13 +103,13 @@ impl UserSettingsRow {
             tuesday_target_minutes: self.tuesday_target_minutes as u32,
             wednesday_target_minutes: self.wednesday_target_minutes as u32,
             thursday_target_minutes: self.thursday_target_minutes as u32,
-            friday_target_minutes: self.fridays_target_minutes as u32,
-            saturday_target_minutes: self.saturdays_target_minutes as u32,
-            sunday_target_minutes: self.sundays_target_minutes as u32,
+            friday_target_minutes: self.friday_target_minutes as u32,
+            saturday_target_minutes: self.saturday_target_minutes as u32,
+            sunday_target_minutes: self.sunday_target_minutes as u32,
             show_archived_projects: self.show_archived_projects != 0,
             show_archived_tasks: self.show_archived_tasks != 0,
-            created_at: DateTime::parse_from_rfc3339(&self.created_at)?.with_timezone(&Utc),
-            updated_at: DateTime::parse_from_rfc3339(&self.updated_at)?.with_timezone(&Utc),
+            created_at: parse_db_datetime(&self.created_at)?,
+            updated_at: parse_db_datetime(&self.updated_at)?,
         })
     }
 }

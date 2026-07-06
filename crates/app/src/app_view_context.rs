@@ -1,7 +1,7 @@
 use crate::app_context::AppContext;
 use crate::app_error::AppError;
 use crate::csv_serializer::CsvSerializer;
-use domain::types::{Project, Task, TimeEntry};
+use domain::types::{Project, Task, TimeEntry, UserSettings};
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::types::Uuid;
 use tui::screens::overview::overview_view_model::{
@@ -100,6 +100,10 @@ impl<'a> AppViewContext<'a> {
 impl<'a> TuiBackend for AppViewContext<'a> {
     async fn load_projects(&self) -> anyhow::Result<OverviewViewModel> {
         self.create_overview_view_model().await
+    }
+
+    async fn load_settings(&self) -> anyhow::Result<UserSettings> {
+        self.app.user_settings_service.get_settings().await
     }
 
     async fn create_project(

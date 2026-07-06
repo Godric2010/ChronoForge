@@ -28,4 +28,6 @@ pub enum AppAction {
     // Settings
     ImportCsv(String),
     ExportCsv(String),
+    ToggleShowArchivedProjects(bool),
+    ToggleShowArchivedTasks(bool),
 }
