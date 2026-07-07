@@ -46,6 +46,7 @@ impl ProjectsView {
                     p.tasks.len(),
                     p.total_project_time_min,
                     p.time_limit,
+                    p.is_archived,
                 )
             })
             .collect();

@@ -11,6 +11,7 @@ pub struct ProjectViewModel {
     pub project: Project,
     pub total_project_time_min: u32,
     pub time_limit: Option<u32>,
+    pub is_archived: bool,
     pub tasks: Vec<TaskViewModel>,
 }
 #[derive(Clone)]
@@ -18,6 +19,7 @@ pub struct TaskViewModel {
     pub task: Task,
     pub total_task_time_min: u32,
     pub time_limit: Option<u32>,
+    pub is_archived: bool,
     pub time_entries: Vec<TimeEntryViewModel>,
 }
 

@@ -20,10 +20,17 @@ impl<'a> AppViewContext<'a> {
     }
 
     async fn create_overview_view_model(&self) -> anyhow::Result<OverviewViewModel> {
-        let all_projects = self.app.project_service.find_all(false).await?;
+        let settings = self.app.user_settings_service.get_settings().await?;
+        let all_projects = self
+            .app
+            .project_service
+            .find_all(settings.show_archived_projects)
+            .await?;
         let mut projects = Vec::<ProjectViewModel>::new();
         for project in all_projects {
-            let project_vm = self.create_project_view_model(&project).await?;
+            let project_vm = self
+                .create_project_view_model(&project, settings.show_archived_tasks)
+                .await?;
             projects.push(project_vm);
         }
 
@@ -33,11 +40,12 @@ impl<'a> AppViewContext<'a> {
     async fn create_project_view_model(
         &self,
         project: &Project,
+        show_archived_tasks: bool,
     ) -> anyhow::Result<ProjectViewModel> {
         let tasks = self
             .app
             .task_service
-            .find_by_project_id(project.id, false)
+            .find_by_project_id(project.id, show_archived_tasks)
             .await?;
 
         let mut project_time_minutes = 0;
@@ -52,6 +60,7 @@ impl<'a> AppViewContext<'a> {
             project: project.clone(),
             total_project_time_min: project_time_minutes,
             time_limit: project.time_limit,
+            is_archived: project.is_archived,
             tasks: task_vms,
         })
     }
@@ -80,6 +89,7 @@ impl<'a> AppViewContext<'a> {
             task: task.clone(),
             total_task_time_min: task_time_minutes,
             time_limit: task.time_limit,
+            is_archived: task.is_archived,
             time_entries: sorted_entries,
         })
     }

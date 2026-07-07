@@ -11,7 +11,10 @@ pub struct ProjectCard {
     pub total_tasks: usize,
     pub total_minutes: u32,
     pub time_limit: Option<u32>,
+    pub is_archived: bool,
     is_selected: bool,
+    normal_style: Style,
+    archived_style: Style,
 }
 
 impl ProjectCard {
@@ -20,13 +23,24 @@ impl ProjectCard {
         total_tasks: usize,
         total_minutes: u32,
         time_limit: Option<u32>,
+        is_archived: bool,
     ) -> Self {
+        let normal_style = Style::default()
+            .add_modifier(Modifier::BOLD)
+            .fg(Color::White);
+        let archived_style = Style::default()
+            .add_modifier(Modifier::BOLD | Modifier::ITALIC)
+            .fg(Color::Gray);
+
         Self {
             project_name,
             total_tasks,
             total_minutes,
             time_limit,
+            is_archived,
             is_selected: false,
+            normal_style,
+            archived_style,
         }
     }
     fn render_project_info(&self, area: Rect, frame: &mut Frame) {
@@ -38,11 +52,17 @@ impl ProjectCard {
         ])
         .split(area);
 
-        let name_paragraph = Paragraph::new(self.project_name.clone()).style(
-            Style::default()
-                .add_modifier(Modifier::BOLD)
-                .fg(Color::White),
-        );
+        let style: Style;
+        let name_text: String;
+        if self.is_archived {
+            style = self.archived_style;
+            name_text = format!("{} (archived)", self.project_name);
+        } else {
+            style = self.normal_style;
+            name_text = self.project_name.clone();
+        }
+
+        let name_paragraph = Paragraph::new(name_text).style(style);
         frame.render_widget(name_paragraph, info_chunks[1]);
 
         let task_paragraph = Paragraph::new(format!("Tasks: {}", self.total_tasks));
