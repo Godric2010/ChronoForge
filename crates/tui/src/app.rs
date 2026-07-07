@@ -237,6 +237,7 @@ impl App {
     fn handle_event(&mut self, event: KeyEvent) -> Option<AppAction> {
         if let Some(new_screen) = self.tab_widget.handle_input(event) {
             self.current_screen = new_screen;
+            self.enforce_vm_update_on_next_tick = true;
             return None;
         }
 

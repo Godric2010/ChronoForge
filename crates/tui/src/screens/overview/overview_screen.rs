@@ -89,6 +89,10 @@ impl OverviewScreen {
         self.tasks_view.set_data_from_view_model(&self.view_model);
         self.time_entry_view
             .set_data_from_view_model(&self.view_model);
+
+        if let Some(selected_project) = self.projects_view.get_selected_project() {
+            self.tasks_view.update_task_list(selected_project.id);
+        }
     }
 
     pub fn render(&mut self, frame: &mut Frame, area: Rect) {

@@ -10,16 +10,34 @@ pub struct TaskCard {
     pub task_name: String,
     pub total_minutes: u32,
     pub time_limit: Option<u32>,
+    pub is_archived: bool,
     is_selected: bool,
+    normal_style: Style,
+    archived_style: Style,
 }
 
 impl TaskCard {
-    pub fn new(task_name: String, total_minutes: u32, time_limit: Option<u32>) -> Self {
+    pub fn new(
+        task_name: String,
+        total_minutes: u32,
+        time_limit: Option<u32>,
+        is_archived: bool,
+    ) -> Self {
+        let normal_style = Style::default()
+            .add_modifier(Modifier::BOLD)
+            .fg(Color::White);
+        let archived_style = Style::default()
+            .add_modifier(Modifier::BOLD | Modifier::ITALIC)
+            .fg(Color::Gray);
+
         Self {
             task_name,
             total_minutes,
             time_limit,
+            is_archived,
             is_selected: false,
+            normal_style,
+            archived_style,
         }
     }
     fn render_task_info(&self, area: Rect, frame: &mut Frame) {
@@ -30,11 +48,16 @@ impl TaskCard {
         ])
         .split(area);
 
-        let name_paragraph = Paragraph::new(self.task_name.clone()).style(
-            Style::default()
-                .add_modifier(Modifier::BOLD)
-                .fg(Color::White),
-        );
+        let name: String;
+        let style: Style;
+        if self.is_archived {
+            name = format!("[Done] {}", self.task_name);
+            style = self.archived_style;
+        } else {
+            name = self.task_name.clone();
+            style = self.normal_style;
+        }
+        let name_paragraph = Paragraph::new(name).style(style);
         frame.render_widget(name_paragraph, info_chunks[1]);
     }
 }

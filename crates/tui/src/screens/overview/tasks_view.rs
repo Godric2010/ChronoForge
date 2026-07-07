@@ -65,6 +65,10 @@ impl TasksView {
             }
         }
 
+        self.update_task_list(selected_project)
+    }
+
+    pub fn update_task_list(&mut self, selected_project: Uuid) {
         self.selected_project = Some(selected_project);
         let selected_tasks = self.model.tasks.get(&selected_project);
         if selected_tasks.is_none() {
@@ -74,7 +78,12 @@ impl TasksView {
         let task_cards: Vec<TaskCard> = selected_tasks
             .iter()
             .map(|(task, total_time)| {
-                TaskCard::new(task.name.clone(), *total_time, task.time_limit)
+                TaskCard::new(
+                    task.name.clone(),
+                    *total_time,
+                    task.time_limit,
+                    task.is_archived,
+                )
             })
             .collect::<Vec<TaskCard>>();
         self.task_list_widget.update_list_items(task_cards, 7);
