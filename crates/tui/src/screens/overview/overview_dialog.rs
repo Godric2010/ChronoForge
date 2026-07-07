@@ -20,11 +20,15 @@ pub enum OverviewDialog {
     CreateProject(Dialog<ProjectEditWidget>),
     EditProjectName(Dialog<ProjectEditWidget>, Uuid),
     DeleteProject(Dialog<YesNoWidget>, Uuid),
+    ArchiveProject(Dialog<YesNoWidget>, Uuid),
+    UnarchiveProject(Dialog<YesNoWidget>, Uuid),
 
     CreateTask(Dialog<TaskEditWidget>, Uuid),
     EditTask(Dialog<TaskEditWidget>, Uuid),
     AssignTask(Dialog<ListWidget>, Uuid),
     DeleteTask(Dialog<YesNoWidget>, Uuid),
+    ArchiveTask(Dialog<YesNoWidget>, Uuid),
+    UnarchiveTask(Dialog<YesNoWidget>, Uuid),
 
     CreateTimeEntry(Dialog<TimeEntryWidget>, Uuid),
     EditTimeEntry(Dialog<TimeEntryWidget>, Uuid),
@@ -66,6 +70,18 @@ impl OverviewDialog {
                 dialog.render(frame, area);
             }
             OverviewDialog::EditTimeEntry(dialog, _) => {
+                dialog.render(frame, area);
+            }
+            OverviewDialog::ArchiveProject(dialog, _) => {
+                dialog.render(frame, area);
+            }
+            OverviewDialog::ArchiveTask(dialog, _) => {
+                dialog.render(frame, area);
+            }
+            OverviewDialog::UnarchiveProject(dialog, _) => {
+                dialog.render(frame, area);
+            }
+            OverviewDialog::UnarchiveTask(dialog, _) => {
                 dialog.render(frame, area);
             }
         }
@@ -222,6 +238,72 @@ impl OverviewDialog {
                         if let Some(times) = times {
                             OverviewDialogResult::Confirmed(AppAction::EditTimeEntry(
                                 *entry_id, times.0, times.1,
+                            ))
+                        } else {
+                            OverviewDialogResult::Cancelled
+                        }
+                    }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
+                }
+            }
+            OverviewDialog::ArchiveProject(dialog, project_id) => {
+                let result = dialog.handle_input(event);
+                match result {
+                    DialogResult::None => OverviewDialogResult::None,
+                    DialogResult::Cancelled => OverviewDialogResult::Cancelled,
+                    DialogResult::Confirmed(archive_project) => {
+                        if archive_project {
+                            OverviewDialogResult::Confirmed(AppAction::ArchiveProject(
+                                project_id.clone(),
+                            ))
+                        } else {
+                            OverviewDialogResult::Cancelled
+                        }
+                    }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
+                }
+            }
+            OverviewDialog::ArchiveTask(dialog, task_id) => {
+                let result = dialog.handle_input(event);
+                match result {
+                    DialogResult::None => OverviewDialogResult::None,
+                    DialogResult::Cancelled => OverviewDialogResult::Cancelled,
+                    DialogResult::Confirmed(archive_task) => {
+                        if archive_task {
+                            OverviewDialogResult::Confirmed(AppAction::ArchiveTask(task_id.clone()))
+                        } else {
+                            OverviewDialogResult::Cancelled
+                        }
+                    }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
+                }
+            }
+            OverviewDialog::UnarchiveProject(dialog, project_id) => {
+                let result = dialog.handle_input(event);
+                match result {
+                    DialogResult::None => OverviewDialogResult::None,
+                    DialogResult::Cancelled => OverviewDialogResult::Cancelled,
+                    DialogResult::Confirmed(unarchive_project) => {
+                        if unarchive_project {
+                            OverviewDialogResult::Confirmed(AppAction::UnarchiveProject(
+                                project_id.clone(),
+                            ))
+                        } else {
+                            OverviewDialogResult::Cancelled
+                        }
+                    }
+                    DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
+                }
+            }
+            OverviewDialog::UnarchiveTask(dialog, task_id) => {
+                let result = dialog.handle_input(event);
+                match result {
+                    DialogResult::None => OverviewDialogResult::None,
+                    DialogResult::Cancelled => OverviewDialogResult::Cancelled,
+                    DialogResult::Confirmed(unarchive_task) => {
+                        if unarchive_task {
+                            OverviewDialogResult::Confirmed(AppAction::UnarchiveTask(
+                                task_id.clone(),
                             ))
                         } else {
                             OverviewDialogResult::Cancelled

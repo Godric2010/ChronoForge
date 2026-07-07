@@ -19,6 +19,7 @@ pub(crate) enum ProjectsModeActions {
     New,
     Edit,
     Delete,
+    Archive,
 }
 
 #[derive(Clone, Copy)]
@@ -27,6 +28,7 @@ pub(crate) enum TasksModeActions {
     Edit,
     AssignToProject,
     Delete,
+    Archive,
 }
 
 #[derive(Clone, Copy)]

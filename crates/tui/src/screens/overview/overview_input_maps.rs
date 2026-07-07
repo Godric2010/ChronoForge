@@ -77,6 +77,14 @@ pub fn create_project_mode_input_map() -> InputMap<ProjectsModeActions> {
             action: ProjectsModeActions::Delete,
             display_in_footer: false,
         },
+        KeyBinding {
+            key_code: KeyCode::Char('a'),
+            key_modifier: KeyModifiers::CONTROL,
+            key_name: "CTRL + a".to_string(),
+            key_description: "Archive/Unarchive project".to_string(),
+            action: ProjectsModeActions::Archive,
+            display_in_footer: false,
+        },
     ];
     InputMap::new("Project Mode", key_bindings)
 }
@@ -112,6 +120,14 @@ pub fn create_task_mode_input_map() -> InputMap<TasksModeActions> {
             key_name: "a".to_string(),
             key_description: "Assign task to project".to_string(),
             action: TasksModeActions::AssignToProject,
+            display_in_footer: false,
+        },
+        KeyBinding {
+            key_code: KeyCode::Char('a'),
+            key_modifier: KeyModifiers::CONTROL,
+            key_name: "CTRL + a".to_string(),
+            key_description: "Mark task as done / not done".to_string(),
+            action: TasksModeActions::Archive,
             display_in_footer: false,
         },
     ];

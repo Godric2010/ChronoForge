@@ -69,6 +69,11 @@ pub trait TuiBackend {
     async fn assign_time_entry(&self, entry_id: Uuid, task_id: Uuid) -> anyhow::Result<()>;
     async fn delete_time_entry(&self, entry_id: Uuid) -> anyhow::Result<()>;
 
+    async fn archive_project(&self, project_id: Uuid) -> anyhow::Result<()>;
+    async fn archive_task(&self, task_id: Uuid) -> anyhow::Result<()>;
+    async fn unarchive_project(&self, project_id: Uuid) -> anyhow::Result<()>;
+    async fn unarchive_task(&self, task_id: Uuid) -> anyhow::Result<()>;
+
     async fn get_active_time(&self) -> anyhow::Result<Option<u32>>;
 
     async fn start_timer(&self, task_id: Uuid) -> anyhow::Result<()>;

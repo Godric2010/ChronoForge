@@ -226,6 +226,29 @@ impl<'a> TuiBackend for AppViewContext<'a> {
         Ok(())
     }
 
+    async fn archive_project(&self, project_id: Uuid) -> anyhow::Result<()> {
+        self.app.project_service.archive_project(project_id).await?;
+        Ok(())
+    }
+
+    async fn archive_task(&self, task_id: Uuid) -> anyhow::Result<()> {
+        self.app.task_service.archive_task(task_id).await?;
+        Ok(())
+    }
+
+    async fn unarchive_project(&self, project_id: Uuid) -> anyhow::Result<()> {
+        self.app
+            .project_service
+            .unarchive_project(project_id)
+            .await?;
+        Ok(())
+    }
+
+    async fn unarchive_task(&self, task_id: Uuid) -> anyhow::Result<()> {
+        self.app.task_service.unarchive_task(task_id).await?;
+        Ok(())
+    }
+
     async fn get_active_time(&self) -> anyhow::Result<Option<u32>> {
         let active_time = self
             .app

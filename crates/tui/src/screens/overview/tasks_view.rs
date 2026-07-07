@@ -113,9 +113,10 @@ impl TasksView {
         if let Some(action) = action {
             return match action {
                 TasksModeActions::New => Some(self.open_new_task_dialog(selected_project)),
-                TasksModeActions::Edit => self.open_edit_project_dialog(),
+                TasksModeActions::Edit => self.open_edit_task_dialog(),
                 TasksModeActions::Delete => self.open_delete_task_dialog(),
                 TasksModeActions::AssignToProject => self.open_assign_to_project_dialog(),
+                TasksModeActions::Archive => self.open_archive_task_dialog(),
             };
         }
         self.task_list_widget.handle_event(key);
@@ -128,7 +129,7 @@ impl TasksView {
         OverviewDialog::CreateTask(dialog, project_id)
     }
 
-    fn open_edit_project_dialog(&mut self) -> Option<OverviewDialog> {
+    fn open_edit_task_dialog(&mut self) -> Option<OverviewDialog> {
         if let Some(task) = &self.get_selected_task() {
             let widget = TaskEditWidget::new(task);
             let dialog = Dialog::new("Edit the task", widget);
@@ -146,6 +147,26 @@ impl TasksView {
             );
 
             return Some(OverviewDialog::DeleteTask(dialog, task.id));
+        }
+        None
+    }
+
+    fn open_archive_task_dialog(&mut self) -> Option<OverviewDialog> {
+        if let Some(task) = &self.get_selected_task() {
+            let widget = YesNoWidget::new();
+            if task.is_archived {
+                let dialog = Dialog::new(
+                    format!("Mark task \"{}\" as not done?", task.name).as_str(),
+                    widget,
+                );
+                return Some(OverviewDialog::UnarchiveTask(dialog, task.id));
+            } else {
+                let dialog = Dialog::new(
+                    format!("Mark task \"{}\" as done?", task.name).as_str(),
+                    widget,
+                );
+                return Some(OverviewDialog::ArchiveTask(dialog, task.id));
+            }
         }
         None
     }

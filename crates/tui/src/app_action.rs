@@ -8,12 +8,16 @@ pub enum AppAction {
     CreateProject(String, Option<u32>),
     EditProject(Uuid, String, Option<u32>),
     DeleteProject(Uuid),
+    ArchiveProject(Uuid),
+    UnarchiveProject(Uuid),
 
     // Tasks
     CreateTask(String, Option<u32>, Uuid),
     RenameTask(Uuid, String, Option<u32>),
     AssignTask(Uuid, Uuid),
     DeleteTask(Uuid),
+    ArchiveTask(Uuid),
+    UnarchiveTask(Uuid),
 
     // Time Entries
     CreateTimeEntry(Uuid, DateTime<Utc>, DateTime<Utc>),

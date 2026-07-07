@@ -320,6 +320,18 @@ impl App {
             AppAction::ToggleShowArchivedTasks(show_archived) => {
                 backend.set_show_archived_tasks(show_archived).await?;
             }
+            AppAction::ArchiveProject(project_id) => {
+                backend.archive_project(project_id).await?;
+            }
+            AppAction::UnarchiveProject(project_id) => {
+                backend.unarchive_project(project_id).await?;
+            }
+            AppAction::ArchiveTask(task_id) => {
+                backend.archive_task(task_id).await?;
+            }
+            AppAction::UnarchiveTask(task_id) => {
+                backend.unarchive_task(task_id).await?;
+            }
         }
         Ok(())
     }

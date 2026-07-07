@@ -76,6 +76,7 @@ impl ProjectsView {
                 ProjectsModeActions::New => Some(self.open_new_project_dialog()),
                 ProjectsModeActions::Edit => self.open_edit_project_dialog(),
                 ProjectsModeActions::Delete => self.open_delete_project_dialog(),
+                ProjectsModeActions::Archive => self.open_archive_project_dialog(),
             };
         }
         self.projects_list_widget.handle_event(key);
@@ -106,6 +107,26 @@ impl ProjectsView {
             );
 
             return Some(OverviewDialog::DeleteProject(dialog, project.id));
+        }
+        None
+    }
+
+    fn open_archive_project_dialog(&mut self) -> Option<OverviewDialog> {
+        if let Some(project) = &self.get_selected_project() {
+            let widget = YesNoWidget::new();
+            if project.is_archived {
+                let dialog = Dialog::new(
+                    format!("Unarchive project \"{}\"?", project.name).as_str(),
+                    widget,
+                );
+                return Some(OverviewDialog::UnarchiveProject(dialog, project.id));
+            } else {
+                let dialog = Dialog::new(
+                    format!("Archive project \"{}\"?", project.name).as_str(),
+                    widget,
+                );
+                return Some(OverviewDialog::ArchiveProject(dialog, project.id));
+            }
         }
         None
     }
