@@ -253,9 +253,7 @@ impl OverviewDialog {
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(archive_project) => {
                         if archive_project {
-                            OverviewDialogResult::Confirmed(AppAction::ArchiveProject(
-                                project_id.clone(),
-                            ))
+                            OverviewDialogResult::Confirmed(AppAction::ArchiveProject(*project_id))
                         } else {
                             OverviewDialogResult::Cancelled
                         }
@@ -270,7 +268,7 @@ impl OverviewDialog {
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(archive_task) => {
                         if archive_task {
-                            OverviewDialogResult::Confirmed(AppAction::ArchiveTask(task_id.clone()))
+                            OverviewDialogResult::Confirmed(AppAction::ArchiveTask(*task_id))
                         } else {
                             OverviewDialogResult::Cancelled
                         }
@@ -286,7 +284,7 @@ impl OverviewDialog {
                     DialogResult::Confirmed(unarchive_project) => {
                         if unarchive_project {
                             OverviewDialogResult::Confirmed(AppAction::UnarchiveProject(
-                                project_id.clone(),
+                                *project_id,
                             ))
                         } else {
                             OverviewDialogResult::Cancelled
@@ -302,9 +300,7 @@ impl OverviewDialog {
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(unarchive_task) => {
                         if unarchive_task {
-                            OverviewDialogResult::Confirmed(AppAction::UnarchiveTask(
-                                task_id.clone(),
-                            ))
+                            OverviewDialogResult::Confirmed(AppAction::UnarchiveTask(*task_id))
                         } else {
                             OverviewDialogResult::Cancelled
                         }
