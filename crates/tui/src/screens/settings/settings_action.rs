@@ -10,13 +10,13 @@ pub enum ToggleActionTarget {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TimeTargetAction {
-    MondayWorkTarget,
-    TuesdayWorkTarget,
-    WednesdayWorkTarget,
-    ThursdayWorkTarget,
-    FridayWorkTarget,
-    SaturdayWorkTarget,
-    SundayWorkTarget,
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    Sunday,
 }
 
 pub enum SettingsActionPurpose {

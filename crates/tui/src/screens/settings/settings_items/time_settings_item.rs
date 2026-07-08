@@ -47,44 +47,44 @@ impl TimeSettingsItem {
 
     pub fn update(&mut self, settings: &UserSettings) {
         self.value = match self.target {
-            TimeTargetAction::MondayWorkTarget => settings.monday_target_minutes,
-            TimeTargetAction::TuesdayWorkTarget => settings.tuesday_target_minutes,
-            TimeTargetAction::WednesdayWorkTarget => settings.wednesday_target_minutes,
-            TimeTargetAction::ThursdayWorkTarget => settings.thursday_target_minutes,
-            TimeTargetAction::FridayWorkTarget => settings.friday_target_minutes,
-            TimeTargetAction::SaturdayWorkTarget => settings.saturday_target_minutes,
-            TimeTargetAction::SundayWorkTarget => settings.sunday_target_minutes,
+            TimeTargetAction::Monday => settings.monday_target_minutes,
+            TimeTargetAction::Tuesday => settings.tuesday_target_minutes,
+            TimeTargetAction::Wednesday => settings.wednesday_target_minutes,
+            TimeTargetAction::Thursday => settings.thursday_target_minutes,
+            TimeTargetAction::Friday => settings.friday_target_minutes,
+            TimeTargetAction::Saturday => settings.saturday_target_minutes,
+            TimeTargetAction::Sunday => settings.sunday_target_minutes,
         }
     }
 
     pub fn execute_action(&self) -> SettingsDialog {
         let widget = TimeWidget::new(self.value);
         match self.target {
-            TimeTargetAction::MondayWorkTarget => {
+            TimeTargetAction::Monday => {
                 let dialog = Dialog::new("Set Monday Work Target", widget);
                 SettingsDialog::SetMondayWorkTarget(dialog)
             }
-            TimeTargetAction::TuesdayWorkTarget => {
+            TimeTargetAction::Tuesday => {
                 let dialog = Dialog::new("Set Tuesday Work Target", widget);
                 SettingsDialog::SetTuesdayWorkTarget(dialog)
             }
-            TimeTargetAction::WednesdayWorkTarget => {
+            TimeTargetAction::Wednesday => {
                 let dialog = Dialog::new("Set Wednesday Work Target", widget);
                 SettingsDialog::SetWednesdayWorkTarget(dialog)
             }
-            TimeTargetAction::ThursdayWorkTarget => {
+            TimeTargetAction::Thursday => {
                 let dialog = Dialog::new("Set Thrusday Work Target", widget);
                 SettingsDialog::SetThursdayWorkTarget(dialog)
             }
-            TimeTargetAction::FridayWorkTarget => {
+            TimeTargetAction::Friday => {
                 let dialog = Dialog::new("Set Friday Work Target", widget);
                 SettingsDialog::SetFridayWorkTarget(dialog)
             }
-            TimeTargetAction::SaturdayWorkTarget => {
+            TimeTargetAction::Saturday => {
                 let dialog = Dialog::new("Set Saturday Work Target", widget);
                 SettingsDialog::SetSaturdayWorkTarget(dialog)
             }
-            TimeTargetAction::SundayWorkTarget => {
+            TimeTargetAction::Sunday => {
                 let dialog = Dialog::new("Set Sunday Work Target", widget);
                 SettingsDialog::SetSundayWorkTarget(dialog)
             }
