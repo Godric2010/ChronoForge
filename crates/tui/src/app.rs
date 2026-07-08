@@ -7,6 +7,7 @@ use crate::widgets::active_timer::ActiveTimer;
 use crate::widgets::dialog_widgets::error_widget::ErrorWidget;
 use crate::widgets::tab_widget::TabWidget;
 use crate::TuiBackend;
+use chrono::Weekday;
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Alignment, Constraint, Layout, Rect};
@@ -331,6 +332,41 @@ impl App {
             }
             AppAction::UnarchiveTask(task_id) => {
                 backend.unarchive_task(task_id).await?;
+            }
+            AppAction::SetMondayWorkTarget(target_time) => {
+                backend
+                    .set_workday_work_targets(target_time, Weekday::Mon)
+                    .await?;
+            }
+            AppAction::SetTuesdayWorkTarget(target_time) => {
+                backend
+                    .set_workday_work_targets(target_time, Weekday::Tue)
+                    .await?;
+            }
+            AppAction::SetWednesdayWorkTarget(target_time) => {
+                backend
+                    .set_workday_work_targets(target_time, Weekday::Wed)
+                    .await?;
+            }
+            AppAction::SetThursdayWorkTarget(target_time) => {
+                backend
+                    .set_workday_work_targets(target_time, Weekday::Thu)
+                    .await?;
+            }
+            AppAction::SetFridayWorkTarget(target_time) => {
+                backend
+                    .set_workday_work_targets(target_time, Weekday::Fri)
+                    .await?;
+            }
+            AppAction::SetSaturdayWorkTarget(target_time) => {
+                backend
+                    .set_workday_work_targets(target_time, Weekday::Sat)
+                    .await?;
+            }
+            AppAction::SetSundayWorkTarget(target_time) => {
+                backend
+                    .set_workday_work_targets(target_time, Weekday::Sun)
+                    .await?;
             }
         }
         Ok(())

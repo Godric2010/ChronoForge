@@ -3,9 +3,20 @@ use crate::screens::settings::settings_dialog::SettingsDialog;
 use crate::widgets::dialog_widgets::PathWidget;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SettingsActionTarget {
+pub enum ToggleActionTarget {
     ShowArchivedProjects,
     ShowArchivedTasks,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TimeTargetAction {
+    MondayWorkTarget,
+    TuesdayWorkTarget,
+    WednesdayWorkTarget,
+    ThursdayWorkTarget,
+    FridayWorkTarget,
+    SaturdayWorkTarget,
+    SundayWorkTarget,
 }
 
 pub enum SettingsActionPurpose {

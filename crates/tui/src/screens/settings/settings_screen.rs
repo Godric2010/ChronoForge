@@ -4,7 +4,9 @@ use crate::input::input_map::InputMap;
 use crate::input::HelpProvider;
 use crate::screens::dialog::help_dialog::HelpDialog;
 use crate::screens::settings::input_actions::*;
-use crate::screens::settings::settings_action::{SettingsActionPurpose, SettingsActionTarget};
+use crate::screens::settings::settings_action::{
+    SettingsActionPurpose, TimeTargetAction, ToggleActionTarget,
+};
 use crate::screens::settings::settings_dialog::{SettingsDialog, SettingsDialogResult};
 use crate::screens::settings::settings_items::settings_item::SettingsItem;
 use crate::screens::settings::settings_section::SettingsSection;
@@ -58,12 +60,52 @@ impl SettingsScreen {
                     SettingsItem::new_toggle(
                         "Show archived projects",
                         "Show archived projects in project overview",
-                        SettingsActionTarget::ShowArchivedProjects,
+                        ToggleActionTarget::ShowArchivedProjects,
                     ),
                     SettingsItem::new_toggle(
                         "Show archived tasks",
                         "Show archived tasks in task overview",
-                        SettingsActionTarget::ShowArchivedTasks,
+                        ToggleActionTarget::ShowArchivedTasks,
+                    ),
+                ],
+            ),
+            SettingsSection::new(
+                "Set daily work-time",
+                vec![
+                    SettingsItem::new_time_value(
+                        "Monday:",
+                        "Set work target for Mondays",
+                        TimeTargetAction::MondayWorkTarget,
+                    ),
+                    SettingsItem::new_time_value(
+                        "Tuesday:",
+                        "Set work target for Tuesdays",
+                        TimeTargetAction::TuesdayWorkTarget,
+                    ),
+                    SettingsItem::new_time_value(
+                        "Wednesday:",
+                        "Set work target for Wednesdays",
+                        TimeTargetAction::WednesdayWorkTarget,
+                    ),
+                    SettingsItem::new_time_value(
+                        "Thursday:",
+                        "Set work target for Thrusdays",
+                        TimeTargetAction::ThursdayWorkTarget,
+                    ),
+                    SettingsItem::new_time_value(
+                        "Friday:",
+                        "Set work target for Fridays",
+                        TimeTargetAction::FridayWorkTarget,
+                    ),
+                    SettingsItem::new_time_value(
+                        "Saturday:",
+                        "Set work target for Saturdays",
+                        TimeTargetAction::SaturdayWorkTarget,
+                    ),
+                    SettingsItem::new_time_value(
+                        "Sunday:",
+                        "Set work target for Sundays",
+                        TimeTargetAction::SundayWorkTarget,
                     ),
                 ],
             ),
@@ -188,6 +230,10 @@ impl SettingsScreen {
                 self.enforce_update_on_next_tick = true;
                 Some(toggle_item.execute_action())
             }
+            SettingsItem::TimeValue(time_item) => {
+                self.settings_dialog = Some(time_item.execute_action());
+                None
+            }
         }
     }
 
@@ -247,6 +293,7 @@ impl SettingsScreen {
             }
             SettingsDialogResult::Confirmed(app_action) => {
                 self.settings_dialog = None;
+                self.enforce_update_on_next_tick = true;
                 Some(app_action)
             }
             SettingsDialogResult::Help(help_context) => {

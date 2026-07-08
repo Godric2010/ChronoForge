@@ -1,5 +1,5 @@
 use crate::app_action::AppAction;
-use crate::screens::settings::settings_action::SettingsActionTarget;
+use crate::screens::settings::settings_action::ToggleActionTarget;
 use domain::types::UserSettings;
 use ratatui::layout::Rect;
 use ratatui::prelude::Modifier;
@@ -11,7 +11,7 @@ pub struct ToggleSettingsItem {
     name: String,
     description: String,
     value: bool,
-    toggle_target: SettingsActionTarget,
+    toggle_target: ToggleActionTarget,
 }
 
 impl ToggleSettingsItem {
@@ -19,7 +19,7 @@ impl ToggleSettingsItem {
         name: &str,
         description: &str,
         value: bool,
-        toggle_target: SettingsActionTarget,
+        toggle_target: ToggleActionTarget,
     ) -> Self {
         Self {
             name: name.to_string(),
@@ -55,10 +55,10 @@ impl ToggleSettingsItem {
 
     pub fn execute_action(&self) -> AppAction {
         match self.toggle_target {
-            SettingsActionTarget::ShowArchivedProjects => {
+            ToggleActionTarget::ShowArchivedProjects => {
                 AppAction::ToggleShowArchivedProjects(!self.value)
             }
-            SettingsActionTarget::ShowArchivedTasks => {
+            ToggleActionTarget::ShowArchivedTasks => {
                 AppAction::ToggleShowArchivedTasks(!self.value)
             }
         }
@@ -66,8 +66,8 @@ impl ToggleSettingsItem {
 
     pub fn update(&mut self, settings: &UserSettings) {
         self.value = match self.toggle_target {
-            SettingsActionTarget::ShowArchivedProjects => settings.show_archived_projects,
-            SettingsActionTarget::ShowArchivedTasks => settings.show_archived_tasks,
+            ToggleActionTarget::ShowArchivedProjects => settings.show_archived_projects,
+            ToggleActionTarget::ShowArchivedTasks => settings.show_archived_tasks,
         }
     }
 }

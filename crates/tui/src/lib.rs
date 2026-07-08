@@ -1,5 +1,5 @@
 use crate::screens::overview::OverviewViewModel;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, Weekday};
 use domain::types::UserSettings;
 use uuid::Uuid;
 
@@ -83,4 +83,9 @@ pub trait TuiBackend {
     async fn import_csv(&self, path_str: String) -> anyhow::Result<()>;
     async fn set_show_archived_projects(&self, show_archived_projects: bool) -> anyhow::Result<()>;
     async fn set_show_archived_tasks(&self, show_archived_tasks: bool) -> anyhow::Result<()>;
+    async fn set_workday_work_targets(
+        &self,
+        target_time: u32,
+        weekday: Weekday,
+    ) -> anyhow::Result<()>;
 }

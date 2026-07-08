@@ -43,7 +43,7 @@ impl TimeEditElement {
                 key_name: "←".to_string(),
                 key_description: "Move cursor backwards".to_string(),
                 action: TimeEditActions::MoveCursorBackward,
-                display_in_footer: true,
+                display_in_footer: false,
             },
             KeyBinding {
                 key_code: KeyCode::Right,
@@ -51,7 +51,7 @@ impl TimeEditElement {
                 key_name: "→".to_string(),
                 key_description: "Move cursor forward".to_string(),
                 action: TimeEditActions::MoveCursorForward,
-                display_in_footer: true,
+                display_in_footer: false,
             },
             KeyBinding {
                 key_code: KeyCode::Up,

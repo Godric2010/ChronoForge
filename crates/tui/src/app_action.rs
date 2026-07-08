@@ -34,4 +34,11 @@ pub enum AppAction {
     ExportCsv(String),
     ToggleShowArchivedProjects(bool),
     ToggleShowArchivedTasks(bool),
+    SetMondayWorkTarget(u32),
+    SetTuesdayWorkTarget(u32),
+    SetWednesdayWorkTarget(u32),
+    SetThursdayWorkTarget(u32),
+    SetFridayWorkTarget(u32),
+    SetSaturdayWorkTarget(u32),
+    SetSundayWorkTarget(u32),
 }

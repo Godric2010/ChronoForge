@@ -4,6 +4,7 @@ mod path_widget;
 mod project_edit_widget;
 mod task_edit_widget;
 mod time_entry_widget;
+mod time_widget;
 mod yes_no_widget;
 
 use crate::input::HelpProvider;
@@ -15,6 +16,7 @@ use ratatui::layout::Rect;
 use ratatui::Frame;
 pub use task_edit_widget::*;
 pub use time_entry_widget::TimeEntryWidget;
+pub use time_widget::TimeWidget;
 pub use yes_no_widget::YesNoWidget;
 
 pub enum WidgetType {

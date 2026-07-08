@@ -1,6 +1,7 @@
 use crate::app_context::AppContext;
 use crate::app_error::AppError;
 use crate::csv_serializer::CsvSerializer;
+use chrono::Weekday;
 use domain::types::{Project, Task, TimeEntry, UserSettings};
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::types::Uuid;
@@ -319,6 +320,18 @@ impl<'a> TuiBackend for AppViewContext<'a> {
         self.app
             .user_settings_service
             .set_show_archived_tasks(show_archived_tasks)
+            .await?;
+        Ok(())
+    }
+
+    async fn set_workday_work_targets(
+        &self,
+        target_time: u32,
+        weekday: Weekday,
+    ) -> anyhow::Result<()> {
+        self.app
+            .user_settings_service
+            .set_work_target(target_time, weekday)
             .await?;
         Ok(())
     }
