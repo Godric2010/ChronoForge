@@ -115,13 +115,18 @@ impl App {
     }
 
     async fn update_view_model<B: TuiBackend>(&mut self, backend: &B) -> anyhow::Result<()> {
-        let timer_active = backend.get_active_time().await?.is_some();
+        let daily_elapsed_time = backend.get_daily_time().await?;
+        let timer_is_active = daily_elapsed_time
+            .currently_active_timer_elapsed_minutes
+            .is_some();
+        self.active_timer.set_passed_time(daily_elapsed_time);
+
         match self.current_screen {
             ScreenType::Overview => {
                 let view_model = backend.load_projects().await?;
                 self.screens
                     .overview
-                    .set_view_model(view_model.clone(), timer_active);
+                    .set_view_model(view_model.clone(), timer_is_active);
                 Ok(())
             }
             ScreenType::Settings => {
@@ -134,7 +139,7 @@ impl App {
 
     async fn update_tick<B: TuiBackend>(&mut self, backend: &B) -> anyhow::Result<()> {
         self.active_timer
-            .set_passed_time(backend.get_active_time().await?);
+            .set_passed_time(backend.get_daily_time().await?);
 
         if self.enforce_vm_update_on_next_tick {
             self.update_view_model(backend).await?;

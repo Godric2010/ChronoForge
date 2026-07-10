@@ -2,7 +2,7 @@ use crate::app_context::AppContext;
 use crate::app_error::AppError;
 use crate::csv_serializer::CsvSerializer;
 use chrono::Weekday;
-use domain::types::{Project, Task, TimeEntry, UserSettings};
+use domain::types::{DailyTimer, Project, Task, TimeEntry, UserSettings};
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::types::Uuid;
 use tui::screens::overview::overview_view_model::{
@@ -250,18 +250,9 @@ impl<'a> TuiBackend for AppViewContext<'a> {
         Ok(())
     }
 
-    async fn get_active_time(&self) -> anyhow::Result<Option<u32>> {
-        let active_time = self
-            .app
-            .report_service
-            .get_active_timer_start_time()
-            .await?;
-        if let Some(active_time) = active_time {
-            let current = Utc::now();
-            let time_delta = current - active_time;
-            return Ok(Some(time_delta.num_minutes() as u32));
-        }
-        Ok(None)
+    async fn get_daily_time(&self) -> anyhow::Result<DailyTimer> {
+        let daily_time = self.app.report_service.get_daily_work_time().await?;
+        Ok(daily_time)
     }
 
     async fn start_timer(&self, task_id: Uuid) -> anyhow::Result<()> {

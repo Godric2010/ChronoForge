@@ -25,6 +25,7 @@ pub struct AppContext {
         SQLiteTaskRepository,
         SqliteTimeEntryRepository,
         SqliteActiveTimerRepository,
+        SQLiteUserSettingsRepository,
     >,
 }
 
@@ -59,6 +60,7 @@ impl AppContext {
                 task_repo.clone(),
                 entry_repo.clone(),
                 active_repo.clone(),
+                user_settings_repo.clone(),
             ),
         })
     }

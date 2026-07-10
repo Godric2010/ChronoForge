@@ -1,6 +1,6 @@
 use crate::screens::overview::OverviewViewModel;
 use chrono::{DateTime, Utc, Weekday};
-use domain::types::UserSettings;
+use domain::types::{DailyTimer, UserSettings};
 use uuid::Uuid;
 
 mod app;
@@ -74,7 +74,7 @@ pub trait TuiBackend {
     async fn unarchive_project(&self, project_id: Uuid) -> anyhow::Result<()>;
     async fn unarchive_task(&self, task_id: Uuid) -> anyhow::Result<()>;
 
-    async fn get_active_time(&self) -> anyhow::Result<Option<u32>>;
+    async fn get_daily_time(&self) -> anyhow::Result<DailyTimer>;
 
     async fn start_timer(&self, task_id: Uuid) -> anyhow::Result<()>;
     async fn stop_timer(&self) -> anyhow::Result<()>;
