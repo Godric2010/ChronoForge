@@ -187,7 +187,7 @@ impl OverviewScreen {
                 None
             }
             Mode::TimeEntries => {
-                self.time_entry_view.handle_input(key_event);
+                self.overview_dialog = self.time_entry_view.handle_input(key_event);
                 None
             }
         }

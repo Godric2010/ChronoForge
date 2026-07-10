@@ -18,14 +18,16 @@ pub struct TimeEntryCard {
 
 impl TimeEntryCard {
     pub fn new(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Self {
-        let duration_min = (end_time - start_time).num_minutes() as u32;
-        let duration_days = (end_time - start_time).num_days() as u16;
-        let weekday = start_time.weekday().to_string();
+        let start_time_local = start_time.with_timezone(&Local);
+        let end_time_local = end_time.with_timezone(&Local);
+        let duration_min = (end_time_local - start_time_local).num_minutes() as u32;
+        let duration_days = (end_time_local - start_time_local).num_days() as u16;
+        let weekday = start_time_local.weekday().to_string();
         let older_than_week = (Utc::now() - start_time).num_days() >= 7;
 
         Self {
-            start_time: start_time.with_timezone(&Local),
-            end_time: end_time.with_timezone(&Local),
+            start_time: start_time_local,
+            end_time: end_time_local,
             duration_min,
             duration_days,
             weekday,
