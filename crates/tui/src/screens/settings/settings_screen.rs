@@ -10,8 +10,8 @@ use crate::screens::settings::settings_action::{
 use crate::screens::settings::settings_dialog::{SettingsDialog, SettingsDialogResult};
 use crate::screens::settings::settings_items::settings_item::SettingsItem;
 use crate::screens::settings::settings_section::SettingsSection;
+use crate::screens::settings::settings_view_model::UserSettingsViewModel;
 use crossterm::event::KeyEvent;
-use domain::types::UserSettings;
 use ratatui::layout::Rect;
 use ratatui::Frame;
 
@@ -21,7 +21,7 @@ struct SelectionRef {
 }
 
 pub struct SettingsScreen {
-    settings_data: Option<UserSettings>,
+    settings_view_model: Option<UserSettingsViewModel>,
     sections: Vec<SettingsSection>,
     selection_ref: SelectionRef,
     settings_dialog: Option<SettingsDialog>,
@@ -112,7 +112,7 @@ impl SettingsScreen {
         ];
 
         Self {
-            settings_data: None,
+            settings_view_model: None,
             sections,
             selection_ref: SelectionRef {
                 section_index: 0,
@@ -125,11 +125,11 @@ impl SettingsScreen {
         }
     }
 
-    pub fn update_view(&mut self, settings: UserSettings) {
-        self.settings_data = Some(settings);
-        if let Some(settings) = &self.settings_data {
+    pub fn update_view(&mut self, settings: UserSettingsViewModel) {
+        self.settings_view_model = Some(settings);
+        if let Some(settings) = &self.settings_view_model {
             for section in &mut self.sections {
-                section.update(settings);
+                section.update(&settings.user_settings);
             }
         }
     }

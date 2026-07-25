@@ -2,22 +2,28 @@ use crate::app_context::AppContext;
 use crate::app_error::AppError;
 use crate::csv_serializer::CsvSerializer;
 use chrono::Weekday;
-use domain::types::{DailyTimer, Project, Task, TimeEntry, UserSettings};
+use domain::types::{DailyTimer, Project, Task, TimeEntry};
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::types::Uuid;
+use std::path::PathBuf;
 use tui::screens::overview::overview_view_model::{
     ProjectViewModel, TaskViewModel, TimeEntryViewModel,
 };
 use tui::screens::overview::OverviewViewModel;
+use tui::screens::settings::settings_view_model::UserSettingsViewModel;
 use tui::TuiBackend;
 
 pub struct AppViewContext<'a> {
     app: &'a AppContext,
+    app_config_db_path: PathBuf,
 }
 
 impl<'a> AppViewContext<'a> {
-    pub fn new(app: &'a AppContext) -> Self {
-        Self { app }
+    pub fn new(app: &'a AppContext, app_config_db_path: PathBuf) -> Self {
+        Self {
+            app,
+            app_config_db_path,
+        }
     }
 
     async fn create_overview_view_model(&self) -> anyhow::Result<OverviewViewModel> {
@@ -113,8 +119,12 @@ impl<'a> TuiBackend for AppViewContext<'a> {
         self.create_overview_view_model().await
     }
 
-    async fn load_settings(&self) -> anyhow::Result<UserSettings> {
-        self.app.user_settings_service.get_settings().await
+    async fn load_settings(&self) -> anyhow::Result<UserSettingsViewModel> {
+        let user_settings = self.app.user_settings_service.get_settings().await?;
+        Ok(UserSettingsViewModel {
+            db_path: self.app_config_db_path.clone(),
+            user_settings,
+        })
     }
 
     async fn create_project(
