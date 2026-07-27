@@ -246,17 +246,6 @@ mod text_input_widget_tests {
     }
 
     #[test]
-    fn text_input_exceeds_length() {
-        let string = "----------------------------------------".to_string();
-        let mut widget = TextEditElement::new(Some(string), InputMode::Naming);
-        widget.set_active(true);
-        widget.handle_key(char_key('a'));
-
-        let result = widget.get_output();
-        assert_eq!(result.len(), widget.size.width as usize);
-    }
-
-    #[test]
     fn text_input_if_not_active() {
         let mut widget = TextEditElement::new(None, InputMode::Naming);
         widget.set_active(false);

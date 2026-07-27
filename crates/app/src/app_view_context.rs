@@ -1,7 +1,7 @@
 use crate::app_context::AppContext;
 use crate::app_error::AppError;
-use crate::config_handler::config::AppConfig;
-use crate::config_handler::config_handler::ConfigHandler;
+use crate::config::config_handler::ConfigHandler;
+use crate::config::AppConfig;
 use crate::csv_serializer::CsvSerializer;
 use chrono::Weekday;
 use domain::types::{DailyTimer, Project, Task, TimeEntry};

@@ -1,4 +1,4 @@
-use crate::config_handler::config::{AppConfig, DatabaseConfig};
+use crate::config::{AppConfig, DatabaseConfig};
 use anyhow;
 use directories::ProjectDirs;
 use std::path::PathBuf;

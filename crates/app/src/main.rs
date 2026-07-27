@@ -1,14 +1,14 @@
 use crate::app_context::AppContext;
 use crate::app_view_context::AppViewContext;
 use crate::cli::Cli;
-use crate::config_handler::config_handler::ConfigHandler;
+use crate::config::config_handler::ConfigHandler;
 use clap::Parser;
 
 mod app_context;
 mod app_error;
 mod app_view_context;
 mod cli;
-pub mod config_handler;
+pub mod config;
 mod csv_serializer;
 
 #[tokio::main]
