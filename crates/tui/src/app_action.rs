@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use std::path::PathBuf;
 use uuid::Uuid;
 
 pub enum AppAction {
@@ -32,6 +33,8 @@ pub enum AppAction {
     // Settings
     ImportCsv(String),
     ExportCsv(String),
+    LinkNewDatabase(PathBuf),
+    MoveDatabase(PathBuf),
     ToggleShowArchivedProjects(bool),
     ToggleShowArchivedTasks(bool),
     SetMondayWorkTarget(u32),

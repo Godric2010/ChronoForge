@@ -2,6 +2,7 @@ use crate::screens::overview::OverviewViewModel;
 use crate::screens::settings::settings_view_model::UserSettingsViewModel;
 use chrono::{DateTime, Utc, Weekday};
 use domain::types::DailyTimer;
+use std::path::PathBuf;
 use uuid::Uuid;
 
 mod app;
@@ -13,7 +14,7 @@ mod terminal;
 mod ui_error_message;
 mod widgets;
 
-pub async fn run<B: TuiBackend>(backend: &B) -> anyhow::Result<()> {
+pub async fn run<B: TuiBackend>(backend: &mut B) -> anyhow::Result<()> {
     let mut terminal = terminal::init_terminal()?;
 
     let result = app::App::new().run(backend, &mut terminal).await;
@@ -82,6 +83,9 @@ pub trait TuiBackend {
 
     async fn export_csv(&self, path_str: String) -> anyhow::Result<()>;
     async fn import_csv(&self, path_str: String) -> anyhow::Result<()>;
+    async fn move_database(&mut self, path: PathBuf) -> anyhow::Result<()>;
+    async fn relink_database(&mut self, path: PathBuf) -> anyhow::Result<()>;
+
     async fn set_show_archived_projects(&self, show_archived_projects: bool) -> anyhow::Result<()>;
     async fn set_show_archived_tasks(&self, show_archived_tasks: bool) -> anyhow::Result<()>;
     async fn set_workday_work_targets(

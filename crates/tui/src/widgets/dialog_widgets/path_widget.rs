@@ -12,8 +12,10 @@ pub struct PathWidget {
 
 impl PathWidget {
     pub fn new() -> Self {
+        let mut text_edit_element = TextEditElement::new(None, InputMode::Ascii);
+        text_edit_element.set_active(true);
         Self {
-            path_input: TextEditElement::new(None, InputMode::Ascii),
+            path_input: text_edit_element,
         }
     }
 }

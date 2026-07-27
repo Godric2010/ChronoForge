@@ -66,7 +66,7 @@ impl TextEditElement {
             cursor_pos: content.len(),
             content,
             size: ElementSize {
-                width: 40,
+                width: 60,
                 height: 1,
             },
             active: false,

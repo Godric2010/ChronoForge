@@ -1,5 +1,7 @@
 use crate::app_context::AppContext;
 use crate::app_error::AppError;
+use crate::config_handler::config::AppConfig;
+use crate::config_handler::config_handler::ConfigHandler;
 use crate::csv_serializer::CsvSerializer;
 use chrono::Weekday;
 use domain::types::{DailyTimer, Project, Task, TimeEntry};
@@ -15,15 +17,12 @@ use tui::TuiBackend;
 
 pub struct AppViewContext<'a> {
     app: &'a AppContext,
-    app_config_db_path: PathBuf,
+    app_config: AppConfig,
 }
 
 impl<'a> AppViewContext<'a> {
-    pub fn new(app: &'a AppContext, app_config_db_path: PathBuf) -> Self {
-        Self {
-            app,
-            app_config_db_path,
-        }
+    pub fn new(app: &'a AppContext, app_config: AppConfig) -> Self {
+        Self { app, app_config }
     }
 
     async fn create_overview_view_model(&self) -> anyhow::Result<OverviewViewModel> {
@@ -122,7 +121,7 @@ impl<'a> TuiBackend for AppViewContext<'a> {
     async fn load_settings(&self) -> anyhow::Result<UserSettingsViewModel> {
         let user_settings = self.app.user_settings_service.get_settings().await?;
         Ok(UserSettingsViewModel {
-            db_path: self.app_config_db_path.clone(),
+            db_path: self.app_config.database.path.clone(),
             user_settings,
         })
     }
@@ -306,6 +305,18 @@ impl<'a> TuiBackend for AppViewContext<'a> {
                 path: path_str,
                 source,
             })?;
+        Ok(())
+    }
+
+    async fn move_database(&mut self, path: PathBuf) -> anyhow::Result<()> {
+        let config_handler = ConfigHandler::new()?;
+        config_handler.move_database(&mut self.app_config, path)?;
+        Ok(())
+    }
+
+    async fn relink_database(&mut self, path: PathBuf) -> anyhow::Result<()> {
+        let config_handler = ConfigHandler::new()?;
+        config_handler.relink_database(&mut self.app_config, path)?;
         Ok(())
     }
 

@@ -22,6 +22,8 @@ pub enum TimeTargetAction {
 pub enum SettingsActionPurpose {
     ImportCSV,
     ExportCSV,
+    LinkNewDatabase,
+    MoveDatabase,
 }
 
 impl SettingsActionPurpose {
@@ -36,6 +38,16 @@ impl SettingsActionPurpose {
                 let widget = PathWidget::new();
                 let dialog = Dialog::new("Set path to export CSV", widget);
                 SettingsDialog::ExportCSV(dialog)
+            }
+            SettingsActionPurpose::LinkNewDatabase => {
+                let widget = PathWidget::new();
+                let dialog = Dialog::new("Link new database", widget);
+                SettingsDialog::LinkNewDatabase(dialog)
+            }
+            SettingsActionPurpose::MoveDatabase => {
+                let widget = PathWidget::new();
+                let dialog = Dialog::new("Move database", widget);
+                SettingsDialog::MoveDatabase(dialog)
             }
         }
     }

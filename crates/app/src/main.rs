@@ -27,8 +27,8 @@ async fn main() -> anyhow::Result<()> {
             cli.run(&context).await?;
         }
         None => {
-            let view_context = AppViewContext::new(&context, config.database.path);
-            tui::run(&view_context).await?;
+            let mut view_context = AppViewContext::new(&context, config);
+            tui::run(&mut view_context).await?;
         }
     }
 

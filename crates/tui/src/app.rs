@@ -48,7 +48,7 @@ impl App {
 
     pub async fn run<B: TuiBackend>(
         &mut self,
-        backend: &B,
+        backend: &mut B,
         terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     ) -> anyhow::Result<()> {
         self.update_view_model(backend).await?;
@@ -253,7 +253,7 @@ impl App {
         }
     }
 
-    async fn handle_action<B: TuiBackend>(&mut self, action: AppAction, backend: &B) {
+    async fn handle_action<B: TuiBackend>(&mut self, action: AppAction, backend: &mut B) {
         if let Err(error) = self.try_handle_action(action, backend).await {
             let ui_error_message = UiErrorMessage::from_anyhow(error);
             let error_widget = ErrorWidget::new(ui_error_message);
@@ -265,7 +265,7 @@ impl App {
     async fn try_handle_action<B: TuiBackend>(
         &mut self,
         action: AppAction,
-        backend: &B,
+        backend: &mut B,
     ) -> anyhow::Result<()> {
         match action {
             AppAction::Quit => {
@@ -372,6 +372,12 @@ impl App {
                 backend
                     .set_workday_work_targets(target_time, Weekday::Sun)
                     .await?;
+            }
+            AppAction::LinkNewDatabase(new_db_path) => {
+                backend.relink_database(new_db_path).await?;
+            }
+            AppAction::MoveDatabase(target_db_path) => {
+                backend.move_database(target_db_path).await?;
             }
         }
         Ok(())

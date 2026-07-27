@@ -40,8 +40,18 @@ impl SettingsScreen {
 
         let sections = vec![
             SettingsSection::new(
-                "Import/Export",
+                "Database",
                 vec![
+                    SettingsItem::new_action(
+                        "Link new database",
+                        "Link a new database file (Requires restart)",
+                        SettingsActionPurpose::LinkNewDatabase,
+                    ),
+                    SettingsItem::new_action(
+                        "Move database",
+                        "Move the database file (Requires restart)",
+                        SettingsActionPurpose::MoveDatabase,
+                    ),
                     SettingsItem::new_action(
                         "Import CSV",
                         "Import Data from a CSV file into the database",
@@ -131,6 +141,10 @@ impl SettingsScreen {
             for section in &mut self.sections {
                 section.update(&settings.user_settings);
             }
+            self.sections[0].set_subtitle(Some(format!(
+                "Path: {}",
+                settings.db_path.to_str().unwrap()
+            )));
         }
     }
 

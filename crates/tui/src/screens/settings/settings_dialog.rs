@@ -5,6 +5,7 @@ use crate::widgets::dialog_widgets::{PathWidget, TimeWidget};
 use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
 use ratatui::Frame;
+use std::path::PathBuf;
 
 pub enum SettingsDialogResult {
     None,
@@ -16,6 +17,8 @@ pub enum SettingsDialogResult {
 pub enum SettingsDialog {
     ImportCsv(Dialog<PathWidget>),
     ExportCSV(Dialog<PathWidget>),
+    LinkNewDatabase(Dialog<PathWidget>),
+    MoveDatabase(Dialog<PathWidget>),
     SetMondayWorkTarget(Dialog<TimeWidget>),
     SetTuesdayWorkTarget(Dialog<TimeWidget>),
     SetWednesdayWorkTarget(Dialog<TimeWidget>),
@@ -55,11 +58,47 @@ impl SettingsDialog {
             SettingsDialog::SetSundayWorkTarget(dialog) => {
                 dialog.render(frame, area);
             }
+            SettingsDialog::LinkNewDatabase(dialog) => {
+                dialog.render(frame, area);
+            }
+            SettingsDialog::MoveDatabase(dialog) => {
+                dialog.render(frame, area);
+            }
         }
     }
 
     pub fn handle_input(&mut self, event: KeyEvent) -> SettingsDialogResult {
         match self {
+            SettingsDialog::LinkNewDatabase(dialog) => {
+                let result = dialog.handle_input(event);
+                match result {
+                    DialogResult::None => SettingsDialogResult::None,
+                    DialogResult::Cancelled => SettingsDialogResult::Cancelled,
+                    DialogResult::Confirmed(result) => {
+                        let path = PathBuf::from(result);
+                        if !path.parent().unwrap().exists() {
+                            return SettingsDialogResult::Cancelled;
+                        }
+                        SettingsDialogResult::Confirmed(AppAction::LinkNewDatabase(path))
+                    }
+                    DialogResult::Help(help_context) => SettingsDialogResult::Help(help_context),
+                }
+            }
+            SettingsDialog::MoveDatabase(dialog) => {
+                let result = dialog.handle_input(event);
+                match result {
+                    DialogResult::None => SettingsDialogResult::None,
+                    DialogResult::Cancelled => SettingsDialogResult::Cancelled,
+                    DialogResult::Confirmed(result) => {
+                        let path = PathBuf::from(result);
+                        if !path.parent().unwrap().exists() {
+                            return SettingsDialogResult::Cancelled;
+                        }
+                        SettingsDialogResult::Confirmed(AppAction::MoveDatabase(path))
+                    }
+                    DialogResult::Help(help_context) => SettingsDialogResult::Help(help_context),
+                }
+            }
             SettingsDialog::ImportCsv(dialog) => {
                 let result = dialog.handle_input(event);
                 match result {
