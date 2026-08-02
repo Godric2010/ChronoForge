@@ -62,7 +62,9 @@ impl DialogWidget for ErrorWidget {
         }
     }
 
-    fn output(&self) -> Self::Output {}
+    fn output(&self) -> Option<Self::Output> {
+        None
+    }
 
     fn height(&self) -> u16 {
         4

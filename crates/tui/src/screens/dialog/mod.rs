@@ -124,7 +124,13 @@ impl<Widget: DialogWidget> Dialog<Widget> {
                 DialogResult::None
             }
             Some(action) => match action {
-                DialogActions::Confirm => DialogResult::Confirmed(self.widget.output()),
+                DialogActions::Confirm => {
+                    if let Some(output) = self.widget.output() {
+                        DialogResult::Confirmed(output)
+                    } else {
+                        DialogResult::None
+                    }
+                }
                 DialogActions::Cancel => DialogResult::Cancelled,
                 DialogActions::Help => {
                     let mut help_contexts = self.widget.general_help();

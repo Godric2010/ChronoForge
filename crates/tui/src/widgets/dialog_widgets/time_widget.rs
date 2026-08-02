@@ -43,9 +43,9 @@ impl DialogWidget for TimeWidget {
         self.time_edit_element.handle_key(key);
     }
 
-    fn output(&self) -> Self::Output {
+    fn output(&self) -> Option<Self::Output> {
         let time = self.time_edit_element.get_output();
-        time.hour * 60 + time.minute
+        Some(time.hour * 60 + time.minute)
     }
 
     fn height(&self) -> u16 {

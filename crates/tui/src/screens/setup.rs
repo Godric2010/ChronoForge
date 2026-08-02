@@ -2,7 +2,7 @@ use crate::app_action::SetupAction;
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
 use crate::screens::dialog::{Dialog, DialogResult};
-use crate::widgets::dialog_widgets::PathWidget;
+use crate::widgets::dialog_widgets::{PathWidget, ValidationMode};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use figlet_rs::FIGlet;
 use ratatui::layout::{Alignment, Constraint, Layout, Rect};
@@ -181,11 +181,19 @@ impl SetupScreen {
                     match action {
                         Action::Quit => return Some(SetupAction::Quit),
                         Action::CreateNewDatabase => {
-                            let widget = PathWidget::new();
+                            let widget = PathWidget::new(
+                                None,
+                                ValidationMode::WritableDirectory("chrono-forge.db".to_string()),
+                            );
                             self.dialog = Some(Dialog::new("Create a new database at:", widget));
                         }
                         Action::LinkDatabase => {
-                            let widget = PathWidget::new();
+                            let widget = PathWidget::new(
+                                None,
+                                ValidationMode::DirectoryContainsFile(
+                                    "chrono-forge.db".to_string(),
+                                ),
+                            );
                             self.dialog = Some(Dialog::new("Link to existing database:", widget));
                         }
                     }

@@ -191,7 +191,7 @@ impl DialogWidget for ProjectEditWidget {
         }
     }
 
-    fn output(&self) -> Self::Output {
+    fn output(&self) -> Option<Self::Output> {
         let time_limit = if self.time_limit_checkbox.get_output() {
             let time = self.time_limit_input.get_output();
             Some(time.hour * 60 + time.minute)
@@ -199,10 +199,10 @@ impl DialogWidget for ProjectEditWidget {
             None
         };
 
-        ProjectEditOutput {
+        Some(ProjectEditOutput {
             project_name: self.name_input.get_output(),
             time_limit,
-        }
+        })
     }
 
     fn height(&self) -> u16 {

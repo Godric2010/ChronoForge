@@ -137,7 +137,7 @@ impl HelpProvider for ListWidget {
 }
 
 impl DialogWidget for ListWidget {
-    type Output = Option<Uuid>;
+    type Output = Uuid;
 
     fn get_type(&self) -> WidgetType {
         WidgetType::Input
@@ -154,7 +154,7 @@ impl DialogWidget for ListWidget {
         }
     }
 
-    fn output(&self) -> Self::Output {
+    fn output(&self) -> Option<Self::Output> {
         self.items.get(self.selected_index).map(|item| item.id)
     }
 

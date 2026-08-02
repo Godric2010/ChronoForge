@@ -184,13 +184,7 @@ impl OverviewDialog {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
                     DialogResult::Confirmed(project_id) => {
-                        if let Some(project_id) = project_id {
-                            OverviewDialogResult::Confirmed(AppAction::AssignTask(
-                                *task_id, project_id,
-                            ))
-                        } else {
-                            OverviewDialogResult::Cancelled
-                        }
+                        OverviewDialogResult::Confirmed(AppAction::AssignTask(*task_id, project_id))
                     }
                     DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
@@ -200,15 +194,9 @@ impl OverviewDialog {
                 match result {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
-                    DialogResult::Confirmed(task_id) => {
-                        if let Some(task_id) = task_id {
-                            OverviewDialogResult::Confirmed(AppAction::AssignTimeEntry(
-                                *entry_id, task_id,
-                            ))
-                        } else {
-                            OverviewDialogResult::Cancelled
-                        }
-                    }
+                    DialogResult::Confirmed(task_id) => OverviewDialogResult::Confirmed(
+                        AppAction::AssignTimeEntry(*entry_id, task_id),
+                    ),
                     DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
@@ -217,15 +205,9 @@ impl OverviewDialog {
                 match result {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
-                    DialogResult::Confirmed(times) => {
-                        if let Some(times) = times {
-                            OverviewDialogResult::Confirmed(AppAction::CreateTimeEntry(
-                                *task_id, times.0, times.1,
-                            ))
-                        } else {
-                            OverviewDialogResult::Cancelled
-                        }
-                    }
+                    DialogResult::Confirmed(times) => OverviewDialogResult::Confirmed(
+                        AppAction::CreateTimeEntry(*task_id, times.0, times.1),
+                    ),
                     DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }
@@ -234,15 +216,9 @@ impl OverviewDialog {
                 match result {
                     DialogResult::None => OverviewDialogResult::None,
                     DialogResult::Cancelled => OverviewDialogResult::Cancelled,
-                    DialogResult::Confirmed(times) => {
-                        if let Some(times) = times {
-                            OverviewDialogResult::Confirmed(AppAction::EditTimeEntry(
-                                *entry_id, times.0, times.1,
-                            ))
-                        } else {
-                            OverviewDialogResult::Cancelled
-                        }
-                    }
+                    DialogResult::Confirmed(times) => OverviewDialogResult::Confirmed(
+                        AppAction::EditTimeEntry(*entry_id, times.0, times.1),
+                    ),
                     DialogResult::Help(help_context) => OverviewDialogResult::Help(help_context),
                 }
             }

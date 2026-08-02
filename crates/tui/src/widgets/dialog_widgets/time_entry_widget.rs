@@ -268,7 +268,7 @@ impl HelpProvider for TimeEntryWidget {
     }
 }
 impl DialogWidget for TimeEntryWidget {
-    type Output = Option<(DateTime<Utc>, DateTime<Utc>)>;
+    type Output = (DateTime<Utc>, DateTime<Utc>);
 
     fn get_type(&self) -> WidgetType {
         WidgetType::Input
@@ -285,7 +285,7 @@ impl DialogWidget for TimeEntryWidget {
         }
     }
 
-    fn output(&self) -> Self::Output {
+    fn output(&self) -> Option<Self::Output> {
         let start_time = self.start_time?;
         let end_time = self.end_time?;
         Some((start_time, end_time))

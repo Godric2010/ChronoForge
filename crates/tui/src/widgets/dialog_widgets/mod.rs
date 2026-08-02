@@ -30,7 +30,7 @@ pub trait DialogWidget: HelpProvider {
     fn get_type(&self) -> WidgetType;
 
     fn handle_key(&mut self, key: KeyEvent);
-    fn output(&self) -> Self::Output;
+    fn output(&self) -> Option<Self::Output>;
     fn height(&self) -> u16;
     fn render(&self, frame: &mut Frame, area: Rect);
 }

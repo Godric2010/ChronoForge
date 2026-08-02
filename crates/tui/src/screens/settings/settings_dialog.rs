@@ -5,7 +5,6 @@ use crate::widgets::dialog_widgets::{PathWidget, TimeWidget};
 use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
 use ratatui::Frame;
-use std::path::PathBuf;
 
 pub enum SettingsDialogResult {
     None,

@@ -116,11 +116,11 @@ impl DialogWidget for YesNoWidget {
         }
     }
 
-    fn output(&self) -> Self::Output {
-        match self.decision {
+    fn output(&self) -> Option<Self::Output> {
+        Some(match self.decision {
             YesNo::Yes => true,
             YesNo::No => false,
-        }
+        })
     }
 
     fn height(&self) -> u16 {
@@ -168,29 +168,29 @@ mod yes_no_widget_tests {
     #[test]
     fn yes_no_defaults_to_no() {
         let widget = YesNoWidget::new();
-        assert!(!widget.output())
+        assert!(!widget.output().unwrap())
     }
 
     #[test]
     fn yes_no_widget_accepts_y_and_n() {
         let mut widget = YesNoWidget::new();
         widget.handle_key(char_key('y'));
-        assert!(widget.output());
+        assert!(widget.output().unwrap());
 
         widget.handle_key(char_key('n'));
-        assert!(!widget.output());
+        assert!(!widget.output().unwrap());
     }
 
     #[test]
     fn yes_no_widget_toggles_with_left_and_right() {
         let mut widget = YesNoWidget::new();
-        assert!(!widget.output());
+        assert!(!widget.output().unwrap());
 
         widget.handle_key(key(KeyCode::Left));
-        assert!(widget.output());
+        assert!(widget.output().unwrap());
 
         widget.handle_key(key(KeyCode::Right));
-        assert!(!widget.output());
+        assert!(!widget.output().unwrap());
     }
 
     #[test]
@@ -198,15 +198,15 @@ mod yes_no_widget_tests {
         let mut widget = YesNoWidget::new();
 
         widget.handle_key(key(KeyCode::Tab));
-        assert!(!widget.output());
+        assert!(!widget.output().unwrap());
 
         widget.handle_key(key(KeyCode::Enter));
-        assert!(!widget.output());
+        assert!(!widget.output().unwrap());
 
         widget.handle_key(key(KeyCode::Esc));
-        assert!(!widget.output());
+        assert!(!widget.output().unwrap());
 
         widget.handle_key(char_key('x'));
-        assert!(!widget.output());
+        assert!(!widget.output().unwrap());
     }
 }
