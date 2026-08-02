@@ -24,13 +24,14 @@ impl ConfigHandler {
         })
     }
     pub fn create_new_default_config(&self) -> anyhow::Result<AppConfig> {
-        let default_database_path = self.data_local_path.join(DB_FILE_NAME);
-        self.create_new_config(default_database_path)
+        self.create_new_config(self.data_local_path.clone())
     }
 
     pub fn create_new_config(&self, path: PathBuf) -> anyhow::Result<AppConfig> {
         let config = AppConfig {
-            database: DatabaseConfig { path },
+            database: DatabaseConfig {
+                path: path.join(DB_FILE_NAME),
+            },
         };
         self.write_config(&config)?;
         Ok(config)

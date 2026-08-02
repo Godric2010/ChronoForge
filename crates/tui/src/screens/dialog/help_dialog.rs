@@ -1,13 +1,13 @@
+use crate::app_render_helper::render_separator;
 use crate::input::help_context::{InputMapHelpContext, KeyBindingHelpContext};
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
 use crate::input::HelpProvider;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, Layout, Rect};
-use ratatui::prelude::Line;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
-use ratatui::{symbols, Frame};
+use ratatui::Frame;
 
 #[derive(Copy, Clone)]
 enum HelpDialogActions {
@@ -116,7 +116,7 @@ impl HelpDialog {
             let more_next_paragraph = Paragraph::new("↓ more").style(self.more_indicator_style);
             frame.render_widget(more_next_paragraph, inner_chunks[2]);
         }
-        self.render_separator(frame, inner_chunks[3]);
+        render_separator(frame, inner_chunks[3]);
         self.render_help_text(frame, inner_chunks[4]);
     }
 
@@ -136,13 +136,6 @@ impl HelpDialog {
             y_pos += 1;
             row_idx += 1;
         }
-    }
-    fn render_separator(&self, frame: &mut Frame, area: Rect) {
-        let separator = symbols::line::HORIZONTAL.repeat(area.width.saturating_sub(2) as usize);
-        let separator_widget = Paragraph::new(Line::from(separator));
-        let mut rect = area;
-        rect.x += 1;
-        frame.render_widget(separator_widget, rect);
     }
 
     fn render_help_text(&self, frame: &mut Frame, area: Rect) {

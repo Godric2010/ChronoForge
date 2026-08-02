@@ -1,4 +1,5 @@
 use crate::app_action::AppAction;
+use crate::app_render_helper::render_separator;
 use crate::event::{read_event, TuiEvent};
 use crate::screens::dialog::{Dialog, DialogResult};
 use crate::screens::{ScreenType, Screens};
@@ -13,7 +14,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Alignment, Constraint, Layout, Rect};
 use ratatui::prelude::Line;
 use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
-use ratatui::{symbols, Frame, Terminal};
+use ratatui::{Frame, Terminal};
 use std::io::Stdout;
 use std::time::Duration;
 
@@ -179,7 +180,7 @@ impl MainApp {
         .split(screen_rect);
 
         self.render_header(frame, app_layout_rects[0]);
-        self.render_separator(frame, app_layout_rects[1]);
+        render_separator(frame, app_layout_rects[1]);
 
         let help_text;
         let screen_area = app_layout_rects[2];
@@ -199,7 +200,7 @@ impl MainApp {
             }
         }
 
-        self.render_separator(frame, app_layout_rects[3]);
+        render_separator(frame, app_layout_rects[3]);
 
         // help box
         let help_box = Paragraph::new(Line::from(help_text).alignment(Alignment::Center));
@@ -230,14 +231,6 @@ impl MainApp {
 
         self.tab_widget.render(frame, tab_time_split[0]);
         self.active_timer.render(frame, tab_time_split[1]);
-    }
-
-    fn render_separator(&self, frame: &mut Frame, area: Rect) {
-        let separator = symbols::line::HORIZONTAL.repeat(area.width.saturating_sub(2) as usize);
-        let separator_widget = Paragraph::new(Line::from(separator));
-        let mut rect = area;
-        rect.x += 1;
-        frame.render_widget(separator_widget, rect);
     }
 
     fn handle_event(&mut self, event: KeyEvent) -> Option<AppAction> {

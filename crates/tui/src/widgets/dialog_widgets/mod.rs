@@ -32,5 +32,5 @@ pub trait DialogWidget: HelpProvider {
     fn handle_key(&mut self, key: KeyEvent);
     fn output(&self) -> Self::Output;
     fn height(&self) -> u16;
-    fn render(&mut self, frame: &mut Frame, area: Rect);
+    fn render(&self, frame: &mut Frame, area: Rect);
 }

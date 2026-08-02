@@ -68,7 +68,7 @@ impl DialogWidget for ErrorWidget {
         4
     }
 
-    fn render(&mut self, frame: &mut Frame, area: Rect) {
+    fn render(&self, frame: &mut Frame, area: Rect) {
         let vertical = Layout::vertical([
             Constraint::Length(1),
             Constraint::Length(1),

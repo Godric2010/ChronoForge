@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use uuid::Uuid;
 
 mod app_action;
+mod app_render_helper;
 mod event;
 pub mod input;
 mod main_app;
@@ -19,7 +20,7 @@ mod widgets;
 pub async fn setup() -> anyhow::Result<SetupResult> {
     let mut terminal = terminal::init_terminal()?;
 
-    let mut setup_app = SetupApp::new();
+    let setup_app = SetupApp::new();
     let result = setup_app.run(&mut terminal).await;
 
     terminal::restore_terminal()?;

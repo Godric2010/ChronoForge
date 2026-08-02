@@ -45,3 +45,9 @@ pub enum AppAction {
     SetSaturdayWorkTarget(u32),
     SetSundayWorkTarget(u32),
 }
+
+pub enum SetupAction {
+    Quit,
+    CreateNewDatabase(PathBuf),
+    LinkNewDatabase(PathBuf),
+}

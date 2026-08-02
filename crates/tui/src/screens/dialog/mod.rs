@@ -1,5 +1,6 @@
 pub mod help_dialog;
 
+use crate::app_render_helper::render_separator;
 use crate::input::help_context::{InputMapHelpContext, KeyBindingHelpContext};
 use crate::input::input_map::InputMap;
 use crate::input::key_binding::KeyBinding;
@@ -7,10 +8,9 @@ use crate::input::HelpProvider;
 use crate::widgets::dialog_widgets::{DialogWidget, WidgetType};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::{Constraint, HorizontalAlignment, Layout, Rect};
-use ratatui::prelude::Line;
 use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
-use ratatui::{symbols, Frame};
+use ratatui::Frame;
 
 pub enum DialogResult<T> {
     None,
@@ -76,7 +76,7 @@ impl<Widget: DialogWidget> Dialog<Widget> {
         }
     }
 
-    pub fn render(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render(&self, frame: &mut Frame, area: Rect) {
         let dialog_draw_rect = self.calculate_draw_rect(area);
         frame.render_widget(Clear, dialog_draw_rect);
 
@@ -109,7 +109,7 @@ impl<Widget: DialogWidget> Dialog<Widget> {
         widget_rect.x += 1;
 
         self.widget.render(frame, widget_rect);
-        self.render_separator(frame, inner_chunks[4]);
+        render_separator(frame, inner_chunks[4]);
         self.render_help_text(frame, inner_chunks[5]);
     }
 
@@ -153,14 +153,6 @@ impl<Widget: DialogWidget> Dialog<Widget> {
         .split(dialog_row);
 
         horizontal_chunks[1]
-    }
-
-    fn render_separator(&self, frame: &mut Frame, area: Rect) {
-        let separator = symbols::line::HORIZONTAL.repeat(area.width.saturating_sub(2) as usize);
-        let separator_widget = Paragraph::new(Line::from(separator));
-        let mut rect = area;
-        rect.x += 1;
-        frame.render_widget(separator_widget, rect);
     }
 
     fn render_help_text(&self, frame: &mut Frame, area: Rect) {

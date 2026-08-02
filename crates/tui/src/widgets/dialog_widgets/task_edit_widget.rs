@@ -215,7 +215,7 @@ impl DialogWidget for TaskEditWidget {
         name_input_height + checkbox_height + time_input_height
     }
 
-    fn render(&mut self, frame: &mut Frame, area: Rect) {
+    fn render(&self, frame: &mut Frame, area: Rect) {
         let vertical = Layout::vertical([
             Constraint::Length(self.name_input.get_size().height + 2),
             Constraint::Length(self.time_limit_checkbox.get_size().height + 2),

@@ -1,10 +1,12 @@
 use crate::screens::overview::OverviewScreen;
 use crate::screens::settings::SettingsScreen;
+use crate::screens::setup::SetupScreen;
 use crate::screens::welcome::WelcomeScreen;
 
 pub(crate) mod dialog;
 pub mod overview;
 pub mod settings;
+pub mod setup;
 pub mod welcome;
 
 #[derive(Copy, Clone)]
@@ -32,4 +34,9 @@ impl Screens {
             settings: SettingsScreen::new(),
         }
     }
+}
+
+pub enum SetupScreens {
+    Welcome(WelcomeScreen),
+    Setup(SetupScreen),
 }

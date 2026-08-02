@@ -127,7 +127,7 @@ impl DialogWidget for YesNoWidget {
         1
     }
 
-    fn render(&mut self, frame: &mut Frame, area: Rect) {
+    fn render(&self, frame: &mut Frame, area: Rect) {
         let horizontal = Layout::horizontal([
             Constraint::Min(0),
             Constraint::Length(3),

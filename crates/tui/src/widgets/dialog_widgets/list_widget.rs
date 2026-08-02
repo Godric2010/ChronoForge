@@ -69,7 +69,7 @@ impl ListWidget {
             Paragraph::new(more_text_top).style(Style::default().add_modifier(Modifier::BOLD));
         frame.render_widget(top_paragraph, area);
     }
-    fn render_list_items(&mut self, frame: &mut Frame, area: Rect) {
+    fn render_list_items(&self, frame: &mut Frame, area: Rect) {
         for index in 0..self.visible_count {
             let item_index = index + self.scroll_offset;
             if item_index >= self.items.len() {
@@ -162,7 +162,7 @@ impl DialogWidget for ListWidget {
         10
     }
 
-    fn render(&mut self, frame: &mut Frame, area: Rect) {
+    fn render(&self, frame: &mut Frame, area: Rect) {
         let vertical = Layout::vertical([
             Constraint::Length(1),
             Constraint::Length(self.visible_count as u16),

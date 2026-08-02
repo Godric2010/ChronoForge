@@ -295,7 +295,7 @@ impl DialogWidget for TimeEntryWidget {
         7
     }
 
-    fn render(&mut self, frame: &mut Frame, area: Rect) {
+    fn render(&self, frame: &mut Frame, area: Rect) {
         let inner_chunks = Layout::vertical([
             Constraint::Length(1), // spacer
             Constraint::Length(1), // start time heading (1)

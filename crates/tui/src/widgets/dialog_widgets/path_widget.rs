@@ -49,7 +49,7 @@ impl DialogWidget for PathWidget {
         self.path_input.get_size().height
     }
 
-    fn render(&mut self, frame: &mut Frame, area: Rect) {
+    fn render(&self, frame: &mut Frame, area: Rect) {
         self.path_input.render(frame, area.x, area.y);
     }
 }
