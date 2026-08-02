@@ -88,20 +88,16 @@ impl TextEditElement {
     }
 
     fn move_cursor_right(&mut self) {
-        if self.cursor_pos < self.content.len() && self.is_content_in_bounds() {
+        if self.cursor_pos < self.content.len() {
             self.cursor_pos += 1;
         }
     }
 
     fn insert_char(&mut self, c: char) {
-        if self.is_char_valid(c) && self.is_content_in_bounds() {
+        if self.is_char_valid(c) {
             self.content.insert(self.cursor_pos, c);
-            self.cursor_pos += 1;
+            self.cursor_pos += c.len_utf8();
         }
-    }
-
-    fn is_content_in_bounds(&self) -> bool {
-        self.content.len() < self.size.width as usize
     }
 
     fn is_char_valid(&self, c: char) -> bool {
@@ -109,6 +105,25 @@ impl TextEditElement {
             InputMode::Ascii => c.is_ascii(),
             InputMode::Naming => c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ',
         }
+    }
+
+    fn visible_content(&self) -> (&str, usize) {
+        let width = self.size.width as usize;
+
+        if self.content.len() <= width {
+            return (&self.content, self.cursor_pos);
+        }
+
+        let start = if self.cursor_pos >= width {
+            self.cursor_pos - width + 1
+        } else {
+            0
+        };
+
+        let end = (start + width).min(self.content.len());
+        let visible = &self.content[start..end];
+        let visible_cursor_pos = self.cursor_pos - start;
+        (visible, visible_cursor_pos)
     }
 }
 
@@ -141,11 +156,12 @@ impl WidgetElement for TextEditElement {
             height: self.size.height,
         };
 
-        let paragraph = Paragraph::new(self.content.clone());
+        let (visible_content, visible_cursor_pos) = self.visible_content();
+        let paragraph = Paragraph::new(visible_content.to_string());
         frame.render_widget(paragraph, rect);
 
         if self.active {
-            frame.set_cursor_position((pos_x + self.cursor_pos as u16, pos_y));
+            frame.set_cursor_position((pos_x + visible_cursor_pos as u16, pos_y));
         }
     }
 

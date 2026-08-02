@@ -80,7 +80,7 @@ impl ConfigHandler {
     }
 
     pub fn relink_database(&self, app_config: &mut AppConfig, path: PathBuf) -> anyhow::Result<()> {
-        app_config.database.path = path;
+        app_config.database.path = path.join(DB_FILE_NAME);
 
         self.write_config(app_config)?;
         Ok(())
