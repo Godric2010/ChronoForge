@@ -5,7 +5,7 @@ use crate::config::config_handler::ConfigHandler;
 use crate::config::AppConfig;
 use anyhow::anyhow;
 use clap::Parser;
-use std::path::PathBuf;
+use std::path::Path;
 use tui::setup_app::SetupResult;
 
 mod app_context;
@@ -52,13 +52,13 @@ async fn run_tui_tool(config_handler: &ConfigHandler) -> anyhow::Result<()> {
     let app_config = config_handler.load_config()?;
     match app_config {
         None => {
-            run_tui_setup(&config_handler).await?;
+            run_tui_setup(config_handler).await?;
             Ok(())
         }
         Some(app_config) => {
             let database_exists = app_config.database_exists();
             if !database_exists {
-                run_tui_setup(&config_handler).await?;
+                run_tui_setup(config_handler).await?;
                 return Ok(());
             }
             let app_context = create_app_context(&app_config.database.path, false).await?;
@@ -96,7 +96,7 @@ async fn run_tui_main(app_context: AppContext, config: &AppConfig) -> anyhow::Re
     Ok(())
 }
 
-async fn create_app_context(db_path: &PathBuf, create_new_db: bool) -> anyhow::Result<AppContext> {
+async fn create_app_context(db_path: &Path, create_new_db: bool) -> anyhow::Result<AppContext> {
     let db_path_str = db_path
         .to_str()
         .ok_or_else(|| anyhow!("Failed to convert db path to str"))?;
