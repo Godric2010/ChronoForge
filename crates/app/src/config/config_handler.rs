@@ -4,8 +4,10 @@ use directories::ProjectDirs;
 use std::path::PathBuf;
 
 const DB_FILE_NAME: &str = "chrono-forge.db";
+const CONFIG_FILE_NAME: &str = "config.toml";
+
 pub struct ConfigHandler {
-    config_path: PathBuf,
+    config_file: PathBuf,
     data_local_path: PathBuf,
 }
 
@@ -14,30 +16,29 @@ impl ConfigHandler {
         let project_dirs = ProjectDirs::from("", "", "chrono-forge")
             .ok_or_else(|| anyhow::anyhow!("Failed to get project dirs"))?;
         Ok(Self {
-            config_path: project_dirs.config_dir().to_path_buf(),
+            config_file: project_dirs
+                .config_dir()
+                .to_path_buf()
+                .join(CONFIG_FILE_NAME),
             data_local_path: project_dirs.data_local_dir().to_path_buf(),
         })
     }
-    pub fn load_or_create_app_config(&self) -> anyhow::Result<AppConfig> {
-        let config_path = self.config_path.join("config.toml");
-
+    pub fn create_new_default_config(&self) -> anyhow::Result<AppConfig> {
         let default_database_path = self.data_local_path.join(DB_FILE_NAME);
+        self.create_new_config(default_database_path)
+    }
 
-        if config_path.exists() {
-            return self.read_config(&config_path);
-        }
-
+    pub fn create_new_config(&self, path: PathBuf) -> anyhow::Result<AppConfig> {
         let config = AppConfig {
-            database: DatabaseConfig {
-                path: default_database_path,
-            },
+            database: DatabaseConfig { path },
         };
-        self.write_config(&config_path, &config)?;
+        self.write_config(&config)?;
         Ok(config)
     }
 
-    pub fn write_config(&self, config_path: &PathBuf, config: &AppConfig) -> anyhow::Result<()> {
-        let parent_dir = config_path
+    pub fn write_config(&self, config: &AppConfig) -> anyhow::Result<()> {
+        let parent_dir = self
+            .config_file
             .parent()
             .ok_or_else(|| anyhow::anyhow!("Config path has no parent directory"))?;
         std::fs::create_dir_all(parent_dir)?;
@@ -52,14 +53,18 @@ impl ConfigHandler {
         }
 
         let toml_string = toml::to_string(config)?;
-        std::fs::write(config_path, toml_string)?;
+        std::fs::write(self.config_file.clone(), toml_string)?;
         Ok(())
     }
 
-    pub fn read_config(&self, config_path: &PathBuf) -> anyhow::Result<AppConfig> {
-        let toml_string = std::fs::read_to_string(config_path)?;
+    pub fn load_config(&self) -> anyhow::Result<Option<AppConfig>> {
+        if !self.config_file.exists() {
+            return Ok(None);
+        }
+
+        let toml_string = std::fs::read_to_string(self.config_file.clone())?;
         let config: AppConfig = toml::from_str(&toml_string)?;
-        Ok(config)
+        Ok(Some(config))
     }
 
     pub fn move_database(&self, app_config: &mut AppConfig, path: PathBuf) -> anyhow::Result<()> {
@@ -68,8 +73,7 @@ impl ConfigHandler {
         std::fs::rename(old_path, &new_path)?;
         app_config.database.path = new_path;
 
-        let config_path = self.config_path.join("config.toml");
-        self.write_config(&config_path, app_config)?;
+        self.write_config(app_config)?;
 
         Ok(())
     }
@@ -77,8 +81,7 @@ impl ConfigHandler {
     pub fn relink_database(&self, app_config: &mut AppConfig, path: PathBuf) -> anyhow::Result<()> {
         app_config.database.path = path;
 
-        let config_path = self.config_path.join("config.toml");
-        self.write_config(&config_path, app_config)?;
+        self.write_config(app_config)?;
         Ok(())
     }
 }

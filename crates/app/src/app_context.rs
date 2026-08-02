@@ -30,8 +30,10 @@ pub struct AppContext {
 }
 
 impl AppContext {
-    pub async fn new(database_url: &str) -> anyhow::Result<Self> {
-        let options = SqliteConnectOptions::from_str(database_url)?;
+    pub async fn new(database_url: &str, create_new_db: bool) -> anyhow::Result<Self> {
+        let options =
+            SqliteConnectOptions::from_str(database_url)?.create_if_missing(create_new_db);
+
         let pool = SqlitePoolOptions::new()
             .max_connections(5)
             .connect_with(options)

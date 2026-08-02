@@ -17,7 +17,7 @@ use ratatui::{symbols, Frame, Terminal};
 use std::io::Stdout;
 use std::time::Duration;
 
-pub struct App {
+pub struct MainApp {
     should_quit: bool,
     welcome_active: bool,
     screens: Screens,
@@ -28,7 +28,7 @@ pub struct App {
     error_dialog: Option<Dialog<ErrorWidget>>,
 }
 
-impl App {
+impl MainApp {
     pub fn new() -> Self {
         let tab_widget = TabWidget::new()
             .add_item("Overview", KeyCode::F(1), ScreenType::Overview)

@@ -12,3 +12,9 @@ pub struct AppConfig {
 pub struct DatabaseConfig {
     pub path: PathBuf,
 }
+
+impl AppConfig {
+    pub fn database_exists(&self) -> bool {
+        self.database.path.exists()
+    }
+}

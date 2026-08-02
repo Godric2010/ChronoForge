@@ -1,23 +1,36 @@
 use crate::screens::overview::OverviewViewModel;
 use crate::screens::settings::settings_view_model::UserSettingsViewModel;
+use crate::setup_app::{SetupApp, SetupResult};
 use chrono::{DateTime, Utc, Weekday};
 use domain::types::DailyTimer;
 use std::path::PathBuf;
 use uuid::Uuid;
 
-mod app;
 mod app_action;
 mod event;
 pub mod input;
+mod main_app;
 pub mod screens;
+pub mod setup_app;
 mod terminal;
 mod ui_error_message;
 mod widgets;
 
+pub async fn setup() -> anyhow::Result<SetupResult> {
+    let mut terminal = terminal::init_terminal()?;
+
+    let mut setup_app = SetupApp::new();
+    let result = setup_app.run(&mut terminal).await;
+
+    terminal::restore_terminal()?;
+
+    result
+}
+
 pub async fn run<B: TuiBackend>(backend: &mut B) -> anyhow::Result<()> {
     let mut terminal = terminal::init_terminal()?;
 
-    let mut tui_app = app::App::new();
+    let mut tui_app = main_app::MainApp::new();
     let result = tui_app.run(backend, &mut terminal).await;
 
     terminal::restore_terminal()?;
