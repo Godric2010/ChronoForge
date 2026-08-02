@@ -17,7 +17,8 @@ mod widgets;
 pub async fn run<B: TuiBackend>(backend: &mut B) -> anyhow::Result<()> {
     let mut terminal = terminal::init_terminal()?;
 
-    let result = app::App::new().run(backend, &mut terminal).await;
+    let mut tui_app = app::App::new();
+    let result = tui_app.run(backend, &mut terminal).await;
 
     terminal::restore_terminal()?;
 
