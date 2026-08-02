@@ -51,12 +51,8 @@ The SQLite database is currently stored right next to the executable as chrono-f
 Make sure to back up *chrono-forge.db* before updating to a newer version.
 
 ## Known limitations
-- Early 0.1.0 release
-- No option to archive projects or tasks yet
-- No daily work targets or project/task time limits yet
-- Error handling is still being improved 
-  - Invalid Paths when importing/exporting CSV files result in a crash
-  - Invalid CSV imports result in a crash
+- Early 0.2.0 release
+- Paths when writing or reading always need to start at the root directory.
 - No Themes or alternative display styles implemented yet
 - The major development platform for this project is Linux. It should also work on macOS and Windows, but approach it with extra care.
 
