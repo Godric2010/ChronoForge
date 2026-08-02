@@ -75,11 +75,10 @@ impl SettingsDialog {
                     DialogResult::None => SettingsDialogResult::None,
                     DialogResult::Cancelled => SettingsDialogResult::Cancelled,
                     DialogResult::Confirmed(result) => {
-                        let path = PathBuf::from(result);
-                        if !path.parent().unwrap().exists() {
+                        if !result.parent().unwrap().exists() {
                             return SettingsDialogResult::Cancelled;
                         }
-                        SettingsDialogResult::Confirmed(AppAction::LinkNewDatabase(path))
+                        SettingsDialogResult::Confirmed(AppAction::LinkNewDatabase(result))
                     }
                     DialogResult::Help(help_context) => SettingsDialogResult::Help(help_context),
                 }
@@ -90,11 +89,10 @@ impl SettingsDialog {
                     DialogResult::None => SettingsDialogResult::None,
                     DialogResult::Cancelled => SettingsDialogResult::Cancelled,
                     DialogResult::Confirmed(result) => {
-                        let path = PathBuf::from(result);
-                        if !path.parent().unwrap().exists() {
+                        if !result.parent().unwrap().exists() {
                             return SettingsDialogResult::Cancelled;
                         }
-                        SettingsDialogResult::Confirmed(AppAction::MoveDatabase(path))
+                        SettingsDialogResult::Confirmed(AppAction::MoveDatabase(result))
                     }
                     DialogResult::Help(help_context) => SettingsDialogResult::Help(help_context),
                 }

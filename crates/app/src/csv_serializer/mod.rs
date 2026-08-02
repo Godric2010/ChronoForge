@@ -28,7 +28,7 @@ impl<'a> CsvSerializer<'a> {
         }
     }
 
-    pub async fn export(&self, path_str: String) -> anyhow::Result<()> {
+    pub async fn export(&self, path_str: PathBuf) -> anyhow::Result<()> {
         let export_path = self.prepare_export_directory(path_str)?;
         self.meta_serializer.write_to_file(&export_path)?;
         self.project_serializer.export_csv(&export_path).await?;
@@ -37,7 +37,7 @@ impl<'a> CsvSerializer<'a> {
         Ok(())
     }
 
-    pub async fn import(&self, path_str: String) -> anyhow::Result<()> {
+    pub async fn import(&self, path_str: PathBuf) -> anyhow::Result<()> {
         let import_path = self.prepare_import_directory(path_str)?;
         let _meta = self.meta_serializer.read_from_file(&import_path)?;
         self.project_serializer.import_csv(&import_path).await?;
@@ -47,29 +47,27 @@ impl<'a> CsvSerializer<'a> {
         Ok(())
     }
 
-    fn prepare_export_directory(&self, path_str: String) -> anyhow::Result<PathBuf> {
-        let base_path = self.expand_home_path(path_str)?;
-        self.validate_path(&base_path)?;
+    fn prepare_export_directory(&self, path: PathBuf) -> anyhow::Result<PathBuf> {
+        self.validate_path(&path)?;
 
-        let export_dir = base_path.join("ChronoForge");
+        let export_dir = path.join("ChronoForge");
         fs::create_dir_all(&export_dir)?;
         Ok(export_dir)
     }
 
-    fn prepare_import_directory(&self, path_str: String) -> anyhow::Result<PathBuf> {
-        let base_path = self.expand_home_path(path_str)?;
-        self.validate_path(&base_path)?;
+    fn prepare_import_directory(&self, path: PathBuf) -> anyhow::Result<PathBuf> {
+        self.validate_path(&path)?;
 
-        let meta_path = base_path.join("meta.json");
+        let meta_path = path.join("meta.json");
 
         if !meta_path.exists() {
             anyhow::bail!(
                 "Missing meta.json file in import directory {}",
-                base_path.display()
+                path.display()
             );
         }
 
-        Ok(base_path)
+        Ok(path)
     }
 
     fn validate_path(&self, path_buf: &Path) -> anyhow::Result<()> {
@@ -84,13 +82,13 @@ impl<'a> CsvSerializer<'a> {
         Ok(())
     }
 
-    fn expand_home_path(&self, path_str: String) -> anyhow::Result<PathBuf> {
-        if let Some(stripped) = path_str.strip_prefix("~/") {
-            let home_dir =
-                dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Cannot get home directory"))?;
-            Ok(home_dir.join(stripped))
-        } else {
-            Ok(PathBuf::from(path_str))
-        }
-    }
+    // fn expand_home_path(&self, path_str: PathBuf) -> anyhow::Result<PathBuf> {
+    //     if let Some(stripped) = path_str.strip_prefix("~/") {
+    //         let home_dir =
+    //             dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Cannot get home directory"))?;
+    //         Ok(home_dir.join(stripped))
+    //     } else {
+    //         Ok(PathBuf::from(path_str))
+    //     }
+    // }
 }

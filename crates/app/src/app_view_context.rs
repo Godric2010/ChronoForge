@@ -286,23 +286,23 @@ impl<'a> TuiBackend for AppViewContext<'a> {
         Ok(())
     }
 
-    async fn export_csv(&self, path_str: String) -> anyhow::Result<()> {
+    async fn export_csv(&self, path: PathBuf) -> anyhow::Result<()> {
         CsvSerializer::new(self.app)
-            .export(path_str.clone())
+            .export(path.clone())
             .await
             .map_err(|source| AppError::CsvExportFailed {
-                path: path_str,
+                path: path.to_str().unwrap_or_default().to_string(),
                 source,
             })?;
         Ok(())
     }
 
-    async fn import_csv(&self, path_str: String) -> anyhow::Result<()> {
+    async fn import_csv(&self, path: PathBuf) -> anyhow::Result<()> {
         CsvSerializer::new(self.app)
-            .import(path_str.clone())
+            .import(path.clone())
             .await
             .map_err(|source| AppError::CsvImportFailed {
-                path: path_str,
+                path: path.to_str().unwrap_or_default().to_string(),
                 source,
             })?;
         Ok(())

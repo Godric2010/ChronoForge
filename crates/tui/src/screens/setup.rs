@@ -195,18 +195,15 @@ impl SetupScreen {
         None
     }
 
-    fn handle_dialog_result(&mut self, result: DialogResult<String>) -> Option<SetupAction> {
+    fn handle_dialog_result(&mut self, result: DialogResult<PathBuf>) -> Option<SetupAction> {
         match result {
             DialogResult::None => None,
             DialogResult::Cancelled => None,
-            DialogResult::Confirmed(path_str) => {
-                let path_buf = PathBuf::from(path_str);
-                match self.selected_action_idx {
-                    0 => Some(SetupAction::CreateNewDatabase(path_buf)),
-                    1 => Some(SetupAction::LinkNewDatabase(path_buf)),
-                    _ => None,
-                }
-            }
+            DialogResult::Confirmed(path_buf) => match self.selected_action_idx {
+                0 => Some(SetupAction::CreateNewDatabase(path_buf)),
+                1 => Some(SetupAction::LinkNewDatabase(path_buf)),
+                _ => None,
+            },
             DialogResult::Help(_) => None,
         }
     }

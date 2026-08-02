@@ -96,8 +96,8 @@ pub trait TuiBackend {
     async fn start_timer(&self, task_id: Uuid) -> anyhow::Result<()>;
     async fn stop_timer(&self) -> anyhow::Result<()>;
 
-    async fn export_csv(&self, path_str: String) -> anyhow::Result<()>;
-    async fn import_csv(&self, path_str: String) -> anyhow::Result<()>;
+    async fn export_csv(&self, path_str: PathBuf) -> anyhow::Result<()>;
+    async fn import_csv(&self, path_str: PathBuf) -> anyhow::Result<()>;
     async fn move_database(&mut self, path: PathBuf) -> anyhow::Result<()>;
     async fn relink_database(&mut self, path: PathBuf) -> anyhow::Result<()>;
 

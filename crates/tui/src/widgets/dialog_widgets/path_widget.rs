@@ -5,6 +5,7 @@ use crate::widgets::elements::{InputMode, TextEditElement, WidgetElement};
 use crossterm::event::KeyEvent;
 use ratatui::layout::Rect;
 use ratatui::Frame;
+use std::path::PathBuf;
 
 pub struct PathWidget {
     path_input: TextEditElement,
@@ -31,7 +32,7 @@ impl HelpProvider for PathWidget {
 }
 
 impl DialogWidget for PathWidget {
-    type Output = String;
+    type Output = PathBuf;
 
     fn get_type(&self) -> WidgetType {
         WidgetType::Input
@@ -42,7 +43,7 @@ impl DialogWidget for PathWidget {
     }
 
     fn output(&self) -> Self::Output {
-        self.path_input.get_output().to_string()
+        PathBuf::from(self.path_input.get_output())
     }
 
     fn height(&self) -> u16 {

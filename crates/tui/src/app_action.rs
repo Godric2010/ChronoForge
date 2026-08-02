@@ -31,8 +31,8 @@ pub enum AppAction {
     StopTimer,
 
     // Settings
-    ImportCsv(String),
-    ExportCsv(String),
+    ImportCsv(PathBuf),
+    ExportCsv(PathBuf),
     LinkNewDatabase(PathBuf),
     MoveDatabase(PathBuf),
     ToggleShowArchivedProjects(bool),
