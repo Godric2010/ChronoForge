@@ -26,7 +26,7 @@ impl ErrorWidget {
             key_code: KeyCode::Enter,
             key_modifier: KeyModifiers::empty(),
             key_name: "↲".to_string(),
-            key_description: "Confirm the error and close the dialog".to_string(),
+            key_description: "Ok".to_string(),
             action: ErrorWidgetActions::Confirm,
             display_in_footer: true,
         }];
@@ -63,11 +63,20 @@ impl DialogWidget for ErrorWidget {
     }
 
     fn output(&self) -> Option<Self::Output> {
-        None
+        if self.should_close {
+            Some(())
+        } else {
+            None
+        }
     }
 
     fn height(&self) -> u16 {
         4
+    }
+
+    fn width(&self) -> u16 {
+        let string = self.error_message.get_message().to_string();
+        string.len() as u16
     }
 
     fn render(&self, frame: &mut Frame, area: Rect) {
@@ -85,17 +94,5 @@ impl DialogWidget for ErrorWidget {
 
         let message_paragraph = Paragraph::new(self.error_message.get_message());
         frame.render_widget(message_paragraph, vertical[1]);
-
-        let confirm_paragraph = Paragraph::new("OK")
-            .centered()
-            .style(Style::default().add_modifier(Modifier::REVERSED));
-
-        let horizontal = Layout::horizontal([
-            Constraint::Min(1),
-            Constraint::Length(2),
-            Constraint::Min(1),
-        ])
-        .split(vertical[3]);
-        frame.render_widget(confirm_paragraph, horizontal[1]);
     }
 }

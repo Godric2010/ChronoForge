@@ -26,6 +26,7 @@ pub struct ListWidget {
     selected_index: usize,
     scroll_offset: usize,
     visible_count: usize,
+    width: u16,
     input_map: InputMap<ListWidgetActions>,
 }
 
@@ -50,11 +51,20 @@ impl ListWidget {
             },
         ];
         let input_map = InputMap::new("List Actions", key_bindings);
+
+        let mut widest_item_length = 0;
+        for item in items.iter() {
+            if item.name.len() as u16 > widest_item_length {
+                widest_item_length = item.name.len() as u16;
+            }
+        }
+
         Self {
             items,
             selected_index: 0,
             scroll_offset: 0,
             visible_count: 8,
+            width: widest_item_length + 2,
             input_map,
         }
     }
@@ -160,6 +170,10 @@ impl DialogWidget for ListWidget {
 
     fn height(&self) -> u16 {
         10
+    }
+
+    fn width(&self) -> u16 {
+        self.width
     }
 
     fn render(&self, frame: &mut Frame, area: Rect) {

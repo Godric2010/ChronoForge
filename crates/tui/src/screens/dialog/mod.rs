@@ -30,12 +30,13 @@ pub struct Dialog<Widget: DialogWidget> {
     title: String,
     widget: Widget,
     height: u16,
+    width: u16,
     input_map: InputMap<DialogActions>,
     footer_text: String,
 }
 
 impl<Widget: DialogWidget> Dialog<Widget> {
-    pub fn new(title: &str, widget: Widget) -> Self {
+    fn build_base_input_for_widget(widget: &Widget) -> InputMap<DialogActions> {
         let key_bindings = vec![
             KeyBinding {
                 key_code: KeyCode::Enter,
@@ -62,14 +63,34 @@ impl<Widget: DialogWidget> Dialog<Widget> {
                 display_in_footer: true,
             },
         ];
-        let input_map = InputMap::new("Dialog Actions", key_bindings);
+        let input_map_name = "Dialog Actions";
+        match widget.get_type() {
+            WidgetType::Input => InputMap::new(input_map_name, key_bindings),
+            WidgetType::Error => InputMap::new(input_map_name, vec![]),
+        }
+        // let input_map = InputMap::new(input_map_name, key_bindings);
+        // input_map
+    }
+
+    pub fn new(title: &str, widget: Widget) -> Self {
+        let input_map = Self::build_base_input_for_widget(&widget);
         let mut footer = widget.footer_help();
         input_map.append_footer_help(&mut footer);
         let footer_text = KeyBindingHelpContext::build_single_line(footer);
 
+        let titel = String::from(title);
+
+        let title_len = titel.len();
+        let footer_len = footer_text.len();
+        let widget_width = widget.width();
+
+        let width_candidates = [title_len, footer_len, widget_width as usize];
+        let width = width_candidates.iter().max().unwrap_or(&100);
+
         Self {
-            title: String::from(title),
+            title: titel,
             height: 6 + &widget.height(),
+            width: *width as u16 + 2,
             widget,
             input_map,
             footer_text,
@@ -114,6 +135,13 @@ impl<Widget: DialogWidget> Dialog<Widget> {
     }
 
     pub fn handle_input(&mut self, key_event: KeyEvent) -> DialogResult<Widget::Output> {
+        match self.widget.get_type() {
+            WidgetType::Input => self.handle_input_widget_input(key_event),
+            WidgetType::Error => self.handle_error_widget_input(key_event),
+        }
+    }
+
+    fn handle_input_widget_input(&mut self, key_event: KeyEvent) -> DialogResult<Widget::Output> {
         let action = self.input_map.find_action(key_event);
         match action {
             None => {
@@ -140,6 +168,13 @@ impl<Widget: DialogWidget> Dialog<Widget> {
             },
         }
     }
+    fn handle_error_widget_input(&mut self, key_event: KeyEvent) -> DialogResult<Widget::Output> {
+        self.widget.handle_key(key_event);
+        match self.widget.output() {
+            None => DialogResult::None,
+            Some(output) => DialogResult::Confirmed(output),
+        }
+    }
 
     fn calculate_draw_rect(&self, area: Rect) -> Rect {
         let vertical_chunks = Layout::vertical([
@@ -153,7 +188,7 @@ impl<Widget: DialogWidget> Dialog<Widget> {
 
         let horizontal_chunks = Layout::horizontal([
             Constraint::Min(0),
-            Constraint::Percentage(30),
+            Constraint::Length(self.width),
             Constraint::Min(0),
         ])
         .split(dialog_row);
@@ -162,7 +197,7 @@ impl<Widget: DialogWidget> Dialog<Widget> {
     }
 
     fn render_help_text(&self, frame: &mut Frame, area: Rect) {
-        let target_area = Rect::new(area.x + 1, area.y, area.width - 1, 1);
+        let target_area = Rect::new(area.x, area.y, area.width, 1);
 
         let help_text = self.footer_text.as_str();
         let paragraph = Paragraph::new(help_text).centered();

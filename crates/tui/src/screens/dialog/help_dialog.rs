@@ -139,7 +139,7 @@ impl HelpDialog {
     }
 
     fn render_help_text(&self, frame: &mut Frame, area: Rect) {
-        let target_area = Rect::new(area.x + 1, area.y, area.width - 1, 1);
+        let target_area = Rect::new(area.x, area.y, area.width, 1);
 
         let help_text = self.footer_text.as_str();
         let paragraph = Paragraph::new(help_text).centered();
@@ -157,7 +157,7 @@ impl HelpDialog {
 
         let horizontal_chunks = Layout::horizontal([
             Constraint::Min(0),
-            Constraint::Percentage(30),
+            Constraint::Length(self.footer_text.len() as u16 * 2),
             Constraint::Min(0),
         ])
         .split(dialog_row);

@@ -213,6 +213,16 @@ impl DialogWidget for ProjectEditWidget {
         name_input_height + checkbox_height + time_input_height
     }
 
+    fn width(&self) -> u16 {
+        let name_width = self.name_input.get_size().width;
+        let time_input_width = self.time_limit_checkbox.get_size().width;
+        if name_width > time_input_width {
+            name_width
+        } else {
+            time_input_width
+        }
+    }
+
     fn render(&self, frame: &mut Frame, area: Rect) {
         let vertical = Layout::vertical([
             Constraint::Length(self.name_input.get_size().height + 2),

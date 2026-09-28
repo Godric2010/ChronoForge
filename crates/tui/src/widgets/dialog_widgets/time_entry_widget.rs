@@ -295,6 +295,9 @@ impl DialogWidget for TimeEntryWidget {
         7
     }
 
+    fn width(&self) -> u16 {
+        75
+    }
     fn render(&self, frame: &mut Frame, area: Rect) {
         let inner_chunks = Layout::vertical([
             Constraint::Length(1), // spacer

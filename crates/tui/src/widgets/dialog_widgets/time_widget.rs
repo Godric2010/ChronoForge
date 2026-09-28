@@ -52,6 +52,10 @@ impl DialogWidget for TimeWidget {
         1
     }
 
+    fn width(&self) -> u16 {
+        20
+    }
+
     fn render(&self, frame: &mut Frame, area: Rect) {
         let inner_chunks = Layout::vertical([
             Constraint::Length(1),
