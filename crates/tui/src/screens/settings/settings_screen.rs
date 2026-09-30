@@ -277,7 +277,8 @@ impl SettingsScreen {
             self.selection_ref.item_index -= 1;
         } else if section_index > 0 {
             self.selection_ref.section_index -= 1;
-            self.selection_ref.item_index = self.sections[section_index].get_items_count() - 1;
+            self.selection_ref.item_index =
+                self.sections[self.selection_ref.section_index].get_items_count() - 1;
         }
         None
     }
