@@ -48,17 +48,23 @@ impl<'a> AppViewContext<'a> {
         project: &Project,
         show_archived_tasks: bool,
     ) -> anyhow::Result<ProjectViewModel> {
+        let mut project_time_minutes = 0;
+        let mut task_vms = Vec::<TaskViewModel>::new();
+
         let tasks = self
             .app
             .task_service
-            .find_by_project_id(project.id, show_archived_tasks)
+            .find_by_project_id(project.id, true)
             .await?;
 
-        let mut project_time_minutes = 0;
-        let mut task_vms = Vec::<TaskViewModel>::new();
         for task in tasks {
             let task_vm = self.create_task_view_model(&task).await?;
             project_time_minutes += task_vm.total_task_time_min;
+
+            if !show_archived_tasks && task_vm.is_archived {
+                continue;
+            }
+
             task_vms.push(task_vm);
         }
 
