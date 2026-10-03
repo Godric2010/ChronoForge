@@ -5,7 +5,7 @@ use crate::repositories::task_repository::TaskRepository;
 use crate::repositories::time_entry_repository::TimeEntryRepository;
 use crate::repositories::user_settings_repository::UserSettingsRepository;
 use crate::types::DailyTimer;
-use chrono::{DateTime, Datelike, Local, Utc, Weekday};
+use chrono::{DateTime, Datelike, Local, TimeZone, Utc, Weekday};
 
 #[allow(dead_code)]
 pub struct ReportService<
@@ -139,7 +139,22 @@ impl<
                 && today.month() == entry_end_time.month()
                 && today.year() == entry_end_time.year()
             {
-                let entry_elapsed = entry_end_time - entry.start_time.with_timezone(&Local);
+                let midnight = Local
+                    .with_ymd_and_hms(
+                        entry.start_time.year(),
+                        entry.start_time.month(),
+                        entry.end_time.day(),
+                        0,
+                        0,
+                        0,
+                    )
+                    .unwrap();
+                let elapsed_time_base = if entry.start_time.day() == entry_end_time.day() {
+                    entry.start_time.with_timezone(&Local)
+                } else {
+                    midnight
+                };
+                let entry_elapsed = entry_end_time - elapsed_time_base;
                 let elapsed_minutes = entry_elapsed.num_minutes() as u32;
                 time_worked_today += elapsed_minutes;
             }
