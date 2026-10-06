@@ -92,6 +92,10 @@ impl OverviewScreen {
 
         if let Some(selected_project) = self.projects_view.get_selected_project() {
             self.tasks_view.update_task_list(selected_project.id);
+            if let Some(selected_task) = self.tasks_view.get_selected_task() {
+                self.time_entry_view
+                    .update_time_entry_view(selected_task.id);
+            }
         }
     }
 
@@ -212,6 +216,7 @@ impl OverviewScreen {
     fn toggle_timer(&mut self) -> Option<AppAction> {
         if self.timer_active {
             self.timer_active = false;
+            self.enforce_view_model_update_on_next_tick = true;
             return Some(AppAction::StopTimer);
         }
 

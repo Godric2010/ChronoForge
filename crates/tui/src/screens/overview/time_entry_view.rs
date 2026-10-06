@@ -68,6 +68,10 @@ impl TimeEntryView {
             }
         }
 
+        self.update_time_entry_view(selected_task);
+    }
+
+    pub fn update_time_entry_view(&mut self, selected_task: Uuid) {
         self.selected_task = Some(selected_task);
         let selected_entries = self.model.time_entries.get(&selected_task);
         if selected_entries.is_none() {
