@@ -224,20 +224,11 @@ impl DateEditElement {
             year_value = 1970;
         }
         self.year = year_value;
-        if month_value > 12 {
-            month_value = 12;
-        }
-        if month_value == 0 {
-            month_value = 1;
-        }
+        month_value = month_value.clamp(1, 12);
         self.month = month_value;
+
         let days_in_month = self.get_days_in_month();
-        if day_value > days_in_month {
-            day_value = days_in_month;
-        }
-        if day_value == 0 {
-            day_value = 1;
-        }
+        day_value = day_value.clamp(1, days_in_month);
         self.day = day_value;
 
         self.day_digit_chars = Self::u32_to_two_chars(day_value);
