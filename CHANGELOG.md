@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1] - 2026-10-06
+### Bugfixes
+- Error message boxes now react correctly to enter key presses
+- Dialog boxes now scale correctly to the size of their content
+- Archiving tasks no longer influences the project total time display, project total time always incorporates all tasks, no matter if archived or not
+- Fixed navigation issue in the settings menu
+- Time worked that day is now shown correctly when time entries span over multiple days
+- Changing time entries now refreshes the view instantly
+
 ## [0.2.0] - 2026-08-02
 ### Changes
 - Added optional target times for projects and tasks
