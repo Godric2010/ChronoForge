@@ -134,6 +134,7 @@ impl<
         let all_time_entries = all_time_entries.unwrap();
         let mut time_worked_today: u32 = 0;
         all_time_entries.iter().for_each(|entry| {
+            let entry_start_time = entry.start_time.with_timezone(&Local);
             let entry_end_time = entry.end_time.with_timezone(&Local);
             if today.day() == entry_end_time.day()
                 && today.month() == entry_end_time.month()
@@ -141,15 +142,15 @@ impl<
             {
                 let midnight = Local
                     .with_ymd_and_hms(
-                        entry.start_time.year(),
-                        entry.start_time.month(),
-                        entry.end_time.day(),
+                        entry_end_time.year(),
+                        entry_end_time.month(),
+                        entry_end_time.day(),
                         0,
                         0,
                         0,
                     )
                     .unwrap();
-                let elapsed_time_base = if entry.start_time.day() == entry_end_time.day() {
+                let elapsed_time_base = if entry_start_time.day() == entry_end_time.day() {
                     entry.start_time.with_timezone(&Local)
                 } else {
                     midnight
